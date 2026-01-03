@@ -3,21 +3,14 @@ import json
 import datetime
 import os
 
-# GitHubのSecretsから読み込む
+# APIキーを読み込み
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 def get_prompt(now_time):
     return f"""
 【羽田空港・リアルタイム需要分析依頼】
 最高顧問、現在の最新データ（フライト到着数・ゲート配分・鉄道運行状況・天気）を収集し、分析ダッシュボードを更新してください。
-
-分析にあたっては以下の条件を厳守すること：
-1. 14時〜16時の到着便数と予測降機人数をターミナル別（T1/T2/T3）に算出。
-2. 以下の「ベテランドライバーのセオリー」をベースに、今日のリアルタイム要因（鉄道遅延やゲートの偏り）で補正を行うこと。
-   [セオリー：6-16時 3号 / 16-18時 4号 / 18-21時 3号 / 21-22時 1か2号 / 22時以降 3号]
-3. タクシープール待機台数（推計）と降機人数のギャップを解説に含めること。
-4. 回答はすべて一つのコードブロック（ ``` ）内に記述すること。
-
+14時〜16時の到着便数と予測降機人数をターミナル別（T1/T2/T3）に算出。
 現在の時刻：{now_time}
 """
 
@@ -25,32 +18,37 @@ def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # 【最重要】URLを分解して結合。こうすればエディタの自動リンクに邪魔されません。
-    base_url = "[https://generativelanguage.googleapis.com](https://generativelanguage.googleapis.com)"
-    endpoint = "/v1beta/models/gemini-1.5-flash:generateContent"
-    full_url = f"{base_url}{endpoint}?key={API_KEY}"
+    # 【最終兵器】URLを1文字ずつのリストにして結合。
+    # これによりGitHubの「自動リンク機能」が絶対に発動しません。
+    u_parts = [
+        'h','t','t','p','s',':','/','/','g','e','n','e','r','a','t','i','v','e',
+        'l','a','n','g','u','a','g','e','.','g','o','o','g','l','e','a','p','i','s',
+        '.','c','o','m','/','v','1','b','e','t','a','/','m','o','d','e','l','s','/',
+        'g','e','m','i','n','i','-','1','.','5','-','f','l','a','s','h',':','g','e','n','e','r','a','t','e','C','o','n','t','e','n','t'
+    ]
+    full_url = "".join(u_parts) + "?key=" + str(API_KEY)
     
     payload = {
-        "contents": [{
-            "parts": [{"text": get_prompt(now_str)}]
-        }]
+        "contents": [{"parts": [{"text": get_prompt(now_str)}]}]
     }
     headers = {'Content-Type': 'application/json'}
 
     try:
-        # verify=Trueを追加して通信の安全性を確保
-        response = requests.post(full_url, headers=headers, data=json.dumps(payload), timeout=30)
+        # 通信実行
+        response = requests.post(full_url, headers=headers, json=payload, timeout=30)
         res_json = response.json()
         
         if response.status_code == 200:
             report_content = res_json['candidates'][0]['content']['parts'][0]['text']
         else:
-            report_content = f"APIエラー (Status: {response.status_code})\n{json.dumps(res_json, indent=2, ensure_ascii=False)}"
+            report_content = f"APIエラー (Status: {response.status_code})\n{json.dumps(res_json, ensure_ascii=False)}"
             
     except Exception as e:
-        report_content = f"実行中にエラーが発生しました。\n(原因: {str(e)})"
+        # エラー発生時は、変な記号を徹底的に排除して表示
+        err_msg = str(e).replace('[', '').replace(']', '').replace('(', '').replace(')', '')
+        report_content = f"実行エラーが発生しました。\n原因: {err_msg}"
     
-    # HTMLの組み立て
+    # HTML生成
     html_template = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -59,17 +57,16 @@ def generate_report():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>カセタク・羽田レーダー</title>
         <style>
-            body {{ background: #121212; color: #FFD700; font-family: sans-serif; padding: 20px; line-height: 1.6; }}
+            body {{ background: #121212; color: #FFD700; font-family: sans-serif; padding: 20px; }}
             h1 {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.2rem; }}
             pre {{ background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; font-size: 0.9rem; }}
-            .footer {{ text-align: right; font-size: 0.8rem; color: #888; margin-top: 20px; }}
         </style>
     </head>
     <body>
         <div style="font-weight:bold;">🚖 KASETACK</div>
-        <h1>羽田空港需要分析（20分更新）</h1>
+        <h1>羽田空港需要分析</h1>
         <pre>{report_content}</pre>
-        <div class="footer">最終更新: {now_str} (JST)</div>
+        <div style="text-align:right; font-size:0.7rem; color:#888; margin-top:20px;">最終更新: {now_str}</div>
     </body>
     </html>
     """
