@@ -3,47 +3,48 @@ import json
 import datetime
 import os
 
-# APIキーを取得
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 def get_prompt(now_time):
-    return f"""
-羽田空港のリアルタイム需要分析を行ってください。
-14時〜16時の到着便数と予測降機人数をターミナル別（T1/T2/T3）に算出してください。
-現在の時刻：{now_time}
-"""
+    return f"羽田空港のリアルタイム需要分析（14時〜16時の到着便数と予測降機人数）をT1/T2/T3別に算出して。現在時刻：{now_time}"
 
 def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # 【変更点】バージョンを v1 にし、モデル名を gemini-pro に変更。
-    # これが最も多くのAPIキーで「確実に」動く組み合わせです。
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={API_KEY}"
+    report_content = "有効なモデルが見つかりませんでした。"
     
-    payload = {
-        "contents": [{"parts": [{"text": get_prompt(now_str)}]}]
-    }
-    headers = {'Content-Type': 'application/json'}
-
     try:
-        response = requests.post(url, json=payload, timeout=30)
-        res_json = response.json()
+        # 1. まず、このAPIキーで「今、何が使えるのか」をGoogleにリストアップさせます
+        list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={API_KEY}"
+        models_res = requests.get(list_url).json()
         
-        if response.status_code == 200:
-            report_content = res_json['candidates'][0]['content']['parts'][0]['text']
-        else:
-            # 404が出る場合は、予備のモデル（gemini-1.5-flash）で再試行
-            url_alt = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
-            response = requests.post(url_alt, json=payload, timeout=30)
-            res_json = response.json()
-            if response.status_code == 200:
-                report_content = res_json['candidates'][0]['content']['parts'][0]['text']
-            else:
-                report_content = f"APIエラー (Status: {response.status_code})\n{json.dumps(res_json, ensure_ascii=False)}"
+        # 使えるモデル名を探す
+        target_model = None
+        if 'models' in models_res:
+            for m in models_res['models']:
+                # generateContent が可能なモデルを探す
+                if 'generateContent' in m.get('supportedGenerationMethods', []):
+                    target_model = m['name']
+                    # 1.5 flashがあれば最優先、なければ最初に見つかったもの
+                    if 'gemini-1.5-flash' in m['name']:
+                        break
+        
+        if target_model:
+            # 2. 見つかった「確実に動くモデル名」を使って分析を依頼します
+            gen_url = f"https://generativelanguage.googleapis.com/v1beta/{target_model}:generateContent?key={API_KEY}"
+            payload = {"contents": [{"parts": [{"text": get_prompt(now_str)}]}]}
+            res = requests.post(gen_url, json=payload, timeout=30).json()
             
+            if 'candidates' in res:
+                report_content = res['candidates'][0]['content']['parts'][0]['text']
+            else:
+                report_content = f"モデル {target_model} は見つかりましたが、回答が得られませんでした。\n{json.dumps(res, ensure_ascii=False)}"
+        else:
+            report_content = f"このAPIキーで利用可能なGeminiモデルが見つかりませんでした。プロジェクトの設定を確認してください。\nリスト結果: {json.dumps(models_res, ensure_ascii=False)}"
+
     except Exception as e:
-        report_content = f"実行中にエラーが発生しました。\n原因: {str(e)}"
+        report_content = f"実行エラー: {str(e)}"
     
     html_template = f"""
     <!DOCTYPE html>
@@ -66,7 +67,6 @@ def generate_report():
     </body>
     </html>
     """
-    
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_template)
 
