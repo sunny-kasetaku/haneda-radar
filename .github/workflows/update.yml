@@ -2,14 +2,14 @@ name: Update Haneda Radar
 
 on:
   schedule:
-    - cron: '*/20 * * * *' # 20分おきに実行
-  workflow_dispatch: # 手動で動かすボタンを表示
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # GitHubが自分自身を書き換える許可
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -17,11 +17,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10' # 新しいPythonを使う
 
       - name: Install dependencies
         run: |
-          pip install google-generativeai
+          pip install -U google-generativeai # 最新版を強制インストール
 
       - name: Run script
         env:
