@@ -2,12 +2,12 @@ import google.generativeai as genai
 import datetime
 import os
 
-# GitHubのSecretsからAPIキーを読み込む
+# APIの設定（接続エラーを回避する設定を追加済み）
 api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+genai.configure(api_key=api_key, transport='rest')
 
-# 速度と検索能力に優れた 1.5-flash モデルを使用
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+# モデルの指定（最も安定しているフラッシュモデル）
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 def get_prompt(now_time):
     return f"""
@@ -34,7 +34,7 @@ def generate_report():
         response = model.generate_content(get_prompt(now_str))
         report_content = response.text
     except Exception as e:
-        report_content = f"エラーが発生しました: {e}"
+        report_content = f"申し訳ありません、分析中にエラーが発生しました。時間を置いて再試行してください。\n(Error: {e})"
     
     # スマホで見やすいダークモード仕様のHTML
     html_template = f"""
