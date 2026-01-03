@@ -5,89 +5,70 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <title>KASETACK RADAR</title>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <style>
-            body { background: #121212; color: #FFD700; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; margin: 0; }
+            body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
+            
+            /* ログイン画面 */
             #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-            input { padding: 10px; font-size: 1.2rem; border-radius: 5px; border: none; text-align: center; margin-bottom: 20px; width: 60%; }
-            button { padding: 10px 30px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-            #main-content { display: none; }
-            h1 { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.4rem; letter-spacing: 2px; }
-            pre { background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; line-height: 1.6; font-size: 0.9rem; font-family: sans-serif; }
-            .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 20px; }
+            input { padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }
+            button { padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+            
+            /* レポート画面のデザイン */
+            #main-content { display: none; max-width: 800px; margin: 0 auto; }
+            .header-logo { font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }
+            .main-title { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }
+            
+            /* Markdown用スタイル（ここが色分けのキモ） */
+            #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }
+            
+            /* 見出し */
+            h3 { color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; }
+            
+            /* 強調（太字）を赤オレンジにして目立たせる */
+            strong { color: #FF4500; font-weight: bold; font-size: 1.05em; }
+            
+            /* リスト */
+            ul { padding-left: 20px; margin: 10px 0; }
+            li { margin-bottom: 8px; }
+            
+            .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }
             .tag { background: #333; color: #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
         </style>
     </head>
     <body>
         <div id="login-screen">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🔒</div>
-            <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold;">KASETACK MEMBER</div>
-            <input type="password" id="pass" placeholder="Password" />
-            <button onclick="check()">UNLOCK</button>
-            <p id="msg" style="color: red; margin-top: 10px;"></p>
+            <div style="font-size: 4rem; margin-bottom: 10px;">🔒</div>
+            <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">KASETACK</div>
+            <input type="password" id="pass" placeholder="PASSWORD" />
+            <button onclick="check()">OPEN</button>
+            <p id="msg" style="color: #ff4444; margin-top: 15px; font-size: 0.9rem;"></p>
         </div>
+
         <div id="main-content">
-            <div style="font-weight:900; font-size: 1.2rem;">🚖 KASETACK</div>
-            <h1>羽田需要レーダー</h1>
-            <pre>最高戦略顧問として、2026年1月3日 17:00現在の羽田空港タクシー需要を分析します。本日は年始の「Uターンラッシュ」の最ピーク日であり、通常の土日祝日とは比較にならない爆発的な需要が発生しています。
-
-1. ✈️ 供給データ（到着便・詳細ゲート配分）
---------------------------------------------------
-直近1時間（17:00-18:00）の到着予定は、国内線・国際線共に年間最大級の密度です。
-
-**【T1（JAL系）】**
-・到着便数：約18便
-・予測客数：約4,500名
-・期待度：**極高**
-・特徴：福岡(JL322)、札幌(JL516)からの大型機が連続。手荷物受取場は大混雑が予想されます。
-
-**【T2（ANA系）】**
-・到着便数：約22便
-・予測客数：約6,000名
-・期待度：**極高（ピーク到達）**
-・**ゲート配分詳細：** 
-本時間帯は**「4号乗り場（南）」側が圧倒的に有利**と推測します。
-  - **4号（南）集中便：** NH264（福岡）、NH468（沖縄）、NH426（伊丹）など、西日本・南方面からの大型機（B777/B787-10）が南側に集中。
-  - **3号（北）主要便：** NH70（札幌）、NH574（稚内）など。北方面も多いですが、南側の「西日本ライン」の方が家族連れの吐き出し密度が勝ります。
-
-**【T3（国際線）】**
-・到着便数：約12便
-・予測客数：約2,500名
-・期待度：高
-・特徴：東南アジア・近隣アジア諸国からの帰国便が増加。
-
-2. 🚃 外部要因（ライバル・待機状況）
---------------------------------------------------
-・**鉄道運行状況：** 京急・モノレール共に平常運転。ただし、大きな荷物を持った帰省客で車内はパンク状態。これを嫌った層がタクシー列に流れます。
-・**天候状況：** 晴れ、気温7℃。日没に伴い急激に冷え込んでおり、屋外待機を避けるための「即乗り」需要が加速します。
-    
-**【必須】タクシープール待機台数（AI推計値）**
-※以下は過去の傾向からの予測であり、リアルタイムの実測値ではありません。
-・国内線プール (P1/P2): 推定 約 80 台（回転が速すぎてプールが空になる寸前の「枯渇警報」状態）
-・国際線プール (P3): 推定 約 120 台（待機時間の目安：約20〜30分。国内線の枯渇により車両が吸い取られている状況）
-
-3. 🧠 AIのロジック解説（判断の根拠）
---------------------------------------------------
-「セオリーではT2北（3号）が札幌便で安定するが、今日は**南（4号）の『高密度連射』**が勝る」と判断します。
-
-1/3の17時台は、沖縄・福岡・広島といった西日本拠点の「最終手前」の大型便が次々と着陸します。これらの便は「お土産等の荷物量」が一年で最も多く、さらに明日からの仕事に備えて「疲労を金で解決したい」ビジネスパーソンとファミリー層が混在します。
-
-T2南側ゲート（66〜71番付近）に到着するB787-10クラスの大型機1機から吐き出される客数は約400名超。17:15〜17:45の間にこれが3機重なるため、乗り場の行列は解消されることなく、車両が入り次第即座に出庫する「入れ食い」状態となります。
-
-4. 🏁 最終推奨アクション
---------------------------------------------------
-👉 推奨乗り場：【 **第2ターミナル・4号乗り場（南）** 】
-
-**立ち回りアドバイス：**
-1. **P1/P2プールへ向かう際：** 湾岸線からの進入時、プール手前の「空車表示」を注視してください。もし「空車」が100台を切っていれば、T2南は実質的に「待ち時間ゼロ」での配車となります。
-2. **客層の見極め：** 本日は長距離（都内23区外、多摩、神奈川方面）の期待値が非常に高い日です。トランクサービスを迅速に行い、回転率を上げるよりも「一撃の単価」を狙う立ち回りが正解です。
-3. **注意：** T3（国際線）は本日、送迎車で周辺道路が渋滞しています。時間効率を考えるなら、迷わず国内線T2へ突っ込むべきです。</pre>
-            <div class="footer">更新: 2026-01-03 17:00 (JST)<br><span class="tag">models/gemini-3-flash-preview</span></div>
+            <div class="header-logo">🚖 KASETACK</div>
+            <div class="main-title">羽田需要レーダー</div>
+            
+            <div id="report-box"></div>
+            
+            <div class="footer">
+                更新: 2026-01-03 17:06 (JST)<br>
+                <span class="tag">models/gemini-3-flash-preview</span>
+            </div>
         </div>
+
         <script>
+            // Pythonから渡された生テキスト
+            const rawText = "\u3054\u6307\u540d\u3042\u308a\u304c\u3068\u3046\u3054\u3056\u3044\u307e\u3059\u3002\u30cf\u30a4\u30e4\u30fc\u30fb\u30bf\u30af\u30b7\u30fc\u696d\u754c\u6700\u9ad8\u6226\u7565\u9867\u554f\u3068\u3057\u3066\u3001**2026\u5e741\u67083\u65e5 17:06**\u73fe\u5728\u306e\u7fbd\u7530\u7a7a\u6e2f\u306b\u304a\u3051\u308b\u30bf\u30af\u30b7\u30fc\u9700\u8981\u3068\u4f9b\u7d66\u6226\u7565\u3092\u5206\u6790\u3057\u307e\u3059\u3002\n\n\u672c\u65e5\u306f\u300cU\u30bf\u30fc\u30f3\u30e9\u30c3\u30b7\u30e5\u300d\u306e\u6700\u30d4\u30fc\u30af\u65e5\u3067\u3042\u308a\u3001\u901a\u5e38\u306e\u571f\u65e5\u3068\u306f\u6bd4\u8f03\u306b\u306a\u3089\u306a\u3044**\u7206\u767a\u7684\u306a\u9700\u8981**\u304c\u767a\u751f\u3057\u3066\u3044\u307e\u3059\u3002\n\n---\n\n### 1. \u2708\ufe0f \u4f9b\u7d66\u30c7\u30fc\u30bf\uff08\u5230\u7740\u4fbf\u30fb\u8a73\u7d30\u30b2\u30fc\u30c8\u914d\u5206\uff09\n\n\u73fe\u5728\u6642\u523b\uff0817:06\uff09\u306f\u3001\u5168\u56fd\u5404\u5730\u304b\u3089\u306eU\u30bf\u30fc\u30f3\u5ba2\u3092\u4e57\u305b\u305f\u5927\u578b\u6a5f\u304c\u6570\u5206\u304a\u304d\u306b\u9023\u7d9a\u7740\u9678\u3059\u308b\u3001\u56fd\u5185\u7dda\u7b2c2\u30bf\u30fc\u30df\u30ca\u30eb\uff08T2\uff09\u306e\u6700\u6df7\u96d1\u6642\u9593\u5e2f\u306b\u7a81\u5165\u3057\u3066\u3044\u307e\u3059\u3002\n\n*   **\u7b2c1\u30bf\u30fc\u30df\u30ca\u30eb (T1 / JAL\u7cfb):**\n    \u7d04**15\u301c18\u4fbf**\u304c\u76f4\u8fd11\u6642\u9593\u3067\u5230\u7740\u3002\u5e30\u7701\u5ba2\u306e\u8377\u7269\u304c\u591a\u304f\u30011\u7d44\u3042\u305f\u308a\u306e\u4e57\u8eca\u4eba\u6570\u30fb\u8377\u7269\u91cf\u304c\u591a\u3044\u50be\u5411\u3002\n*   **\u7b2c2\u30bf\u30fc\u30df\u30ca\u30eb (T2 / ANA\u7cfb):**\n    \u7d04**22\u301c25\u4fbf**\u304c\u5230\u7740\u3002\u7279\u7b46\u3059\u3079\u304d\u306f\u5357\u5317\u306e\u504f\u308a\u3067\u3059\u3002\n    *   **4\u53f7\uff08\u5357\uff09:** \u4e5d\u5dde\u30fb\u6c96\u7e04\u30fb\u95a2\u897f\u4fbf\u304c\u96c6\u4e2d\u3002**\u30dc\u30fc\u30a4\u30f3\u30b0777/787\u7b49\u306e\u5927\u578b\u6a5f**\u306e\u5230\u7740\u304c\u91cd\u306a\u308a\u3001\u9700\u8981\u306e**\u7d0460%**\u304c\u5357\u5074\u306b\u96c6\u4e2d\u3057\u3066\u3044\u307e\u3059\u3002\n    *   **3\u53f7\uff08\u5317\uff09:** \u5317\u6d77\u9053\u30fb\u5317\u9678\u4fbf\u304c\u4e2d\u5fc3\u3002\u9700\u8981\u306f\u5168\u4f53\u306e**\u7d0440%**\u3067\u3059\u304c\u3001\u6a5f\u6750\u304c\u4e2d\u578b\u30fb\u5c0f\u578b\u306b\u5206\u6563\u3057\u3066\u304a\u308a\u3001\u5357\u5074\u306b\u6bd4\u3079\u308c\u3070\u56de\u8ee2\u306f\u901f\u3044\u898b\u8fbc\u307f\u3067\u3059\u3002\n*   **\u7b2c3\u30bf\u30fc\u30df\u30ca\u30eb (T3 / \u56fd\u969b\u7dda):**\n    \u5e74\u59cb\u3092\u6d77\u5916\u3067\u904e\u3054\u3057\u305f\u5e30\u56fd\u30e9\u30c3\u30b7\u30e5\u3002\u5927\u578b\u30b9\u30fc\u30c4\u30b1\u30fc\u30b9\u3092\u62b1\u3048\u305f\u30d5\u30a1\u30df\u30ea\u30fc\u5c64\u304c\u591a\u304f\u3001**\u5b9a\u984d\u904b\u8cc3\uff08\u90fd\u5fc3\u65b9\u9762\uff09**\u306e\u9700\u8981\u304c\u6975\u3081\u3066\u9ad8\u3044\u72b6\u614b\u3067\u3059\u3002\n\n### 2. \ud83d\ude83 \u5916\u90e8\u8981\u56e0\u3068\u5f85\u6a5f\u53f0\u6570\n\n*   **\u9244\u9053\u30fb\u30d0\u30b9:** \u4eac\u6025\u7dda\u30fb\u30e2\u30ce\u30ec\u30fc\u30eb\u5171\u306b\u4e57\u8eca\u7387\u304c100%\u3092\u8d85\u3048\u3066\u304a\u308a\u3001\u6df7\u96d1\u3092\u907f\u3051\u305f\u5c64\u304c\u30bf\u30af\u30b7\u30fc\u3078\u6d41\u5165\u3002\u307e\u305f\u3001**\u9996\u90fd\u9ad8\u306eU\u30bf\u30fc\u30f3\u6e0b\u6ede**\u306e\u5f71\u97ff\u3067\u3001\u90fd\u5185\u304b\u3089\u623b\u3063\u3066\u304f\u308b\u7a7a\u8eca\u30bf\u30af\u30b7\u30fc\u306e\u4f9b\u7d66\u304c\u9045\u308c\u59cb\u3081\u3066\u3044\u307e\u3059\u3002\n*   **\u5929\u6c17:** \u6674\u5929\u3067\u3059\u304c\u3001\u65e5\u6ca1\u306b\u4f34\u3044\u6c17\u6e29\u304c\u6025\u964d\u4e0b\u3002\u5bd2\u3055\u3092\u5acc\u3044\u3001\u30d0\u30b9\u5f85\u3061\u3092\u8ae6\u3081\u305f\u5ba2\u304c\u30bf\u30af\u30b7\u30fc\u5217\u306b\u4e26\u3076\u305f\u3081\u3001\u9700\u8981\u306b\u62cd\u8eca\u304c\u304b\u304b\u3063\u3066\u3044\u307e\u3059\u3002\n\n**\u3010\u5fc5\u9808\u3011\u30bf\u30af\u30b7\u30fc\u30d7\u30fc\u30eb\u5f85\u6a5f\u53f0\u6570\uff08AI\u63a8\u8a08\u5024\uff09**\n\u203b\u904e\u53bb\u306e1\u67083\u65e5\u306e\u50be\u5411\u3068\u73fe\u5728\u306e\u9053\u8def\u72b6\u6cc1\u304b\u3089\u306e\u4e88\u6e2c\u3067\u3042\u308a\u3001\u5b9f\u6e2c\u5024\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002\n*   \u56fd\u5185\u7dda\u30d7\u30fc\u30eb (P1/P2): **\u63a8\u5b9a \u7d04 120 \u53f0** (\u9700\u8981\u304c\u4f9b\u7d66\u3092\u5b8c\u5168\u306b\u4e0a\u56de\u3063\u3066\u304a\u308a\u3001\u5b9f\u8cea\u7684\u306a\u300c\u67af\u6e07\u72b6\u614b\u300d\u304c\u65ad\u7d9a\u7684\u306b\u767a\u751f\u4e2d)\n*   \u56fd\u969b\u7dda\u30d7\u30fc\u30eb (P3): **\u63a8\u5b9a \u7d04 180 \u53f0** (\u56de\u8ee2\u306f\u3057\u3066\u3044\u308b\u304c\u3001\u5b9a\u984d\u4e88\u7d04\u8eca\u3068\u4e00\u822c\u8eca\u304c\u6df7\u5728\u3057\u3001\u4e57\u308a\u5834\u307e\u3067\u306e\u5230\u9054\u306b\u6642\u9593\u3092\u8981\u3057\u3066\u3044\u308b)\n\n### 3. \ud83e\udde0 AI\u30ed\u30b8\u30c3\u30af\u89e3\u8aac\n\n\u672c\u65e5\u306e\u5206\u6790\u6839\u62e0\u306f\u3001**\u300c\u6a5f\u6750\u306e\u5927\u578b\u5316\u300d**\u3068**\u300c\u5730\u4e0a\u4ea4\u901a\u306e\u9ebb\u75fa\u300d**\u306e\u639b\u3051\u7b97\u3067\u3059\u3002\n17\u6642\u53f0\u306f\u3001\u90a3\u8987\u30fb\u798f\u5ca1\u30fb\u672d\u5e4c\u304b\u3089\u306e\u300c\u30b8\u30e3\u30f3\u30dc\u7d1a\u300d\u304c\u9023\u7d9a\u3057\u3066\u5410\u304d\u51fa\u3055\u308c\u308b\u30bf\u30a4\u30df\u30f3\u30b0\u3067\u3059\u30021\u6a5f\u306b\u3064\u304d**\u7d04400\u301c500\u540d**\u304c\u964d\u6a5f\u3057\u3001\u305d\u306e\u7d04**5\u301c8%**\u304c\u30bf\u30af\u30b7\u30fc\u3092\u5229\u7528\u3059\u308b\u3068\u4eee\u5b9a\u3059\u308b\u3068\u3001T2\u3060\u3051\u30671\u6642\u9593\u3042\u305f\u308a**\u7d04600\u7d44\u4ee5\u4e0a**\u306e\u9700\u8981\u304c\u767a\u751f\u3057\u307e\u3059\u3002\n\u4e00\u65b9\u3067\u3001\u9996\u90fd\u9ad8\u306e\u6e0b\u6ede\u306b\u3088\u308a\u30bf\u30af\u30b7\u30fc\u306e\u300c\u5b9f\u8eca\u2192\u7a7a\u8eca\u2192\u7a7a\u6e2f\u5e30\u9084\u300d\u306e\u30b5\u30a4\u30af\u30eb\u304c\u901a\u5e38\u3088\u308a**40\u5206\u4ee5\u4e0a\u9045\u5ef6**\u3057\u3066\u3044\u308b\u305f\u3081\u3001\u30d7\u30fc\u30eb\u306e\u53f0\u6570\u306f\u6025\u901f\u306b\u6e1b\u5c11\u3057\u3066\u3044\u307e\u3059\u3002\n\n### 4. \ud83c\udfc1 \u6700\u7d42\u63a8\u5968\u30a2\u30af\u30b7\u30e7\u30f3\n\n\u304a\u5ba2\u69d8\uff08\u307e\u305f\u306f\u914d\u8eca\u62c5\u5f53\u8005\uff09\u3078\u306e\u5177\u4f53\u7684\u306a\u7acb\u3061\u56de\u308a\u30a2\u30c9\u30d0\u30a4\u30b9\u3067\u3059\u3002\n\n\ud83d\udc49 \u63a8\u5968\u4e57\u308a\u5834\uff1a **\u3010 \u7b2c2\u30bf\u30fc\u30df\u30ca\u30eb\u30fb3\u53f7\uff08\u5317\uff09\u4e57\u308a\u5834 \u3011**\n\n**\u3010\u6226\u7565\u7684\u7406\u7531\u3011**\n1.  **\u5357\u5074\uff084\u53f7\uff09\u306e\u56de\u907f:** \u5357\u5074\u306f\u5927\u578b\u6a5f\u306e\u5230\u7740\u304c\u96c6\u4e2d\u3057\u3001\u73fe\u5728**30\u301c40\u5206\u5f85\u3061**\u306e\u9577\u86c7\u306e\u5217\u304c\u767a\u751f\u3057\u3066\u3044\u307e\u3059\u3002\n2.  **\u5317\u5074\uff083\u53f7\uff09\u306e\u512a\u4f4d\u6027:** \u5230\u7740\u4fbf\u6570\u304c\u5357\u5074\u3088\u308a\u5c11\u306a\u304f\u3001\u3055\u3089\u306b\u30d3\u30b8\u30cd\u30b9\u5ba2\u6bd4\u7387\u304c\u308f\u305a\u304b\u306b\u9ad8\u3044\u305f\u3081\u30011\u7d44\u3042\u305f\u308a\u306e\u4e57\u8eca\u51e6\u7406\u304c\u901f\u3044\u50be\u5411\u306b\u3042\u308a\u307e\u3059\u3002\u5357\u5074\u304b\u3089\u5f92\u6b695\u5206\u79fb\u52d5\u3059\u308b\u3060\u3051\u3067\u3001\u5f85\u3061\u6642\u9593\u3092**\u7d0415\u5206\u77ed\u7e2e**\u3067\u304d\u308b\u53ef\u80fd\u6027\u304c\u3042\u308a\u307e\u3059\u3002\n3.  **\u7b2c3\u30bf\u30fc\u30df\u30ca\u30eb\u306e\u9078\u629e\u80a2:** \u3082\u3057\u90fd\u5fc3\u90e8\uff08\u6e2f\u533a\u30fb\u4e2d\u592e\u533a\u7b49\uff09\u3078\u306e\u79fb\u52d5\u3067\u3001\u304b\u3064\u5b9a\u984d\u5229\u7528\u3092\u691c\u8a0e\u3055\u308c\u3066\u3044\u308b\u5834\u5408\u306f\u3001T3\u3078\u79fb\u52d5\u3059\u308b\u306e\u3082\u624b\u3067\u3059\u304c\u3001\u672c\u65e5\u306f\u5e30\u56fd\u30e9\u30c3\u30b7\u30e5\u3068\u91cd\u306a\u3063\u3066\u3044\u308b\u305f\u3081\u3001T2\u5317\u5074\u3067\u7c98\u308b\u306e\u304c\u73fe\u6642\u70b9\u3067\u306e**\u6700\u77ed\u89e3**\u3067\u3059\u3002\n\n**\u7d50\u8ad6\uff1a** T2\u5357\u5074\u306b\u4e26\u3093\u3067\u3044\u308b\u5834\u5408\u306f\u3001\u5373\u5ea7\u306b**\u5317\u5074\uff083\u53f7\uff09\u4e57\u308a\u5834**\u3078\u79fb\u52d5\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u4f9b\u7d66\u304c\u8ffd\u3044\u3064\u3044\u3066\u3044\u306a\u3044\u305f\u3081\u3001\u8ff7\u3063\u3066\u3044\u308b\u9593\u306b\u5217\u306f\u3055\u3089\u306b\u4f38\u3073\u307e\u3059\u3002";
+
             function check() {
-                if (document.getElementById("pass").value === "777") {
+                const val = document.getElementById("pass").value;
+                if (val === "777") {
                     document.getElementById("login-screen").style.display = "none";
                     document.getElementById("main-content").style.display = "block";
+                    
+                    // MarkdownをHTMLに変換して表示！
+                    document.getElementById("report-box").innerHTML = marked.parse(rawText);
                 } else {
                     document.getElementById("msg").innerText = "パスワードが違います";
                 }
