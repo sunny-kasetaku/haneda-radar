@@ -1,26 +1,106 @@
 
-    <html>
-    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-    <body style='background:#121212;color:#FFD700;padding:20px;font-family:sans-serif;'>
-        <h1 style='border-bottom:2px solid #FFD700;'>🚖 羽田需要レーダー</h1>
-        <pre style='white-space:pre-wrap;color:#fff;background:#1e1e1e;padding:15px;border-radius:10px;line-height:1.6;'>16時台の羽田空港到着便数とタクシー需要予測です。（※便数は目安です）
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>KASETACK RADAR</title>
+        <style>
+            body { background: #121212; color: #FFD700; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; margin: 0; }
+            
+            /* ログイン画面のデザイン */
+            #login-screen { 
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: #000; z-index: 999; display: flex; flex-direction: column; 
+                justify-content: center; align-items: center; 
+            }
+            input { padding: 10px; font-size: 1.2rem; border-radius: 5px; border: none; text-align: center; margin-bottom: 20px; width: 60%; }
+            button { padding: 10px 30px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+            
+            /* メイン画面のデザイン */
+            #main-content { display: none; }
+            h1 { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.4rem; letter-spacing: 2px; }
+            pre { background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; line-height: 1.6; font-size: 0.95rem; }
+            .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 20px; }
+            .tag { background: #333; color: #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
+        </style>
+    </head>
+    <body>
+        <div id="login-screen">
+            <div style="font-size: 3rem; margin-bottom: 20px;">🔒</div>
+            <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold;">KASETACK MEMBER</div>
+            <input type="password" id="pass" placeholder="Password" />
+            <button onclick="check()">UNLOCK</button>
+            <p id="msg" style="color: red; margin-top: 10px;"></p>
+        </div>
 
-*   **T1（JAL系・国内線）**
-    *   **到着便数：** 約15〜18便
-    *   **需要予測：** **高い**
-    *   ビジネス客の帰還ラッシュが始まる時間帯で、タクシー乗り場は混雑し始めます。
-*   **T2（ANA系・国内線）**
-    *   **到着便数：** 約20〜25便
-    *   **需要予測：** **非常に高い**
-    *   国内線最大の到着ピーク時間帯に突入しており、供給が追いつかないタイミングが発生しやすいです。
-*   **T3（国際線）**
-    *   **到着便数：** 約8〜10便
-    *   **需要予測：** **中程度**
-    *   欧米・アジア便が重なる時間帯。手荷物受取に時間がかかるため、17時以降に向けて需要が徐々に高まります。
+        <div id="main-content">
+            <div style="font-weight:900; font-size: 1.2rem;">🚖 KASETACK</div>
+            <h1>羽田需要レーダー</h1>
+            <pre>羽田空港の16時〜17時における到着便予測とタクシー需要に基づいた、ドライバー様向けの戦略をお伝えします。
 
-**【総評】**
-16時台は国内線（T1・T2）の到着が集中するため、空港全体でタクシー需要が急増します。配車アプリも捕まりにくくなる時間帯です。</pre>
-        <p style='text-align:right;color:#888;font-size:0.8rem;'>更新:2026-01-03 16:32 (JST)<br>モデル:models/gemini-3-flash-preview</p>
+### 【結論】ズバリどこを狙うべきか？
+
+**一番の狙い目は「第2ターミナル（T2）」です。**
+
+理由は、**国内線のラッシュ開始（ANA）と国際線到着が重なり、回転率・期待値ともに最も高い**からです。
+
+---
+
+### 1. ターミナル別 到着予定便数（16:00〜17:00）
+※当日の運航状況により前後しますが、標準的なスケジュールに基づく予測です。
+
+*   **第1ターミナル（T1：JAL中心）**
+    *   **約12〜14便**
+    *   16時台前半に福岡・札幌からの大型便が重なります。安定していますが、ビジネス客が多くモノレール利用に流れる率も一定数あります。
+*   **第2ターミナル（T2：ANA中心）**
+    *   **約16〜18便（国内線14＋国際線2〜4）**
+    *   **本日の最大ボリューム地点。** 伊丹、札幌、福岡、沖縄など主要幹線からの到着が集中します。加えて、国際線側（T2行き）の海外便も到着するため、タクシー需要が最も膨らみます。
+*   **第3ターミナル（T3：国際線中心）**
+    *   **約6〜8便**
+    *   アジア圏（ソウル・台北・香港など）からの便が中心です。単価（長距離）の期待値は高いですが、便数が少ないため、待機列が長い場合は「空振り」のリスクがあります。
+
+---
+
+### 2. タクシー需要予測と傾向
+
+*   **T2（第2）：高需要・高回転**
+    *   16時台は、地方出張帰りのビジネスマンが「早く会社や自宅に帰りたい」とタクシーを選択するピークの入り口です。また、手荷物預けの少ない層が多いため、着陸から15〜20分後にはタクシー乗り場に人が並び始めます。
+*   **T1（第1）：安定**
+    *   T2に次ぐ便数ですが、ANA側に比べるとわずかに便数が少なめです。T2が混んでいる場合の予備として優秀です。
+*   **T3（第3）：ギャンブル・高単価**
+    *   訪日外国人が多いため、都心ホテルまでの定額利用や、長距離の期待は最大です。ただし、この時間は「帰国する日本人」も多く、荷物の受け取りに時間がかかるため、客足は緩やかです。
+
+---
+
+### 3. ドライバー様へのアドバイス
+
+1.  **「T2（第2ターミナル）」を優先：**
+    16時台は便数が頭一つ抜けています。特に16:30前後は、地方からの幹線便が続々と降りてくるため、乗り場が途切れにくい時間帯です。
+2.  **待機列を確認：**
+    もしT2の待機列が溢れているようなら、すぐに**T1**へ。16時台のJAL便も決して少なくありません。
+3.  **T3を狙う条件：**
+    「一発長距離」を狙いたい、かつT3のタクシー待機車両が少ない場合のみ突撃してください。この時間の国際線はアジア便が主なので、T2/T1の国内線ビジネス客を回転させた方が、最終的な営収が安定する可能性が高いです。
+
+**今の時間は「第2ターミナル」で回転させるのが、最も効率的に稼げる選択です。** 安全運転で頑張ってください！</pre>
+            <div class="footer">
+                更新: 2026-01-03 16:35 (JST)<br>
+                <span class="tag">models/gemini-3-flash-preview</span>
+            </div>
+        </div>
+
+        <script>
+            function check() {
+                const val = document.getElementById("pass").value;
+                // ここでパスワードを設定（今は 777 です）
+                if (val === "777") {
+                    document.getElementById("login-screen").style.display = "none";
+                    document.getElementById("main-content").style.display = "block";
+                } else {
+                    document.getElementById("msg").innerText = "パスワードが違います";
+                }
+            }
+        </script>
     </body>
     </html>
     
