@@ -1,17 +1,10 @@
 import google.generativeai as genai
-from google.generativeai.types import RequestOptions
 import datetime
 import os
 
-# APIの設定
+# APIの設定（極限までシンプルにしました）
 api_key = os.getenv("GEMINI_API_KEY")
-
-# 【修正ポイント】APIのバージョンを強制的に "v1" (安定版) に固定します
-genai.configure(
-    api_key=api_key,
-    transport='rest',
-    client_options={'api_version': 'v1'}
-)
+genai.configure(api_key=api_key)
 
 def get_prompt(now_time):
     return f"""
@@ -29,22 +22,17 @@ def get_prompt(now_time):
 """
 
 def generate_report():
-    # 日本時間を取得
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # モデルの指定（安定版のパスを指定）
+    # モデルの指定（最新の flash モデルを使用）
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        # リクエスト時にもオプションを念押しで指定
-        response = model.generate_content(
-            get_prompt(now_str)
-        )
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(get_prompt(now_str))
         report_content = response.text
     except Exception as e:
         report_content = f"分析中にエラーが発生しました。\n(Error: {e})"
     
-    # HTMLの生成
     html_template = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -53,15 +41,14 @@ def generate_report():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>カセタク・羽田レーダー</title>
         <style>
-            body {{ background: #121212; color: #FFD700; font-family: sans-serif; padding: 20px; }}
-            h1 {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.2rem; color: #FFD700; }}
-            pre {{ background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; line-height: 1.6; font-size: 0.9rem; }}
+            body {{ background: #121212; color: #FFD700; font-family: sans-serif; padding: 20px; line-height: 1.6; }}
+            h1 {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.2rem; }}
+            pre {{ background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; font-size: 0.9rem; }}
             .footer {{ text-align: right; font-size: 0.7rem; color: #888; margin-top: 20px; }}
-            .logo {{ font-weight: bold; color: #FFD700; margin-bottom: 5px; }}
         </style>
     </head>
     <body>
-        <div class="logo">🚖 KASETACK</div>
+        <div style="font-weight:bold;">🚖 KASETACK</div>
         <h1>羽田空港需要分析（20分更新）</h1>
         <pre>{report_content}</pre>
         <div class="footer">最終更新: {now_str} (JST)</div>
