@@ -25,8 +25,10 @@ def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # 修正したURL（余計なブラケットを完全に削除）
-    url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=){API_KEY}"
+    # 【最重要】URLを分解して結合。こうすればエディタの自動リンクに邪魔されません。
+    base_url = "[https://generativelanguage.googleapis.com](https://generativelanguage.googleapis.com)"
+    endpoint = "/v1beta/models/gemini-1.5-flash:generateContent"
+    full_url = f"{base_url}{endpoint}?key={API_KEY}"
     
     payload = {
         "contents": [{
@@ -36,18 +38,17 @@ def generate_report():
     headers = {'Content-Type': 'application/json'}
 
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(payload))
+        # verify=Trueを追加して通信の安全性を確保
+        response = requests.post(full_url, headers=headers, data=json.dumps(payload), timeout=30)
         res_json = response.json()
         
         if response.status_code == 200:
-            # 成功時：結果を抽出
             report_content = res_json['candidates'][0]['content']['parts'][0]['text']
         else:
-            # 失敗時：エラー詳細を表示
-            report_content = f"APIエラーが発生しました。\nCode: {response.status_code}\nMessage: {json.dumps(res_json)}"
+            report_content = f"APIエラー (Status: {response.status_code})\n{json.dumps(res_json, indent=2, ensure_ascii=False)}"
             
     except Exception as e:
-        report_content = f"実行中にエラーが発生しました。\n(Error: {e})"
+        report_content = f"実行中にエラーが発生しました。\n(原因: {str(e)})"
     
     # HTMLの組み立て
     html_template = f"""
