@@ -36,7 +36,7 @@ def generate_report():
     send_to_discord(daily_pass, ns)
 
     # ---------------------------------------------------------
-    #  【改修】国際線の場合は番号を出さないよう指示を調整
+    #  【改修】「判定理由」を具体的に書くよう厳しく指示
     # ---------------------------------------------------------
     prompt = f"""
     あなたはハイヤー・タクシー業界の「最高戦略顧問」です。
@@ -50,19 +50,33 @@ def generate_report():
 
     【分析条件】
     1. 現在の到着便状況から、ドライバーが向かうべき最適な場所を断定してください。
-    2. 羽田指数（S~D）を判定してください。
+    2. 羽田指数（ランク）を以下の5段階の定義に基づいて判定し、必ず**【 】の中の日本語表記**まで正確に書くこと。
+       - **🌈 S 【 確変・入れ食い 】** : 客があふれている。空車不足。即座に向かうべき。
+       - **🔥 A 【 超・推奨 】** : 回転が非常に早い。積極的に狙うべき。
+       - **✨ B 【 狙い目 】** : 需給バランスが良い。標準的な待ち時間で行ける。
+       - **⚠️ C 【 要・注意 】** : 待機台数がやや多い。タイミング次第では待つ。
+       - **⛔ D 【 撤退・非推奨 】** : 供給過多で動かない。都内営業推奨。
+
+    3. **【重要】判定理由の書き方**
+       抽象的な言葉（「ニーズが偏っている」等）は禁止。
+       必ず**「待機台数（供給）」と「到着便の客数（需要）」のバランス**を具体的に書いてください。
+       * 良い例：「プール待機が30台と枯渇している一方、これからT2に大型機が3便到着するため、即実車になる状態です。」
+       * 悪い例：「全体的な需要が高く、バランスが取れていないため。」
 
     【回答フォーマット】
     ※Markdownを使用。重要な数字は太字。
 
-    ### 📊 羽田指数：ランク 【 〇 】
-    (判定理由を一言)
+    ### 📊 羽田指数：ランク S〜D
+    ## **🌈 S 【 確変・入れ食い 】** （※ ↑ここは判定されたランクの表記だけを残すこと）
+    
+    **判定理由：** (ここに「台数vs客数」の具体的な理由を書く)
 
     ### 🏁 【結論】狙うべき場所
     # 👉 **「 〇 号 レーン 」** （※国内線推奨の場合、必ず 1号/2号/3号/4号 のどれかを指定）
     
     # または 👉 **「 国際線プール 」**
     （※国際線推奨の場合、番号は書かずこう記載）
+    （※ランクDの場合は「都内へ戻ることを推奨」と記載）
 
     ### 1. ✈️ 供給データ詳細
     (T1[1号/2号] / T2[3号/4号] / T3国際線のそれぞれの状況)
@@ -137,13 +151,15 @@ def generate_report():
             .main-title {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }}
             #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
             
-            /* 見出しの色分け */
+            /* 見出しのスタイル */
             h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; }}
             
-            /* ランク表示と結論を目立たせる */
-            h3:nth-of-type(1) {{ font-size: 1.4rem; color: #00e676; border-left: 4px solid #00e676; }}
-            h3:nth-of-type(2) {{ font-size: 1.5rem; color: #ff4081; border-left: 6px solid #ff4081; background: rgba(255, 64, 129, 0.1); padding: 10px; border-radius: 0 8px 8px 0; }}
+            /* 羽田指数（ランク）を目立たせる */
+            h2 {{ font-size: 1.8rem; margin: 10px 0; }}
             
+            /* 結論部分（乗り場）を目立たせる */
+            h1 {{ font-size: 1.8rem; color: #ff4081; border-bottom: 2px solid #ff4081; padding-bottom: 5px; display: inline-block; }}
+
             strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
             ul {{ padding-left: 20px; margin: 10px 0; }}
             li {{ margin-bottom: 8px; }}
