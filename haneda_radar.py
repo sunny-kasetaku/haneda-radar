@@ -36,7 +36,7 @@ def generate_report():
     send_to_discord(daily_pass, ns)
 
     # ---------------------------------------------------------
-    #  【修正】ランク順位の明記 & 数値バグの根絶指示
+    #  【修正】インデント（字下げ）を禁止し、強制改行CSSを追加
     # ---------------------------------------------------------
     prompt = f"""
     あなたはハイヤー・タクシー業界の「最高戦略顧問」です。
@@ -46,6 +46,11 @@ def generate_report():
     1. **「供給（タクシー待機台数）」と「需要（到着便の客数）」のバランス**を見て判定してください。
     2. ドライバーが向かうべき最適な「レーン番号（1〜4号）」または「国際線」を1つだけ選定してください。
     3. 詳細データは、嘘の数字（ありもしない便数など）を並べるのではなく、**文章で状況を説明**してください。
+
+    【重要：記述ルール】
+    * **文頭にスペース（インデント）を絶対に入れないでください。**
+      （スペースが入ると表示が崩れて横スクロールが発生します）
+    * 全ての文章は左詰めで書いてください。
 
     【回答フォーマット】
     （※余計な前置きはせず、以下の形式で出力すること）
@@ -157,16 +162,18 @@ def generate_report():
             #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
             
             h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; }}
-            
-            /* 一番上の「羽田指数」を目立たせる */
             h3:nth-of-type(1) {{ margin-top: 0; color: #00e676; border-left: 4px solid #00e676; }}
-            
-            /* その下の「結論」を目立たせる */
             h3:nth-of-type(2) {{ color: #ff4081; border-left: 6px solid #ff4081; background: rgba(255, 64, 129, 0.1); padding: 10px; border-radius: 0 8px 8px 0; }}
 
             strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
             ul {{ padding-left: 20px; margin: 10px 0; }}
             li {{ margin-bottom: 8px; }}
+
+            /* 【重要】ここが修正ポイント：強制改行CSS */
+            pre {{ white-space: pre-wrap; word-wrap: break-word; overflow-x: auto; background: #222; padding: 10px; border-radius: 5px; }}
+            code {{ white-space: pre-wrap; word-wrap: break-word; }}
+            p {{ word-break: break-all; }}
+
             .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
             .tag {{ background: #333; color: #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }}
         </style>
