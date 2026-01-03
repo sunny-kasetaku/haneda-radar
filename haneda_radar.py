@@ -1,10 +1,12 @@
-import google.generativeai as genai
+import requests
+import json
 import datetime
 import os
 
-# APIの設定（極限までシンプルにしました）
-api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+# 設定
+API_KEY = os.getenv("GEMINI_API_KEY")
+# 強制的に「v1」の安定版URLを直接指定します
+API_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
 
 def get_prompt(now_time):
     return f"""
@@ -25,14 +27,29 @@ def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # モデルの指定（最新の flash モデルを使用）
+    # リクエストデータの作成
+    payload = {
+        "contents": [{
+            "parts": [{"text": get_prompt(now_str)}]
+        }]
+    }
+    headers = {'Content-Type': 'application/json'}
+
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(get_prompt(now_str))
-        report_content = response.text
+        # 直接GoogleのAPIサーバーにPOST（送信）します
+        response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
+        res_json = response.json()
+        
+        if response.status_code == 200:
+            report_content = res_json['candidates'][0]['content']['parts'][0]['text']
+        else:
+            # エラーの詳細を表示
+            report_content = f"APIエラーが発生しました。\nStatus: {response.status_code}\nMessage: {json.dumps(res_json)}"
+            
     except Exception as e:
-        report_content = f"分析中にエラーが発生しました。\n(Error: {e})"
+        report_content = f"通信エラーが発生しました。\n(Error: {e})"
     
+    # HTMLの生成
     html_template = f"""
     <!DOCTYPE html>
     <html lang="ja">
