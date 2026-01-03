@@ -2,12 +2,9 @@ import google.generativeai as genai
 import datetime
 import os
 
-# APIの設定（接続エラーを回避する設定を追加済み）
+# APIの設定（バージョンを明示的に指定する書き方に変更）
 api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key, transport='rest')
-
-# モデルの指定（最も安定しているフラッシュモデル）
-model = genai.GenerativeModel('gemini-1.5-flash')
+genai.configure(api_key=api_key)
 
 def get_prompt(now_time):
     return f"""
@@ -29,14 +26,15 @@ def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # Geminiから分析結果を取得
+    # モデルの指定（v1betaを避けるため、最新の安定版モデルをフルネームで指定）
     try:
+        model = genai.GenerativeModel(model_name="models/gemini-1.5-flash-002")
         response = model.generate_content(get_prompt(now_str))
         report_content = response.text
     except Exception as e:
-        report_content = f"申し訳ありません、分析中にエラーが発生しました。時間を置いて再試行してください。\n(Error: {e})"
+        report_content = f"分析中にエラーが発生しました。\n(Error: {e})"
     
-    # スマホで見やすいダークモード仕様のHTML
+    # HTMLの生成
     html_template = f"""
     <!DOCTYPE html>
     <html lang="ja">
