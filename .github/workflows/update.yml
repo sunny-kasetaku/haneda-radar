@@ -25,7 +25,10 @@ jobs:
 
       - name: Run script
         env:
+          # 【ここが修正ポイント！】
+          # PythonにDiscordの鍵を渡す設定を追加しました
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
       - name: Commit and Push
@@ -35,6 +38,6 @@ jobs:
           git add index.html
           # 変更がない場合はエラーにせず終了
           git diff --staged --quiet || git commit -m "Update Haneda Radar Report"
-          # 【ここが修正点】保存する前に、最新の状態を取り込んで衝突を防ぐ
+          # 衝突回避のための設定
           git pull --rebase origin main
           git push
