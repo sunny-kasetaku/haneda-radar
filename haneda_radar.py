@@ -1,10 +1,17 @@
 import google.generativeai as genai
+from google.generativeai.types import RequestOptions
 import datetime
 import os
 
-# APIの設定（バージョンを明示的に指定する書き方に変更）
+# APIの設定
 api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+
+# 【修正ポイント】APIのバージョンを強制的に "v1" (安定版) に固定します
+genai.configure(
+    api_key=api_key,
+    transport='rest',
+    client_options={'api_version': 'v1'}
+)
 
 def get_prompt(now_time):
     return f"""
@@ -26,10 +33,13 @@ def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # モデルの指定（v1betaを避けるため、最新の安定版モデルをフルネームで指定）
+    # モデルの指定（安定版のパスを指定）
     try:
-        model = genai.GenerativeModel(model_name="models/gemini-1.5-flash-002")
-        response = model.generate_content(get_prompt(now_str))
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        # リクエスト時にもオプションを念押しで指定
+        response = model.generate_content(
+            get_prompt(now_str)
+        )
         report_content = response.text
     except Exception as e:
         report_content = f"分析中にエラーが発生しました。\n(Error: {e})"
