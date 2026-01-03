@@ -9,14 +9,50 @@ def generate_report():
     n = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     ns = n.strftime('%Y-%m-%d %H:%M')
     
-    # 1. 成功した「最強のモデル探索ロジック」をそのまま使います
+    # ---------------------------------------------------------
+    #  ここが心臓部：サニーさん仕様の「超・詳細指示書」
+    # ---------------------------------------------------------
+    prompt = f"""
+    あなたはハイヤー・タクシー業界の「最高戦略顧問」です。
+    羽田空港の現在の時刻【{ns}】におけるタクシー需要を分析し、以下のフォーマットを厳守してレポートを作成してください。
+
+    【分析条件】
+    1. 現在時刻から「直近1時間」の到着便を、標準的なフライトスケジュールに基づいて推測すること。
+    2. 特に第2ターミナル（T2）は、ANAの到着便が「3号（北）」と「4号（南）」のどちらに偏っているかを、便名（NHxxxなど）を挙げて具体的に推測すること。
+    3. 鉄道の遅延や天候などの外部要因も、現在の日時や一般的状況から「ありそうなシナリオ」として考慮に入れること。
+    4. 結論は、ベテランドライバーが納得する「論理的根拠」に基づき断定すること。
+
+    【回答フォーマット（この構成・絵文字を必ず守ること）】
+
+    1. ✈️ 供給データ（到着便・詳細ゲート配分）
+    --------------------------------------------------
+    ここにT1/T2/T3それぞれの到着便数、予測客数、期待度（高・極高など）を記載。
+    【重要】T2については「3号乗り場（北）」と「4号乗り場（南）」のどちらに大型機が着くか、便名を挙げて詳細に書くこと。
+
+    2. 🚃 外部要因（ライバル・待機状況）
+    --------------------------------------------------
+    鉄道（京急・モノレール）の混雑状況や遅延リスク、タクシープールの待機台数推計、天候による需要への影響を記載。
+
+    3. 🧠 AIのロジック解説（判断の根拠）
+    --------------------------------------------------
+    「セオリーではこうだが、今日はここが違う」というプロの視点での解説。
+    ゲートの偏りや、人の流れ（吐き出し）のタイミングを考慮したロジックを展開。
+
+    4. 🏁 最終推奨アクション
+    --------------------------------------------------
+    👉 推奨乗り場：【 ターミナル名・乗り場番号 】
+    具体的な立ち回りアドバイス（何時まではどこで粘る、など）
+
+    """
+    # ---------------------------------------------------------
+
+    # モデル探索ロジック（さっき成功したやつと同じ）
     list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={K}"
     try:
         models_data = requests.get(list_url).json()
-    except Exception as e:
-        models_data = {"error": str(e)}
+    except Exception:
+        models_data = {}
 
-    # deep-researchなどを除外
     ignore_list = ["deep-research", "embedding", "aqa"]
     candidates = []
     
@@ -29,14 +65,13 @@ def generate_report():
                 else:
                     candidates.append(name)
     
-    report_content = "有効なモデルが見つかりませんでした。"
-    used_model = "None"
+    # 候補がなければproを決め打ち（保険）
+    if not candidates:
+        candidates = ["models/gemini-1.5-flash", "models/gemini-pro"]
 
-    # プロンプト（少しリッチにしました）
-    prompt = """
-    羽田空港のT1/T2/T3別の現在（16時〜17時）の到着便数と、タクシー需要予測を行ってください。
-    ドライバー向けに「どのターミナルを狙うべきか」の結論をズバリ書いてください。
-    """
+    report_content = "分析エラーが発生しました。"
+    used_model = "None"
+    
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
     for model_name in candidates:
@@ -52,7 +87,7 @@ def generate_report():
         except:
             continue
 
-    # 2. HTML生成（ここにパスワードロックの仕掛けを組み込みます）
+    # HTML生成（パスワード: 777）
     h = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -62,20 +97,12 @@ def generate_report():
         <title>KASETACK RADAR</title>
         <style>
             body {{ background: #121212; color: #FFD700; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; margin: 0; }}
-            
-            /* ログイン画面のデザイン */
-            #login-screen {{ 
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: #000; z-index: 999; display: flex; flex-direction: column; 
-                justify-content: center; align-items: center; 
-            }}
+            #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }}
             input {{ padding: 10px; font-size: 1.2rem; border-radius: 5px; border: none; text-align: center; margin-bottom: 20px; width: 60%; }}
             button {{ padding: 10px 30px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }}
-            
-            /* メイン画面のデザイン */
             #main-content {{ display: none; }}
             h1 {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.4rem; letter-spacing: 2px; }}
-            pre {{ background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; line-height: 1.6; font-size: 0.95rem; }}
+            pre {{ background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; line-height: 1.6; font-size: 0.9rem; font-family: sans-serif; }}
             .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 20px; }}
             .tag {{ background: #333; color: #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }}
         </style>
@@ -88,22 +115,15 @@ def generate_report():
             <button onclick="check()">UNLOCK</button>
             <p id="msg" style="color: red; margin-top: 10px;"></p>
         </div>
-
         <div id="main-content">
             <div style="font-weight:900; font-size: 1.2rem;">🚖 KASETACK</div>
             <h1>羽田需要レーダー</h1>
             <pre>{report_content}</pre>
-            <div class="footer">
-                更新: {ns} (JST)<br>
-                <span class="tag">{used_model}</span>
-            </div>
+            <div class="footer">更新: {ns} (JST)<br><span class="tag">{used_model}</span></div>
         </div>
-
         <script>
             function check() {{
-                const val = document.getElementById("pass").value;
-                // ここでパスワードを設定（今は 777 です）
-                if (val === "777") {{
+                if (document.getElementById("pass").value === "777") {{
                     document.getElementById("login-screen").style.display = "none";
                     document.getElementById("main-content").style.display = "block";
                 }} else {{
