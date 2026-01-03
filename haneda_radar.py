@@ -9,22 +9,16 @@ GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 DISCORD_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 def get_daily_password():
-    """
-    今日の日付を「種（シード）」にして、ランダムな4桁のパスワードを作る。
-    これなら、同じ日なら何度実行しても同じパスワードになり、
-    日付が変わると勝手に新しいパスワードに切り替わる。
-    """
+    """今日の日付を元に4桁のパスワードを生成"""
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
-    seed_str = now.strftime('%Y%m%d') # 例: 20260103
-    random.seed(seed_str) # 日付で固定
+    seed_str = now.strftime('%Y%m%d') 
+    random.seed(seed_str) 
     return str(random.randint(1000, 9999))
 
 def send_to_discord(password, now_str):
-    """Discordにパスワードと更新通知を送る"""
+    """Discordに通知"""
     if not DISCORD_URL:
-        return # URLが設定されてなければ何もしない
-
-    # メッセージの中身
+        return 
     msg = {
         "username": "カセタク・羽田レーダー",
         "content": f"📡 **羽田需要分析を更新しました** ({now_str})\n\n🔐 **本日の合言葉:** `{password}`\n\nここから確認:\nhttps://sunny-kasetaku.github.io/haneda-radar/"
@@ -38,32 +32,37 @@ def generate_report():
     n = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     ns = n.strftime('%Y-%m-%d %H:%M')
     
-    # 日替わりパスワード生成
     daily_pass = get_daily_password()
-    
-    # Discordに通知（毎回通知がいきます。ウザければここを調整可能）
     send_to_discord(daily_pass, ns)
 
     # ---------------------------------------------------------
-    #  プロンプト（デザイン強化版維持）
+    #  【改修】S/A/B/C/D の5段階ランク判定を追加したプロンプト
     # ---------------------------------------------------------
     prompt = f"""
     あなたはハイヤー・タクシー業界の「最高戦略顧問」です。
     羽田空港の現在の時刻【{ns}】におけるタクシー需要を分析し、レポートを作成してください。
 
     【重要：書き方のルール】
-    * **Markdown形式**を使って、見やすく装飾してください。
-    * 重要な数字（台数や便数）や「結論」は、**太字** (例: **約200台**) にしてください。
-    * 見出しには `###` を使ってください。
+    * **Markdown形式**で見やすく装飾してください。
+    * 重要な数字や結論は **太字** にしてください。
 
     【分析条件】
-    1. 直近1時間の到着便を推測。特にT2の「3号(北)」vs「4号(南)」の偏りを具体的に。
-    2. タクシープール待機台数は、状況からの「推計値」を算出し、必ず数値で書くこと。（※推計である旨の注釈を入れること）
+    1. 直近1時間の到着便（供給）と、現在の待機台数（需要）のバランスを評価し、**「羽田指数」を5段階（S/A/B/C/D）で格付け**すること。
+       - **S (確変)**: 客があふれている。空車不足。即座に向かうべき。
+       - **A (推奨)**: 回転が非常に早い。積極的に狙うべき。
+       - **B (普通)**: 需給バランスが良い。標準的な待ち時間。
+       - **C (微妙)**: 待機台数がやや多い。タイミング次第。
+       - **D (非推奨)**: 供給過多で動かない。都内営業推奨。
+    
+    2. タクシープールの待機台数は、状況からの「推計値」を算出すること。
 
     【回答フォーマット】
 
+    ### 📊 羽田指数：ランク 【 〇 】
+    (ここに判定理由を一言。例：「到着ラッシュにつき回転率最高です」など)
+
     ### 1. ✈️ 供給データ（到着便・詳細ゲート配分）
-    (T1/T2/T3の状況。T2の南北の偏りを強調)
+    (T1/T2/T3の状況。T2の南北の偏りを記載)
 
     ### 2. 🚃 外部要因と待機台数
     (鉄道・天気)
@@ -77,8 +76,8 @@ def generate_report():
     (プロの視点での根拠)
 
     ### 4. 🏁 最終推奨アクション
-    👉 推奨乗り場： **【 〇〇ターミナル・〇〇番 】**
-    (具体的な立ち回りアドバイス)
+    👉 推奨乗り場： **【 〇〇ターミナル 】**
+    (ランクに応じた立ち回りアドバイス。ランクDの場合は「撤退」を推奨)
     """
     
     # モデル探索ロジック
@@ -121,8 +120,6 @@ def generate_report():
 
     safe_report = json.dumps(report_content)
 
-    # HTML生成（自動更新機能付き）
-    # 日替わりパスワードを埋め込みます
     h = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -134,21 +131,23 @@ def generate_report():
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <style>
             body {{ background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }}
-            
             #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }}
             input {{ padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }}
             button {{ padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
-            
             #main-content {{ display: none; max-width: 800px; margin: 0 auto; }}
             .header-logo {{ font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }}
             .main-title {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }}
-            
             #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
+            
+            /* 見出しの色分け */
             h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; }}
+            
+            /* ランク表示を目立たせる */
+            h3:first-of-type {{ font-size: 1.4rem; color: #00e676; border-left: 4px solid #00e676; }}
+            
             strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
             ul {{ padding-left: 20px; margin: 10px 0; }}
             li {{ margin-bottom: 8px; }}
-            
             .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
             .tag {{ background: #333; color: #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }}
         </style>
@@ -174,28 +173,20 @@ def generate_report():
 
         <script>
             const rawText = {safe_report};
-            // Pythonで作られた「今日の日替わりパスワード」
             const correctPass = "{daily_pass}";
-
-            // 以前入力したパスワードをブラウザに覚えさせておく
             window.onload = function() {{
                 const savedPass = localStorage.getItem("haneda_pass");
-                if (savedPass === correctPass) {{
-                    showContent();
-                }}
+                if (savedPass === correctPass) {{ showContent(); }}
             }};
-
             function check() {{
                 const val = document.getElementById("pass").value;
                 if (val === correctPass) {{
-                    // 正解ならブラウザに保存（今日一日は再入力不要）
                     localStorage.setItem("haneda_pass", correctPass);
                     showContent();
                 }} else {{
                     document.getElementById("msg").innerText = "パスワードが違います";
                 }}
             }}
-
             function showContent() {{
                 document.getElementById("login-screen").style.display = "none";
                 document.getElementById("main-content").style.display = "block";
