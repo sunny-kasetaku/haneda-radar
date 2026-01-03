@@ -2,15 +2,50 @@ import requests
 import json
 import datetime
 import os
+import random
 
-K = os.getenv("GEMINI_API_KEY")
+# 環境変数からキーを取得
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+DISCORD_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
+def get_daily_password():
+    """
+    今日の日付を「種（シード）」にして、ランダムな4桁のパスワードを作る。
+    これなら、同じ日なら何度実行しても同じパスワードになり、
+    日付が変わると勝手に新しいパスワードに切り替わる。
+    """
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+    seed_str = now.strftime('%Y%m%d') # 例: 20260103
+    random.seed(seed_str) # 日付で固定
+    return str(random.randint(1000, 9999))
+
+def send_to_discord(password, now_str):
+    """Discordにパスワードと更新通知を送る"""
+    if not DISCORD_URL:
+        return # URLが設定されてなければ何もしない
+
+    # メッセージの中身
+    msg = {
+        "username": "カセタク・羽田レーダー",
+        "content": f"📡 **羽田需要分析を更新しました** ({now_str})\n\n🔐 **本日の合言葉:** `{password}`\n\nここから確認:\nhttps://sunny-kasetaku.github.io/haneda-radar/"
+    }
+    try:
+        requests.post(DISCORD_URL, json=msg)
+    except:
+        pass
 
 def generate_report():
     n = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     ns = n.strftime('%Y-%m-%d %H:%M')
     
+    # 日替わりパスワード生成
+    daily_pass = get_daily_password()
+    
+    # Discordに通知（毎回通知がいきます。ウザければここを調整可能）
+    send_to_discord(daily_pass, ns)
+
     # ---------------------------------------------------------
-    #  【デザイン用指示】Markdown形式で書くように指示を強化
+    #  プロンプト（デザイン強化版維持）
     # ---------------------------------------------------------
     prompt = f"""
     あなたはハイヤー・タクシー業界の「最高戦略顧問」です。
@@ -46,8 +81,8 @@ def generate_report():
     (具体的な立ち回りアドバイス)
     """
     
-    # モデル探索ロジック（実績のあるコードを維持）
-    list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={K}"
+    # モデル探索ロジック
+    list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_KEY}"
     try:
         models_data = requests.get(list_url).json()
     except Exception:
@@ -55,7 +90,6 @@ def generate_report():
 
     ignore_list = ["deep-research", "embedding", "aqa"]
     candidates = []
-    
     if 'models' in models_data:
         for m in models_data['models']:
             name = m['name']
@@ -64,7 +98,6 @@ def generate_report():
                     candidates.insert(0, name)
                 else:
                     candidates.append(name)
-    
     if not candidates:
         candidates = ["models/gemini-1.5-flash", "models/gemini-pro"]
 
@@ -74,7 +107,7 @@ def generate_report():
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
     for model_name in candidates:
-        post_url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={K}"
+        post_url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={GEMINI_KEY}"
         try:
             r = requests.post(post_url, json=payload, timeout=30)
             if r.status_code == 200:
@@ -86,41 +119,33 @@ def generate_report():
         except:
             continue
 
-    # JSONエンコード（改行などを安全にJavaScriptに渡すため）
     safe_report = json.dumps(report_content)
 
-    # HTML生成（デザイン強化 + パスワード機能）
+    # HTML生成（自動更新機能付き）
+    # 日替わりパスワードを埋め込みます
     h = f"""
     <!DOCTYPE html>
     <html lang="ja">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta http-equiv="refresh" content="1260">
         <title>KASETACK RADAR</title>
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <style>
             body {{ background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }}
             
-            /* ログイン画面 */
             #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }}
             input {{ padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }}
             button {{ padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
             
-            /* レポート画面のデザイン */
             #main-content {{ display: none; max-width: 800px; margin: 0 auto; }}
             .header-logo {{ font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }}
             .main-title {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }}
             
-            /* Markdown用スタイル（ここが色分けのキモ） */
             #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
-            
-            /* 見出し */
             h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; }}
-            
-            /* 強調（太字）を赤オレンジにして目立たせる */
             strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
-            
-            /* リスト */
             ul {{ padding-left: 20px; margin: 10px 0; }}
             li {{ margin-bottom: 8px; }}
             
@@ -132,7 +157,7 @@ def generate_report():
         <div id="login-screen">
             <div style="font-size: 4rem; margin-bottom: 10px;">🔒</div>
             <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">KASETACK</div>
-            <input type="password" id="pass" placeholder="PASSWORD" />
+            <input type="password" id="pass" placeholder="TODAY'S PASS" />
             <button onclick="check()">OPEN</button>
             <p id="msg" style="color: #ff4444; margin-top: 15px; font-size: 0.9rem;"></p>
         </div>
@@ -140,9 +165,7 @@ def generate_report():
         <div id="main-content">
             <div class="header-logo">🚖 KASETACK</div>
             <div class="main-title">羽田需要レーダー</div>
-            
             <div id="report-box"></div>
-            
             <div class="footer">
                 更新: {ns} (JST)<br>
                 <span class="tag">{used_model}</span>
@@ -150,20 +173,33 @@ def generate_report():
         </div>
 
         <script>
-            // Pythonから渡された生テキスト
             const rawText = {safe_report};
+            // Pythonで作られた「今日の日替わりパスワード」
+            const correctPass = "{daily_pass}";
+
+            // 以前入力したパスワードをブラウザに覚えさせておく
+            window.onload = function() {{
+                const savedPass = localStorage.getItem("haneda_pass");
+                if (savedPass === correctPass) {{
+                    showContent();
+                }}
+            }};
 
             function check() {{
                 const val = document.getElementById("pass").value;
-                if (val === "777") {{
-                    document.getElementById("login-screen").style.display = "none";
-                    document.getElementById("main-content").style.display = "block";
-                    
-                    // MarkdownをHTMLに変換して表示！
-                    document.getElementById("report-box").innerHTML = marked.parse(rawText);
+                if (val === correctPass) {{
+                    // 正解ならブラウザに保存（今日一日は再入力不要）
+                    localStorage.setItem("haneda_pass", correctPass);
+                    showContent();
                 }} else {{
                     document.getElementById("msg").innerText = "パスワードが違います";
                 }}
+            }}
+
+            function showContent() {{
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("main-content").style.display = "block";
+                document.getElementById("report-box").innerHTML = marked.parse(rawText);
             }}
         </script>
     </body>
