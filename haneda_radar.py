@@ -7,7 +7,7 @@ api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
 # 速度と検索能力に優れた 1.5-flash モデルを使用
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 def get_prompt(now_time):
     return f"""
