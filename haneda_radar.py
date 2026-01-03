@@ -3,6 +3,7 @@ import json
 import datetime
 import os
 
+# GitHubのSecretsから読み込む
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 def get_prompt(now_time):
@@ -24,32 +25,31 @@ def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # 利用可能なモデル候補を順番に試します
-    models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
-    report_content = ""
-    success = False
-
-    for model_name in models:
-        url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model_name}:generateContent?key={API_KEY}"
-        payload = {"contents": [{"parts": [{"text": get_prompt(now_str)}]}]}
-        headers = {'Content-Type': 'application/json'}
-
-        try:
-            response = requests.post(url, headers=headers, data=json.dumps(payload))
-            res_json = response.json()
-            
-            if response.status_code == 200:
-                report_content = res_json['candidates'][0]['content']['parts'][0]['text']
-                success = True
-                break # 成功したらループを抜ける
-            else:
-                report_content = f"モデル {model_name} でエラー: {response.status_code}\n"
-        except Exception as e:
-            report_content += f"{model_name} 通信失敗: {e}\n"
-
-    if not success:
-        report_content = "すべてのモデルで失敗しました。APIキーのプロジェクトでGemini APIが有効か確認してください。\n詳細:\n" + report_content
+    # 修正したURL（余計なブラケットを完全に削除）
+    url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=){API_KEY}"
     
+    payload = {
+        "contents": [{
+            "parts": [{"text": get_prompt(now_str)}]
+        }]
+    }
+    headers = {'Content-Type': 'application/json'}
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
+        res_json = response.json()
+        
+        if response.status_code == 200:
+            # 成功時：結果を抽出
+            report_content = res_json['candidates'][0]['content']['parts'][0]['text']
+        else:
+            # 失敗時：エラー詳細を表示
+            report_content = f"APIエラーが発生しました。\nCode: {response.status_code}\nMessage: {json.dumps(res_json)}"
+            
+    except Exception as e:
+        report_content = f"実行中にエラーが発生しました。\n(Error: {e})"
+    
+    # HTMLの組み立て
     html_template = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -61,7 +61,7 @@ def generate_report():
             body {{ background: #121212; color: #FFD700; font-family: sans-serif; padding: 20px; line-height: 1.6; }}
             h1 {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.2rem; }}
             pre {{ background: #1e1e1e; padding: 15px; border-radius: 10px; white-space: pre-wrap; color: #fff; border: 1px solid #333; font-size: 0.9rem; }}
-            .footer {{ text-align: right; font-size: 0.7rem; color: #888; margin-top: 20px; }}
+            .footer {{ text-align: right; font-size: 0.8rem; color: #888; margin-top: 20px; }}
         </style>
     </head>
     <body>
