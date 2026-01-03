@@ -3,10 +3,7 @@ import json
 import datetime
 import os
 
-# 設定
 API_KEY = os.getenv("GEMINI_API_KEY")
-# 強制的に「v1」の安定版URLを直接指定します
-API_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
 
 def get_prompt(now_time):
     return f"""
@@ -27,29 +24,32 @@ def generate_report():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     now_str = now.strftime('%Y-%m-%d %H:%M')
     
-    # リクエストデータの作成
-    payload = {
-        "contents": [{
-            "parts": [{"text": get_prompt(now_str)}]
-        }]
-    }
-    headers = {'Content-Type': 'application/json'}
+    # 利用可能なモデル候補を順番に試します
+    models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+    report_content = ""
+    success = False
 
-    try:
-        # 直接GoogleのAPIサーバーにPOST（送信）します
-        response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
-        res_json = response.json()
-        
-        if response.status_code == 200:
-            report_content = res_json['candidates'][0]['content']['parts'][0]['text']
-        else:
-            # エラーの詳細を表示
-            report_content = f"APIエラーが発生しました。\nStatus: {response.status_code}\nMessage: {json.dumps(res_json)}"
+    for model_name in models:
+        url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model_name}:generateContent?key={API_KEY}"
+        payload = {"contents": [{"parts": [{"text": get_prompt(now_str)}]}]}
+        headers = {'Content-Type': 'application/json'}
+
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps(payload))
+            res_json = response.json()
             
-    except Exception as e:
-        report_content = f"通信エラーが発生しました。\n(Error: {e})"
+            if response.status_code == 200:
+                report_content = res_json['candidates'][0]['content']['parts'][0]['text']
+                success = True
+                break # 成功したらループを抜ける
+            else:
+                report_content = f"モデル {model_name} でエラー: {response.status_code}\n"
+        except Exception as e:
+            report_content += f"{model_name} 通信失敗: {e}\n"
+
+    if not success:
+        report_content = "すべてのモデルで失敗しました。APIキーのプロジェクトでGemini APIが有効か確認してください。\n詳細:\n" + report_content
     
-    # HTMLの生成
     html_template = f"""
     <!DOCTYPE html>
     <html lang="ja">
