@@ -29,7 +29,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
-      # ▼▼ ここが一番大事な「保存」の命令です ▼▼
+      # ▼▼ これが抜けていたので追加します！ ▼▼
       - name: Commit and Push
         run: |
           git config --global user.name "GitHub Action"
