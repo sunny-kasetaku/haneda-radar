@@ -1,38 +1,123 @@
 
-    <!DOCTYPE html>
-    <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="refresh" content="300">
-        <title>羽田タクシー需要レーダー</title>
-        <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", sans-serif; background-color: #0d1117; color: #c9d1d9; padding: 20px; line-height: 1.6; }
-            .container { max-width: 600px; margin: 0 auto; background-color: #161b22; padding: 25px; border-radius: 15px; border: 1px solid #30363d; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-            h1 { color: #58a6ff; text-align: center; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
-            .content { white-space: pre-wrap; font-size: 1.1em; background-color: #0d1117; padding: 15px; border-radius: 6px; border: 1px solid #30363d; }
-            .footer { margin-top: 25px; text-align: center; font-size: 0.8em; color: #8b949e; }
-            .live-badge { display: inline-block; background-color: #238636; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🚖 羽田需要レーダー <span class="live-badge">LIVE</span></h1>
-            <div class="content">
-🚖 KASETACK 羽田需要レーダー
-❌❌❌❌❌
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="refresh" content="300">
+    <title>KASETACK RADAR</title>
+    <style>
+        body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        input { padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }
+        button { padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        #main-content { display: none; max-width: 800px; margin: 0 auto; }
+        .header-logo { font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }
+        .main-title { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }
+        
+        .legend-box {
+            background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 10px; margin-bottom: 20px;
+            font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+        }
+        .legend-item { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #222; border: 1px solid #333; white-space: nowrap; }
+        .l-s { color: #00e676; border-color: #00e676; font-weight: bold; }
+        .l-a { color: #ff4081; border-color: #ff4081; }
+        .l-b { color: #00b0ff; }
+        .l-c { color: #ffea00; }
+        .l-d { color: #9e9e9e; }
 
-📊 羽田指数: D
-🏁 狙い目: T3（国際線）
-👉 理由: 到着便数に対し、国内線・国際線ともに待機タクシーが過剰。特に国内線は深刻な供給過剰のため、相対的に台数の少ない国際線の方が回転の見込みはわずかながら高いです。
+        #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        h3 { color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }
+        strong { color: #FF4500; font-weight: bold; font-size: 1.1em; }
+        .ai-text { font-size: 0.95rem; line-height: 1.8; }
+        .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <div style="font-size: 4rem; margin-bottom: 10px;">🔒</div>
+        <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">KASETACK</div>
+        <input type="password" id="pass" placeholder="TODAY'S PASS" />
+        <button onclick="check()">OPEN</button>
+        <p id="msg" style="color: #ff4444; margin-top: 15px; font-size: 0.9rem;"></p>
+    </div>
 
-今日は厳しい状況ですが、焦らず、安全運転で頑張ってください！
-            </div>
-            <div class="footer">
-                更新: 2026-01-04 13:50 (JST)<br>
-                📺 自動更新モード: ON (5分間隔)
-            </div>
+    <div id="main-content">
+        <div class="header-logo">🚖 KASETACK</div>
+        <div class="main-title">羽田需要レーダー</div>
+        
+        <div class="legend-box">
+            <span class="legend-item l-s">🌈 S:入れ食い</span>
+            <span class="legend-item l-a">🔥 A:超推奨</span>
+            <span class="legend-item l-b">✨ B:狙い目</span>
+            <span class="legend-item l-c">⚠️ C:要注意</span>
+            <span class="legend-item l-d">⛔ D:撤退</span>
         </div>
-    </body>
-    </html>
-    
+
+        <div id="report-box">
+            <h3>📊 羽田指数</h3>
+            <p>⚠️ C 【 要・注意 】</p>
+
+            <h3>🏁 狙うべき場所</h3>
+            <p>👉 <strong>4号(T2) （統計上の到着予定：3便）</strong></p>
+
+            <p><strong>判定理由：</strong><br><span class="ai-text">⚠️ C要・注意。現在、国内0/国際0便ですが、23時台はサニーさんの統計上、4号(T2)が最も多くの便数を記録しています。深夜帯のため、まずは4号(T2)へ向かいましょう。統計上の到着予定は3便と少なめなので、過度な期待はせず、効率的な待機を心がけてください。</span></p>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
+
+            <h3>1. ✈️ 供給データ詳細</h3>
+            <div class="ai-text">はい、承知いたしました。以下に空港および各ターミナルの状況を簡潔なMarkdownで示します。
+
+---
+
+## 空港全体の状況
+
+*   国内線: **0便**
+*   国際線: **0便**
+*   遅延: **なし**
+
+---
+
+## 各ターミナルの状況
+
+発着便が全くなく、すべてのターミナルで非常に閑散とした状況です。
+
+*   **ターミナル1**: 発着便なし、閑散とした状態。
+*   **ターミナル2**: 発着便なし、閑散とした状態。
+*   **ターミナル3**: 発着便なし、閑散とした状態。
+*   （その他、存在する全てのターミナルも同様です。）</div>
+
+            <h3>2. 🚃 外部要因と待機台数</h3>
+            <p><strong>【必須】タクシープール待機台数（需要予測計算値）</strong></p>
+            <ul>
+                <li>国内線プール: <strong>推計 約 179 台</strong></li>
+                <li>国際線プール: <strong>推計 約 94 台</strong></li>
+            </ul>
+        </div>
+        
+        <div class="footer">更新: 2026-01-04 23:02 (JST) <br>📺 自動更新モード: ON</div>
+    </div>
+
+    <script>
+        const correctPass = "4338";
+        const masterKey = "7777";
+        window.onload = function() {
+            const savedPass = localStorage.getItem("haneda_pass");
+            if (savedPass === correctPass) { showContent(); }
+        };
+        function check() {
+            const val = document.getElementById("pass").value;
+            if (val === correctPass || val === masterKey) {
+                localStorage.setItem("haneda_pass", correctPass);
+                showContent();
+            } else {
+                document.getElementById("msg").innerText = "パスワードが違います";
+            }
+        }
+        function showContent() {
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+        }
+    </script>
+</body>
+</html>
