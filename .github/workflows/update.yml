@@ -2,9 +2,11 @@ name: Haneda Radar Auto Update
 
 on:
   schedule:
-    # 20分おきに実行 ( */20 )
-    - cron: '*/20 * * * *'
-  workflow_dispatch: # 手動ボタンも残す
+    - cron: '*/20 * * * *' # 20分ごとに実行
+  workflow_dispatch: # 手動実行ボタン
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -19,19 +21,19 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: |
-          pip install requests beautifulsoup4
+        run: pip install requests beautifulsoup4
 
-      # ここで羽田のプログラムを実行
       - name: Run Haneda Radar
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
-      # 更新された index.html を保存して公開
+      # ▼▼ ここが一番大事な「保存」の命令です ▼▼
       - name: Commit and Push
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
-          # もし生成されるファイル名が index.html なら以下のように書く
           git add index.html
           git commit -m "Auto update Haneda stats" || exit 0
           git push
