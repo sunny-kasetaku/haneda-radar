@@ -45,15 +45,15 @@ MARKER_TIME = "[[TIME]]"
 MARKER_PASS = "[[PASS]]"
 
 # =========================================================
-#  1. HTMLテンプレート (TVモード実装済み)
+#  1. HTMLテンプレート (強力な強制リロード版)
 # =========================================================
+# ★ <meta refresh> を削除し、最後に JavaScript を追加しています
 HTML_TEMPLATE = f"""
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="refresh" content="300">
     <title>KASETACK RADAR</title>
     <style>
         body {{ background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }}
@@ -125,12 +125,20 @@ HTML_TEMPLATE = f"""
             </ul>
         </div>
         
-        <div class="footer">更新: {MARKER_TIME} (JST) <br>📺 自動更新モード: ON</div>
+        <div class="footer">更新: {MARKER_TIME} (JST) <br>📺 自動更新モード: 強制リロードON</div>
     </div>
 
     <script>
         const correctPass = "{MARKER_PASS}";
         const masterKey = "7777";
+        
+        // ▼▼▼ ここが強力なリロード機能です！ ▼▼▼
+        setTimeout(function() {{
+            // 現在時刻をURLにくっつけて、ブラウザに「新しいページだ！」と騙して読み込ませる
+            window.location.href = window.location.pathname + "?t=" + new Date().getTime();
+        }}, 300000); // 300000ミリ秒 = 5分
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
         window.onload = function() {{
             const savedPass = localStorage.getItem("haneda_pass");
             if (savedPass === correctPass) {{ showContent(); }}
@@ -198,7 +206,6 @@ def determine_facts():
         data = THEORY_DATA[h]
         best = max(data, key=data.get)
         target = f"{best} （統計上の到着予定：{data[best]}便）"
-        # ▼【修正1】「サニーさんの」という名前を削除
         hint = f"統計データによると、{h}時台は{best}が最も多くの便数を記録しています。"
     else:
         target, hint = "国際線 または 都内", "深夜帯のセオリーに基づきます。"
@@ -230,7 +237,6 @@ def generate_report():
     print("Starting update...")
     f = determine_facts()
     
-    # ▼【修正2】AIへの指令を厳格化（挨拶禁止・Markdownという単語を出させない）
     reason_prompt = f"""
     タクシー運転手へ140字以内で助言をしてください。
     【条件】挨拶や前置きは禁止。「はい、承知しました」等は不要。いきなり本文から始めること。
@@ -245,7 +251,6 @@ def generate_report():
     """
     details = call_gemini(details_prompt)
     
-    # パスワード生成
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     if now.hour < 6: now = now - datetime.timedelta(days=1)
