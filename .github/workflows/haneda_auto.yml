@@ -5,7 +5,7 @@ on:
     - cron: '*/20 * * * *'
   workflow_dispatch:
 
-# ▼ これが「Web公開権限」を与える魔法です
+# ▼ この権限設定が「GitHub Actions」モードには必須です
 permissions:
   contents: write
   pages: write
@@ -32,8 +32,8 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
-      # 計算結果(index.html)をリポジトリに保存
-      - name: Commit and Push
+      # 1. まずリポジトリに計算結果を保存
+      - name: Commit changes
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
@@ -45,7 +45,7 @@ jobs:
             git push
           fi
 
-      # ▼▼ ここからが新機能：Webサーバーへ強制反映 ▼▼
+      # 2. その後、Webサーバーへ強制的にアップロード！
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
