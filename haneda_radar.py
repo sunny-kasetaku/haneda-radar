@@ -10,8 +10,7 @@ GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 DISCORD_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 # =========================================================
-#  設定：置換する目印（マーカー）をここで定義
-#  ※ここを変えると動かなくなるので触らないでください
+#  設定：置換する目印（マーカー）
 # =========================================================
 MARKER_RANK = "[[RANK]]"
 MARKER_TARGET = "[[TARGET]]"
@@ -23,7 +22,7 @@ MARKER_TIME = "[[TIME]]"
 MARKER_PASS = "[[PASS]]"
 
 # =========================================================
-#  1. HTMLテンプレート (Pythonコードを含まない純粋なテキスト)
+#  1. HTMLテンプレート
 # =========================================================
 HTML_TEMPLATE = f"""
 <!DOCTYPE html>
@@ -57,6 +56,7 @@ HTML_TEMPLATE = f"""
         #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
         h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }}
         strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
+        .error-msg {{ color: #ff4444; font-size: 0.8rem; background: #330000; padding: 5px; border-radius: 4px; border: 1px solid #ff0000; }}
         .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
     </style>
 </head>
@@ -172,17 +172,24 @@ def determine_facts():
     }
 
 # =========================================================
-# 3. 【文章係】 AI生成
+# 3. 【文章係】 AI生成 (診断モード)
 # =========================================================
 def call_gemini(prompt):
+    # そもそもキーが読み込めていない場合
+    if not GEMINI_KEY:
+        return "<div class='error-msg'>エラー: GitHub Secretsに GEMINI_API_KEY が設定されていません。YAMLファイルを確認してください。</div>"
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     try:
         r = requests.post(url, json=payload, timeout=30)
         if r.status_code == 200:
             return r.json()['candidates'][0]['content']['parts'][0]['text']
-    except: pass
-    return "データ取得エラー"
+        else:
+            # エラー内容を画面に出す
+            return f"<div class='error-msg'>API Error: {r.status_code}<br>{r.text[:100]}...</div>"
+    except Exception as e:
+        return f"<div class='error-msg'>Connection Error: {str(e)}</div>"
 
 def get_ai_reason(facts):
     prompt = f"""
@@ -203,7 +210,24 @@ def get_ai_details(facts):
         return call_gemini(prompt)
 
 # =========================================================
-# 4. 【実行】 置換してファイルを保存
+# 4. 【ユーティリティ】 パスワード・通知
+# =========================================================
+def get_daily_password():
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+    random.seed(now.strftime('%Y%m%d'))
+    return str(random.randint(1000, 9999))
+
+def send_to_discord(password, now_str):
+    if not DISCORD_URL: return 
+    msg = {
+        "username": "羽田レーダー",
+        "content": f"📡 **更新完了** ({now_str})\n🔑 **PASS:** `{password}`\n\n📊 **確認はこちら:**\nhttps://sunny-kasetaku.github.io/haneda-radar/"
+    }
+    try: requests.post(DISCORD_URL, json=msg)
+    except: pass
+
+# =========================================================
+# 5. 【実行】
 # =========================================================
 def generate_report():
     print("Processing started...")
@@ -212,8 +236,8 @@ def generate_report():
     time.sleep(1)
     details_text = get_ai_details(facts)
     
-    # HTML内の目印を、実際のデータに置き換える
-    # ここで MARKER_XXX 変数を使うので、絶対に空文字("")にはなりません
+    daily_pass = get_daily_password()
+    
     html = HTML_TEMPLATE
     html = html.replace(MARKER_RANK, str(facts['rank']))
     html = html.replace(MARKER_TARGET, str(facts['target']))
@@ -222,16 +246,9 @@ def generate_report():
     html = html.replace(MARKER_NUM_D, str(facts['num_d']))
     html = html.replace(MARKER_NUM_I, str(facts['num_i']))
     html = html.replace(MARKER_TIME, str(facts['time_str']))
-    
-    # パスワード処理
-    daily_pass = str(random.randint(1000, 9999))
     html = html.replace(MARKER_PASS, daily_pass)
     
-    # Discord通知
-    if DISCORD_URL:
-        msg = {"username": "羽田レーダー", "content": f"📡 更新: {facts['time_str']}\n🔑 PASS: `{daily_pass}`"}
-        try: requests.post(DISCORD_URL, json=msg)
-        except: pass
+    send_to_discord(daily_pass, facts['time_str'])
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
