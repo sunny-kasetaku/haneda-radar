@@ -6,7 +6,7 @@ import os
 import random
 import time
 import re
-import google.generativeai as genai  # 最新のAIライブラリを使用
+import google.generativeai as genai
 
 # =========================================================
 #  設定 & 環境変数
@@ -14,7 +14,7 @@ import google.generativeai as genai  # 最新のAIライブラリを使用
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 DISCORD_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
-# サニーさんの宝の地図データ（統計）
+# 統計データ
 THEORY_DATA = {
     7:  {"1号(T1)": 2,  "2号(T1)": 0,  "3号(T2)": 1,  "4号(T2)": 0,  "国際": 8},
     8:  {"1号(T1)": 8,  "2号(T1)": 9,  "3号(T2)": 13, "4号(T2)": 4,  "国際": 0},
@@ -47,7 +47,6 @@ MARKER_PASS = "[[PASS]]"
 # =========================================================
 #  1. HTMLテンプレート (TVモード実装済み)
 # =========================================================
-# ★ここで <meta http-equiv="refresh" content="300"> を追加しました！
 HTML_TEMPLATE = f"""
 <!DOCTYPE html>
 <html lang="ja">
@@ -155,7 +154,7 @@ HTML_TEMPLATE = f"""
 """
 
 # =========================================================
-# 2. 【左脳】データ収集・計算ロジック（Yahooスクレイピング復活！）
+# 2. 【左脳】データ収集・計算ロジック
 # =========================================================
 def fetch_flight_data():
     urls = [
@@ -178,11 +177,10 @@ def fetch_flight_data():
                 valid += 1
             counts.append(valid)
         except:
-            counts.append(10) # エラー時の保険
+            counts.append(10)
     return counts[0], counts[1], has_delay
 
 def determine_facts():
-    # ★JST（日本時間）を強制指定
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
@@ -200,7 +198,8 @@ def determine_facts():
         data = THEORY_DATA[h]
         best = max(data, key=data.get)
         target = f"{best} （統計上の到着予定：{data[best]}便）"
-        hint = f"サニーさんの統計データによると、{h}時台は{best}が最も多くの便数を記録しています。"
+        # ▼【修正1】「サニーさんの」という名前を削除
+        hint = f"統計データによると、{h}時台は{best}が最も多くの便数を記録しています。"
     else:
         target, hint = "国際線 または 都内", "深夜帯のセオリーに基づきます。"
 
@@ -217,13 +216,10 @@ def determine_facts():
 # 3. 【右脳】AI & パスワード
 # =========================================================
 def call_gemini(prompt):
-    # ★ここを修正：SDKを使って、さっき見つけた「gemini-2.5-flash」を呼び出す
     if not GEMINI_KEY:
         return "⚠️ APIキーが設定されていません"
-    
     try:
         genai.configure(api_key=GEMINI_KEY)
-        # ★ここで成功したモデル名を指定！
         model = genai.GenerativeModel('gemini-2.5-flash') 
         response = model.generate_content(prompt)
         return response.text
@@ -234,25 +230,32 @@ def generate_report():
     print("Starting update...")
     f = determine_facts()
     
-    # AIへの指令1：理由
-    reason = call_gemini(f"タクシー運転手に140字以内で助言。時刻:{f['time_str']}, ランク:{f['rank']}, 推奨:{f['target']}, 便数:国内{f['dom']}/国際{f['intl']}, 遅延:{f['delay']}, 根拠:{f['hint']}")
+    # ▼【修正2】AIへの指令を厳格化（挨拶禁止・Markdownという単語を出させない）
+    reason_prompt = f"""
+    タクシー運転手へ140字以内で助言をしてください。
+    【条件】挨拶や前置きは禁止。「はい、承知しました」等は不要。いきなり本文から始めること。
+    状況: 時刻{f['time_str']}, ランク{f['rank']}, 推奨{f['target']}, 便数:国内{f['dom']}/国際{f['intl']}, 遅延:{f['delay']}, 根拠:{f['hint']}
+    """
+    reason = call_gemini(reason_prompt)
     
-    # AIへの指令2：詳細
-    details = call_gemini(f"国内{f['dom']}便, 国際{f['intl']}便、遅延{'あり' if f['delay'] else 'なし'}。各ターミナルの状況を簡潔なMarkdownで。")
+    details_prompt = f"""
+    国内{f['dom']}便, 国際{f['intl']}便、遅延{'あり' if f['delay'] else 'なし'}。
+    各ターミナルの状況を簡潔な箇条書きで出力してください。
+    【条件】「Markdown形式で記述します」等の挨拶や前置きは一切禁止。いきなり箇条書きから始めること。
+    """
+    details = call_gemini(details_prompt)
     
-    # パスワード生成（朝6時切り替え）
+    # パスワード生成
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     if now.hour < 6: now = now - datetime.timedelta(days=1)
     random.seed(now.strftime('%Y%m%d'))
     pw = str(random.randint(1000, 9999))
     
-    # HTMLの組み立て
     html = HTML_TEMPLATE.replace(MARKER_RANK, f['rank']).replace(MARKER_TARGET, f['target']).replace(MARKER_REASON, reason).replace(MARKER_DETAILS, details).replace(MARKER_NUM_D, str(f['num_d'])).replace(MARKER_NUM_I, str(f['num_i'])).replace(MARKER_TIME, f['time_str']).replace(MARKER_PASS, pw)
     
-    # Discord通知（あれば）
     if DISCORD_URL:
-        requests.post(DISCORD_URL, json={"content": f"📡 **羽田レーダー更新（自動更新モード）**\n🔑 **PASS:** `{pw}`\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
+        requests.post(DISCORD_URL, json={"content": f"📡 **羽田レーダー更新**\n🔑 **PASS:** `{pw}`\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
     
     with open("index.html", "w", encoding="utf-8") as file: file.write(html)
     print("Done!")
