@@ -16,8 +16,28 @@ if GEMINI_KEY:
     GEMINI_KEY = GEMINI_KEY.strip()
 
 # =========================================================
-#  設定
+#  設定 & 宝の地図データ (サニーさんのExcelデータ)
 # =========================================================
+THEORY_DATA = {
+    7:  {"1号(T1)": 2,  "2号(T1)": 0,  "3号(T2)": 1,  "4号(T2)": 0,  "国際": 8},
+    8:  {"1号(T1)": 8,  "2号(T1)": 9,  "3号(T2)": 13, "4号(T2)": 4,  "国際": 0},
+    9:  {"1号(T1)": 10, "2号(T1)": 9,  "3号(T2)": 16, "4号(T2)": 3,  "国際": 1},
+    10: {"1号(T1)": 6,  "2号(T1)": 8,  "3号(T2)": 9,  "4号(T2)": 4,  "国際": 0},
+    11: {"1号(T1)": 10, "2号(T1)": 10, "3号(T2)": 10, "4号(T2)": 6,  "国際": 1},
+    12: {"1号(T1)": 9,  "2号(T1)": 7,  "3号(T2)": 14, "4号(T2)": 4,  "国際": 1},
+    13: {"1号(T1)": 10, "2号(T1)": 9,  "3号(T2)": 8,  "4号(T2)": 4,  "国際": 0},
+    14: {"1号(T1)": 8,  "2号(T1)": 5,  "3号(T2)": 9,  "4号(T2)": 7,  "国際": 0},
+    15: {"1号(T1)": 7,  "2号(T1)": 7,  "3号(T2)": 13, "4号(T2)": 3,  "国際": 0},
+    16: {"1号(T1)": 7,  "2号(T1)": 12, "3号(T2)": 10, "4号(T2)": 5,  "国際": 2},
+    17: {"1号(T1)": 10, "2号(T1)": 7,  "3号(T2)": 10, "4号(T2)": 4,  "国際": 6},
+    18: {"1号(T1)": 10, "2号(T1)": 8,  "3号(T2)": 11, "4号(T2)": 9,  "国際": 1},
+    19: {"1号(T1)": 9,  "2号(T1)": 7,  "3号(T2)": 11, "4号(T2)": 3,  "国際": 1},
+    20: {"1号(T1)": 11, "2号(T1)": 7,  "3号(T2)": 11, "4号(T2)": 4,  "国際": 2},
+    21: {"1号(T1)": 10, "2号(T1)": 10, "3号(T2)": 14, "4号(T2)": 4,  "国際": 1},
+    22: {"1号(T1)": 7,  "2号(T1)": 7,  "3号(T2)": 9,  "4号(T2)": 4,  "国際": 2},
+    23: {"1号(T1)": 1,  "2号(T1)": 0,  "3号(T2)": 2,  "4号(T2)": 3,  "国際": 0}
+}
+
 MARKER_RANK = "[[RANK]]"
 MARKER_TARGET = "[[TARGET]]"
 MARKER_REASON = "[[REASON]]"
@@ -137,70 +157,90 @@ HTML_TEMPLATE = f"""
 """
 
 # =========================================================
-# 2. 【左脳】データ収集・計算ロジック (Yahoo!路線情報)
+# 2. 【左脳】データ収集・計算ロジック
 # =========================================================
 def fetch_flight_data():
-    # 羽田空港 国内線到着 (Yahoo!路線)
     url_dom = "https://transit.yahoo.co.jp/airport/arrival/23/?kind=1"
-    # 羽田空港 国際線到着
     url_intl = "https://transit.yahoo.co.jp/airport/arrival/23/?kind=2"
     
     def count_flights(url):
         try:
             r = requests.get(url, timeout=10)
-            if r.status_code != 200: return 0
+            if r.status_code != 200: return 0, False # count, has_delay
             soup = BeautifulSoup(r.text, 'html.parser')
-            # 'element'クラスを持つリスト要素（フライト行）を数える
-            rows = soup.find_all('li', class_='element') 
-            return len(rows)
-        except:
-            return 10 # エラー時は安全なデフォルト値
+            rows = soup.find_all('li', class_='element')
             
-    count_dom = count_flights(url_dom)
-    count_intl = count_flights(url_intl)
+            valid_count = 0
+            has_delay = False
+            
+            for row in rows:
+                text = row.get_text()
+                # ★ここで欠航チェック！
+                if "欠航" in text:
+                    continue # 欠航は数えない
+                
+                # ★ここで遅延チェック！
+                if "遅れ" in text or "変更" in text:
+                    has_delay = True
+                
+                valid_count += 1
+                
+            return valid_count, has_delay
+        except:
+            return 10, False
+            
+    count_dom, delay_d = count_flights(url_dom)
+    count_intl, delay_i = count_flights(url_intl)
     
-    return count_dom, count_intl
+    return count_dom, count_intl, (delay_d or delay_i)
 
 def determine_facts():
     n = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     ns = n.strftime('%Y-%m-%d %H:%M')
     current_hour = n.hour
     
-    # ★Yahooから本物のデータを取得
-    real_dom_flights, real_intl_flights = fetch_flight_data()
+    # 1. Yahooからリアルタイム便数（欠航除外・遅延検知済み）を取得
+    real_dom_flights, real_intl_flights, has_delay = fetch_flight_data()
     total_flights = real_dom_flights + real_intl_flights
     
-    # ■ ランク判定ロジック (到着便数に基づく)
-    # ※ページに表示されている便数の多さで判断
-    if total_flights >= 35:
+    # ランク判定
+    if total_flights >= 30:
         rank = "🌈 S 【 確変・入れ食い 】"
-        reason_hint = "到着便が非常に多く、空港内は混雑しています。"
         demand_level = "HIGH"
-    elif total_flights >= 20:
+    elif total_flights >= 15:
         rank = "🔥 A 【 超・推奨 】"
-        reason_hint = "到着便がコンスタントにあり、需要は高いです。"
         demand_level = "MID-HIGH"
-    elif total_flights >= 10:
+    elif total_flights >= 8:
         rank = "✨ B 【 狙い目 】"
-        reason_hint = "到着便は標準的です。"
         demand_level = "MID"
     else:
         rank = "⚠️ C 【 要・注意 】"
-        reason_hint = "到着便が少なく、待機時間が長くなる可能性があります。"
         demand_level = "LOW"
         
-    # ■ ターゲットの決定
-    if 6 <= current_hour < 16: target_lane = "3号レーン (T2)"
-    elif 16 <= current_hour < 21: target_lane = "3号レーン (T2) または 4号"
-    elif 21 <= current_hour: target_lane = "1号/2号レーン (T1)"
-    else: target_lane = "国際線 または 都内"
+    # 2. 【宝の地図】から最適なターゲットを抽出
+    if current_hour in THEORY_DATA:
+        hour_data = THEORY_DATA[current_hour]
+        best_lane = max(hour_data, key=hour_data.get)
+        max_val = hour_data[best_lane]
+        sorted_lanes = sorted(hour_data.items(), key=lambda x:x[1], reverse=True)
+        second_lane = sorted_lanes[1][0] if len(sorted_lanes) > 1 else ""
+        
+        target_lane = f"{best_lane} (指数:{max_val})"
+        reason_hint = f"統計データによると、現時刻({current_hour}時)は{best_lane}の到着便数が最多({max_val})です。次点は{second_lane}です。"
+    else:
+        target_lane = "国際線 または 都内"
+        reason_hint = "深夜帯のため、国際線または都内営業を推奨します。"
+        
+    # ★遅延がある場合の注記を追加
+    if has_delay:
+        reason_hint += " ※現在、遅延便が発生しています。到着客の波が後ろ倒しになる可能性があります。"
 
-    # ■ 待機台数の推計 (需要が多い＝台数は減っているはず)
+    # 3. 待機台数の予測
     base_stock_d = 180
     base_stock_i = 100
     
     if demand_level == "HIGH":
-        pred_d = int(base_stock_d * 0.4) # 需要大なら4割まで減る
+        pred_d = int(base_stock_d * 0.4)
         pred_i = int(base_stock_i * 0.4)
     elif demand_level == "MID-HIGH":
         pred_d = int(base_stock_d * 0.6)
@@ -209,10 +249,9 @@ def determine_facts():
         pred_d = int(base_stock_d * 0.8)
         pred_i = int(base_stock_i * 0.8)
     else:
-        pred_d = int(base_stock_d * 0.95) # 暇なら満車に近い
+        pred_d = int(base_stock_d * 0.95)
         pred_i = int(base_stock_i * 0.95)
         
-    # 自然なバラつき
     pred_d += random.randint(-10, 10)
     pred_i += random.randint(-5, 5)
 
@@ -221,11 +260,12 @@ def determine_facts():
         "rank": rank, "target": target_lane,
         "num_d": pred_d, "num_i": pred_i,
         "flights_d": real_dom_flights, "flights_i": real_intl_flights,
+        "has_delay": has_delay,
         "reason_hint": reason_hint
     }
 
 # =========================================================
-# 3. 【右脳】AI生成 (Gemini) - 文章担当
+# 3. 【右脳】AI生成 (Gemini)
 # =========================================================
 def find_best_model():
     if not GEMINI_KEY: return None
@@ -262,25 +302,34 @@ def call_gemini(prompt):
         return "接続エラー"
 
 def get_ai_reason(facts):
+    # 遅延情報の有無をAIに伝える
+    delay_info = "【重要】遅延便が発生中。需要のピークが遅れる可能性あり。" if facts['has_delay'] else "特になし"
+
     prompt = f"""
     あなたはタクシー戦略コンサルタントです。
-    以下の「確定した事実（フライトデータ）」に基づき、ドライバー向けの「判定理由」を150文字以内で断定口調で書いてください。
+    以下の事実に基づき、ドライバー向けのアドバイスを140文字以内で作成してください。
     【事実】
-    ・現在時刻: {facts['time_str']}
-    ・ランク判定: {facts['rank']}
-    ・直近の国内線到着数(目安): {facts['flights_d']}便
-    ・直近の国際線到着数(目安): {facts['flights_i']}便
-    ・状況ヒント: {facts['reason_hint']}
-    ・推奨場所: {facts['target']}
+    ・時刻: {facts['time_str']}
+    ・ランク: {facts['rank']}
+    ・推奨レーン: {facts['target']}
+    ・統計根拠: {facts['reason_hint']}
+    ・運行状況注記: {delay_info}
+    ・リアルタイム到着数(欠航除く): 国内{facts['flights_d']} / 国際{facts['flights_i']}
+    
+    文体は、簡潔で頼りがいのある口調で。
     """
     return call_gemini(prompt)
 
 def get_ai_details(facts):
+    delay_text = "⚠️ **一部遅延あり**" if facts['has_delay'] else "✅ **概ね定刻**"
+    
     prompt = f"""
-    あなたはタクシー戦略コンサルタントです。
-    現在、直近の国内線到着便数は「{facts['flights_d']}便」、国際線は「{facts['flights_i']}便」です。
-    この数字を元に、T1, T2, T3の混雑状況を推測し、ドライバー向けに短い文章でMarkdown形式で書いてください。
-    数字が多い場合は「混雑」、少ない場合は「閑散」と表現してください。
+    現在の状況：
+    国内線到着便(有効): {facts['flights_d']}便
+    国際線到着便(有効): {facts['flights_i']}便
+    運行状況: {delay_text}
+    
+    これに基づき、T1, T2, T3の状況をMarkdownの箇条書きで簡潔にレポートしてください。
     """
     return call_gemini(prompt)
 
@@ -321,7 +370,7 @@ def send_to_discord(password, now_str):
     if not DISCORD_URL: return 
     msg = {
         "username": "羽田レーダー",
-        "content": f"📡 **更新完了(実データ版)** ({now_str})\n🔑 **PASS:** `{password}`\n（マスターキー: 7777）\n\n📊 **確認はこちら:**\nhttps://sunny-kasetaku.github.io/haneda-radar/"
+        "content": f"📡 **更新完了(統計+遅延対応版)** ({now_str})\n🔑 **PASS:** `{password}`\n（マスターキー: 7777）\n\n📊 **確認はこちら:**\nhttps://sunny-kasetaku.github.io/haneda-radar/"
     }
     try: requests.post(DISCORD_URL, json=msg)
     except: pass
