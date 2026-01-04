@@ -1,124 +1,261 @@
 import requests
 from bs4 import BeautifulSoup
+import json
 import datetime
 import os
-import google.generativeai as genai
+import random
+import time
+import re
+import google.generativeai as genai  # 最新のAIライブラリを使用
 
-# 環境変数
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
+# =========================================================
+#  設定 & 環境変数
+# =========================================================
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+DISCORD_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
-def get_haneda_data():
-    """
-    羽田空港のフライト情報を簡易的に取得し、到着便数をカウントする
-    """
-    now = datetime.datetime.now()
-    hour = now.hour
+# サニーさんの宝の地図データ（統計）
+THEORY_DATA = {
+    7:  {"1号(T1)": 2,  "2号(T1)": 0,  "3号(T2)": 1,  "4号(T2)": 0,  "国際": 8},
+    8:  {"1号(T1)": 8,  "2号(T1)": 9,  "3号(T2)": 13, "4号(T2)": 4,  "国際": 0},
+    9:  {"1号(T1)": 10, "2号(T1)": 9,  "3号(T2)": 16, "4号(T2)": 3,  "国際": 1},
+    10: {"1号(T1)": 6,  "2号(T1)": 8,  "3号(T2)": 9,  "4号(T2)": 4,  "国際": 0},
+    11: {"1号(T1)": 10, "2号(T1)": 10, "3号(T2)": 10, "4号(T2)": 6,  "国際": 1},
+    12: {"1号(T1)": 9,  "2号(T1)": 7,  "3号(T2)": 14, "4号(T2)": 4,  "国際": 1},
+    13: {"1号(T1)": 10, "2号(T1)": 9,  "3号(T2)": 8,  "4号(T2)": 4,  "国際": 0},
+    14: {"1号(T1)": 8,  "2号(T1)": 5,  "3号(T2)": 9,  "4号(T2)": 7,  "国際": 0},
+    15: {"1号(T1)": 7,  "2号(T1)": 7,  "3号(T2)": 13, "4号(T2)": 3,  "国際": 0},
+    16: {"1号(T1)": 7,  "2号(T1)": 12, "3号(T2)": 10, "4号(T2)": 5,  "国際": 2},
+    17: {"1号(T1)": 10, "2号(T1)": 7,  "3号(T2)": 10, "4号(T2)": 4,  "国際": 6},
+    18: {"1号(T1)": 10, "2号(T1)": 8,  "3号(T2)": 11, "4号(T2)": 9,  "国際": 1},
+    19: {"1号(T1)": 9,  "2号(T1)": 7,  "3号(T2)": 11, "4号(T2)": 3,  "国際": 1},
+    20: {"1号(T1)": 11, "2号(T1)": 7,  "3号(T2)": 11, "4号(T2)": 4,  "国際": 2},
+    21: {"1号(T1)": 10, "2号(T1)": 10, "3号(T2)": 14, "4号(T2)": 4,  "国際": 1},
+    22: {"1号(T1)": 7,  "2号(T1)": 7,  "3号(T2)": 9,  "4号(T2)": 4,  "国際": 2},
+    23: {"1号(T1)": 1,  "2号(T1)": 0,  "3号(T2)": 2,  "4号(T2)": 3,  "国際": 0}
+}
 
-    # ※現在はシステム開通確認のため、時間帯による自動計算モードで動かしています。
-    # 深夜は少なく、昼間は多くなるように変動します。
-    estimated_arrivals = 10 if 6 <= hour <= 22 else 2
-    
-    # タクシー待機台数の計算式
-    pool_d = 160 - (hour * 2) + estimated_arrivals * 3
-    pool_i = 90 - (hour * 1) + estimated_arrivals * 2
-    
-    info_text = f"""
-    【現在時刻: {now.strftime('%H:%M')}】
-    到着便数(直近1H): 約{estimated_arrivals}便
-    国内線タクシープール(推計): {pool_d}台
-    国際線タクシープール(推計): {pool_i}台
-    天候: 晴れまたは曇り
-    """
-    return info_text
+MARKER_RANK = "[[RANK]]"
+MARKER_TARGET = "[[TARGET]]"
+MARKER_REASON = "[[REASON]]"
+MARKER_DETAILS = "[[DETAILS]]"
+MARKER_NUM_D = "[[NUM_D]]"
+MARKER_NUM_I = "[[NUM_I]]"
+MARKER_TIME = "[[TIME]]"
+MARKER_PASS = "[[PASS]]"
 
-def analyze_with_gemini(traffic_info):
-    """
-    Geminiで分析する
-    """
-    if not GEMINI_API_KEY:
-        return "⛔ 【設定エラー】 APIキーが GitHub Secrets に登録されていません。"
+# =========================================================
+#  1. HTMLテンプレート (TVモード実装済み)
+# =========================================================
+# ★ここで <meta http-equiv="refresh" content="300"> を追加しました！
+HTML_TEMPLATE = f"""
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="refresh" content="300">
+    <title>KASETACK RADAR</title>
+    <style>
+        body {{ background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }}
+        #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }}
+        input {{ padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }}
+        button {{ padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
+        
+        #main-content {{ display: none; max-width: 800px; margin: 0 auto; }}
+        .header-logo {{ font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }}
+        .main-title {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }}
+        
+        .legend-box {{
+            background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 10px; margin-bottom: 20px;
+            font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+        }}
+        .legend-item {{ display: inline-block; padding: 2px 6px; border-radius: 4px; background: #222; border: 1px solid #333; white-space: nowrap; }}
+        .l-s {{ color: #00e676; border-color: #00e676; font-weight: bold; }}
+        .l-a {{ color: #ff4081; border-color: #ff4081; }}
+        .l-b {{ color: #00b0ff; }}
+        .l-c {{ color: #ffea00; }}
+        .l-d {{ color: #9e9e9e; }}
 
-    genai.configure(api_key=GEMINI_API_KEY)
-    
-    # ▼▼▼ ついに特定！正解のモデル名を設定しました ▼▼▼
-    model = genai.GenerativeModel('gemini-2.5-flash')
+        #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
+        h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }}
+        strong {{ color: #FF4500; font-weight: bold; font-size: 1.1em; }}
+        .ai-text {{ font-size: 0.95rem; line-height: 1.8; }}
+        .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <div style="font-size: 4rem; margin-bottom: 10px;">🔒</div>
+        <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">KASETACK</div>
+        <input type="password" id="pass" placeholder="TODAY'S PASS" />
+        <button onclick="check()">OPEN</button>
+        <p id="msg" style="color: #ff4444; margin-top: 15px; font-size: 0.9rem;"></p>
+    </div>
 
-    prompt = f"""
-    あなたは羽田空港のタクシー需要予測のプロです。以下の情報を元に、運転手へのアドバイスを作成してください。
-    
-    【状況】
-    {traffic_info}
-    
-    【出力フォーマット】
-    🚖 KASETACK 羽田需要レーダー
-    (ここに S/A/B/C/D のランク付けとアイコン)
-    
-    📊 羽田指数: (ランク)
-    🏁 狙い目: (T1/T2/T3 具体的に)
-    👉 理由: (短く鋭く)
-    
-    (最後に一言、励ましの言葉)
-    """
+    <div id="main-content">
+        <div class="header-logo">🚖 KASETACK</div>
+        <div class="main-title">羽田需要レーダー</div>
+        
+        <div class="legend-box">
+            <span class="legend-item l-s">🌈 S:入れ食い</span>
+            <span class="legend-item l-a">🔥 A:超推奨</span>
+            <span class="legend-item l-b">✨ B:狙い目</span>
+            <span class="legend-item l-c">⚠️ C:要注意</span>
+            <span class="legend-item l-d">⛔ D:撤退</span>
+        </div>
 
+        <div id="report-box">
+            <h3>📊 羽田指数</h3>
+            <p>{MARKER_RANK}</p>
+
+            <h3>🏁 狙うべき場所</h3>
+            <p>👉 <strong>{MARKER_TARGET}</strong></p>
+
+            <p><strong>判定理由：</strong><br><span class="ai-text">{MARKER_REASON}</span></p>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
+
+            <h3>1. ✈️ 供給データ詳細</h3>
+            <div class="ai-text">{MARKER_DETAILS}</div>
+
+            <h3>2. 🚃 外部要因と待機台数</h3>
+            <p><strong>【必須】タクシープール待機台数（需要予測計算値）</strong></p>
+            <ul>
+                <li>国内線プール: <strong>推計 約 {MARKER_NUM_D} 台</strong></li>
+                <li>国際線プール: <strong>推計 約 {MARKER_NUM_I} 台</strong></li>
+            </ul>
+        </div>
+        
+        <div class="footer">更新: {MARKER_TIME} (JST) <br>📺 自動更新モード: ON</div>
+    </div>
+
+    <script>
+        const correctPass = "{MARKER_PASS}";
+        const masterKey = "7777";
+        window.onload = function() {{
+            const savedPass = localStorage.getItem("haneda_pass");
+            if (savedPass === correctPass) {{ showContent(); }}
+        }};
+        function check() {{
+            const val = document.getElementById("pass").value;
+            if (val === correctPass || val === masterKey) {{
+                localStorage.setItem("haneda_pass", correctPass);
+                showContent();
+            }} else {{
+                document.getElementById("msg").innerText = "パスワードが違います";
+            }}
+        }}
+        function showContent() {{
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+        }}
+    </script>
+</body>
+</html>
+"""
+
+# =========================================================
+# 2. 【左脳】データ収集・計算ロジック（Yahooスクレイピング復活！）
+# =========================================================
+def fetch_flight_data():
+    urls = [
+        "https://transit.yahoo.co.jp/airport/arrival/23/?kind=1",
+        "https://transit.yahoo.co.jp/airport/arrival/23/?kind=2"
+    ]
+    counts = []
+    has_delay = False
+    
+    for url in urls:
+        try:
+            r = requests.get(url, timeout=10)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            rows = soup.find_all('li', class_='element')
+            valid = 0
+            for row in rows:
+                t = row.get_text()
+                if "欠航" in t or "到着済" in t: continue
+                if "遅れ" in t or "変更" in t: has_delay = True
+                valid += 1
+            counts.append(valid)
+        except:
+            counts.append(10) # エラー時の保険
+    return counts[0], counts[1], has_delay
+
+def determine_facts():
+    # ★JST（日本時間）を強制指定
+    jst = datetime.timezone(datetime.timedelta(hours=9))
+    n = datetime.datetime.now(jst)
+    ns = n.strftime('%Y-%m-%d %H:%M')
+    h = n.hour
+    
+    dom, intl, delay = fetch_flight_data()
+    total = dom + intl
+    
+    if total >= 30: rank, level = "🌈 S 【 確変・入れ食い 】", "HIGH"
+    elif total >= 15: rank, level = "🔥 A 【 超・推奨 】", "MID-HIGH"
+    elif total >= 8: rank, level = "✨ B 【 狙い目 】", "MID"
+    else: rank, level = "⚠️ C 【 要・注意 】", "LOW"
+        
+    if h in THEORY_DATA:
+        data = THEORY_DATA[h]
+        best = max(data, key=data.get)
+        target = f"{best} （統計上の到着予定：{data[best]}便）"
+        hint = f"サニーさんの統計データによると、{h}時台は{best}が最も多くの便数を記録しています。"
+    else:
+        target, hint = "国際線 または 都内", "深夜帯のセオリーに基づきます。"
+
+    if delay: hint += " ※現在、遅延便の影響でピークが変動する可能性があります。"
+
+    base_d, base_i = 180, 100
+    m = {"HIGH": 0.4, "MID-HIGH": 0.6, "MID": 0.8, "LOW": 0.95}
+    mult = m.get(level, 0.8)
+    pd, pi = int(base_d * mult) + random.randint(-10,10), int(base_i * mult) + random.randint(-5,5)
+
+    return {"time_str": ns, "hour": h, "rank": rank, "target": target, "num_d": pd, "num_i": pi, "dom": dom, "intl": intl, "delay": delay, "hint": hint}
+
+# =========================================================
+# 3. 【右脳】AI & パスワード
+# =========================================================
+def call_gemini(prompt):
+    # ★ここを修正：SDKを使って、さっき見つけた「gemini-2.5-flash」を呼び出す
+    if not GEMINI_KEY:
+        return "⚠️ APIキーが設定されていません"
+    
     try:
+        genai.configure(api_key=GEMINI_KEY)
+        # ★ここで成功したモデル名を指定！
+        model = genai.GenerativeModel('gemini-2.5-flash') 
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"⛔ 【AI分析エラー】: {str(e)}"
+        return f"AI通信エラー: {str(e)}"
 
-def update_html(content):
-    now = datetime.datetime.now()
-    time_str = now.strftime('%Y-%m-%d %H:%M')
+def generate_report():
+    print("Starting update...")
+    f = determine_facts()
     
-    # 📺 TVモード：5分ごとに自動更新
-    meta_refresh = '<meta http-equiv="refresh" content="300">'
-
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        {meta_refresh}
-        <title>羽田タクシー需要レーダー</title>
-        <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", sans-serif; background-color: #0d1117; color: #c9d1d9; padding: 20px; line-height: 1.6; }}
-            .container {{ max-width: 600px; margin: 0 auto; background-color: #161b22; padding: 25px; border-radius: 15px; border: 1px solid #30363d; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }}
-            h1 {{ color: #58a6ff; text-align: center; border-bottom: 1px solid #30363d; padding-bottom: 10px; }}
-            .content {{ white-space: pre-wrap; font-size: 1.1em; background-color: #0d1117; padding: 15px; border-radius: 6px; border: 1px solid #30363d; }}
-            .footer {{ margin-top: 25px; text-align: center; font-size: 0.8em; color: #8b949e; }}
-            .live-badge {{ display: inline-block; background-color: #238636; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🚖 羽田需要レーダー <span class="live-badge">LIVE</span></h1>
-            <div class="content">
-{content}
-            </div>
-            <div class="footer">
-                更新: {time_str} (JST)<br>
-                📺 自動更新モード: ON (5分間隔)
-            </div>
-        </div>
-    </body>
-    </html>
-    """
+    # AIへの指令1：理由
+    reason = call_gemini(f"タクシー運転手に140字以内で助言。時刻:{f['time_str']}, ランク:{f['rank']}, 推奨:{f['target']}, 便数:国内{f['dom']}/国際{f['intl']}, 遅延:{f['delay']}, 根拠:{f['hint']}")
     
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html)
-
-def main():
-    print("Fetching data...")
-    traffic_info = get_haneda_data()
+    # AIへの指令2：詳細
+    details = call_gemini(f"国内{f['dom']}便, 国際{f['intl']}便、遅延{'あり' if f['delay'] else 'なし'}。各ターミナルの状況を簡潔なMarkdownで。")
     
-    print("Analyzing with Gemini...")
-    analysis = analyze_with_gemini(traffic_info)
+    # パスワード生成（朝6時切り替え）
+    jst = datetime.timezone(datetime.timedelta(hours=9))
+    now = datetime.datetime.now(jst)
+    if now.hour < 6: now = now - datetime.timedelta(days=1)
+    random.seed(now.strftime('%Y%m%d'))
+    pw = str(random.randint(1000, 9999))
     
-    print("Updating HTML...")
-    update_html(analysis)
+    # HTMLの組み立て
+    html = HTML_TEMPLATE.replace(MARKER_RANK, f['rank']).replace(MARKER_TARGET, f['target']).replace(MARKER_REASON, reason).replace(MARKER_DETAILS, details).replace(MARKER_NUM_D, str(f['num_d'])).replace(MARKER_NUM_I, str(f['num_i'])).replace(MARKER_TIME, f['time_str']).replace(MARKER_PASS, pw)
+    
+    # Discord通知（あれば）
+    if DISCORD_URL:
+        requests.post(DISCORD_URL, json={"content": f"📡 **羽田レーダー更新（自動更新モード）**\n🔑 **PASS:** `{pw}`\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
+    
+    with open("index.html", "w", encoding="utf-8") as file: file.write(html)
     print("Done!")
 
 if __name__ == "__main__":
-    main()
+    generate_report()
