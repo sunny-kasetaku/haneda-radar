@@ -9,7 +9,7 @@ import time
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 DISCORD_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
-# ★★★ キーのクリーニング ★★★
+# キーのクリーニング
 if GEMINI_KEY:
     GEMINI_KEY = GEMINI_KEY.strip()
 
@@ -24,7 +24,7 @@ MARKER_NUM_D = "[[NUM_D]]"
 MARKER_NUM_I = "[[NUM_I]]"
 MARKER_TIME = "[[TIME]]"
 MARKER_PASS = "[[PASS]]"
-MARKER_DEBUG = "[[DEBUG]]" # ★デバッグ用
+MARKER_DEBUG = "[[DEBUG]]"
 
 # =========================================================
 #  1. HTMLテンプレート
@@ -137,42 +137,64 @@ def determine_facts():
     }
 
 # =========================================================
-# 3. AI生成 (詳細なエラー表示モード)
+# 3. AI生成 (自動モデル探索機能付き)
 # =========================================================
+# ★ここで「使えるモデル」をGoogleに問い合わせる
+def find_best_model():
+    if not GEMINI_KEY: return None
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_KEY}"
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code != 200: return None
+        data = r.json()
+        
+        # 'generateContent' が使えるモデルを探す
+        available_models = []
+        for m in data.get('models', []):
+            if 'generateContent' in m.get('supportedGenerationMethods', []):
+                # モデル名から 'models/' を取り除く (例: models/gemini-pro -> gemini-pro)
+                clean_name = m['name'].replace('models/', '')
+                available_models.append(clean_name)
+        
+        # 'gemini' と名のつくものを優先的に探す
+        gemini_models = [m for m in available_models if 'gemini' in m.lower()]
+        
+        if gemini_models:
+            # 最新そうなものを適当に選ぶ（リストの最初の方）
+            return gemini_models[0]
+        elif available_models:
+            return available_models[0] # geminiじゃなくても何かあれば使う
+        else:
+            return None
+    except:
+        return None
+
+# AIに質問する
 def call_gemini(prompt):
     if not GEMINI_KEY:
-        return "<div class='error-msg'>エラー: GEMINI_API_KEY が空です。Secretsを確認してください。</div>"
+        return "Error: API Key missing"
 
-    # 確実に動くはずの組み合わせだけを試す
-    combinations = [
-        ("v1beta", "gemini-1.5-flash"),
-        ("v1", "gemini-pro")
-    ]
+    # ★自動でモデルを探す
+    model_name = find_best_model()
+    
+    # 万が一探せなかったら、イチかバチか gemini-1.5-flash を使う
+    if not model_name:
+        model_name = "gemini-1.5-flash"
+        debug_log = "Auto-detect failed, using fallback"
+    else:
+        debug_log = f"Auto-detected: {model_name}"
 
-    error_logs = []
-
-    for version, model in combinations:
-        url = f"https://generativelanguage.googleapis.com/{version}/models/{model}:generateContent?key={GEMINI_KEY}"
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
-        try:
-            r = requests.post(url, json=payload, timeout=15)
-            if r.status_code == 200:
-                return r.json()['candidates'][0]['content']['parts'][0]['text']
-            else:
-                # ★ここが重要！Googleからの本当の返事を読み取る
-                try:
-                    error_json = r.json()
-                    real_msg = error_json['error']['message'] # 詳しい理由
-                except:
-                    real_msg = r.text[:200] # 読み取れなければ原文を表示
-                
-                error_logs.append(f"<br><strong>[{model}]</strong> Status:{r.status_code}<br>Message: {real_msg}")
-                continue
-        except Exception as e:
-            error_logs.append(f"[{model}] Connect Error: {str(e)}")
-            continue
-
-    return f"<div class='error-msg'>AI Connect Failed:{''.join(error_logs)}</div>"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    
+    try:
+        r = requests.post(url, json=payload, timeout=15)
+        if r.status_code == 200:
+            return r.json()['candidates'][0]['content']['parts'][0]['text'] + f"\n\n(Used Model: {model_name})"
+        else:
+            return f"<div class='error-msg'>Model: {model_name}<br>Status: {r.status_code}<br>{r.text[:200]}</div>"
+    except Exception as e:
+        return f"<div class='error-msg'>Connection Error: {str(e)}</div>"
 
 def get_ai_reason(facts):
     prompt = f"時刻:{facts['time_str']}, ランク:{facts['rank']}, 推奨:{facts['target']}。タクシー運転手に向けた一言アドバイスを100文字以内で。"
@@ -189,15 +211,13 @@ def generate_report():
     print("Processing started...")
     facts = determine_facts()
     
-    # 鍵の状態をチェック（セキュリティのため長さだけ表示）
-    key_status = "OK" if GEMINI_KEY else "MISSING"
-    key_len = len(GEMINI_KEY) if GEMINI_KEY else 0
-    debug_msg = f"API Key Status: {key_status} (Length: {key_len})"
+    # 実際に使おうとしたモデル名を取得（デバッグ表示用）
+    best_model = find_best_model()
+    debug_msg = f"API Key: OK (Length:{len(GEMINI_KEY)}) / Target Model: {best_model}"
     
     reason_text = get_ai_reason(facts)
     time.sleep(1)
     details_text = get_ai_details(facts)
-    daily_pass = "7777" # 今日は固定
     
     html = HTML_TEMPLATE
     html = html.replace(MARKER_RANK, str(facts['rank']))
@@ -207,12 +227,11 @@ def generate_report():
     html = html.replace(MARKER_NUM_D, str(facts['num_d']))
     html = html.replace(MARKER_NUM_I, str(facts['num_i']))
     html = html.replace(MARKER_TIME, str(facts['time_str']))
-    html = html.replace(MARKER_PASS, daily_pass)
-    html = html.replace(MARKER_DEBUG, debug_msg) # デバッグ表示
+    html = html.replace(MARKER_PASS, "7777")
+    html = html.replace(MARKER_DEBUG, debug_msg)
     
-    # Discord通知
     if DISCORD_URL:
-        requests.post(DISCORD_URL, json={"content": f"📡 更新完了 (Debug: {key_status}/{key_len})\nPASS: 7777"})
+        requests.post(DISCORD_URL, json={"content": f"📡 更新完了\nModel: {best_model}\nPASS: 7777"})
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
