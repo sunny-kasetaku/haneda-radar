@@ -22,7 +22,7 @@ MARKER_TIME = "[[TIME]]"
 MARKER_PASS = "[[PASS]]"
 
 # =========================================================
-#  1. HTMLテンプレート（マスターキー 7777 実装済み）
+#  1. HTMLテンプレート（マスターキー 7777）
 # =========================================================
 HTML_TEMPLATE = f"""
 <!DOCTYPE html>
@@ -56,7 +56,7 @@ HTML_TEMPLATE = f"""
         #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
         h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }}
         strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
-        .error-msg {{ color: #ff4444; font-size: 0.8rem; background: #330000; padding: 5px; border-radius: 4px; border: 1px solid #ff0000; }}
+        .error-msg {{ color: #ff4444; font-size: 0.7rem; background: #330000; padding: 5px; border-radius: 4px; border: 1px solid #ff0000; word-break: break-all; }}
         .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
     </style>
 </head>
@@ -107,7 +107,7 @@ HTML_TEMPLATE = f"""
 
     <script>
         const correctPass = "{MARKER_PASS}";
-        const masterKey = "7777"; // ★マスターキー
+        const masterKey = "7777"; 
         
         window.onload = function() {{
             const savedPass = localStorage.getItem("haneda_pass");
@@ -116,7 +116,6 @@ HTML_TEMPLATE = f"""
         
         function check() {{
             const val = document.getElementById("pass").value;
-            // 毎日のパスワード または マスターキー(7777) で開く
             if (val === correctPass || val === masterKey) {{
                 localStorage.setItem("haneda_pass", correctPass);
                 showContent();
@@ -177,33 +176,41 @@ def determine_facts():
     }
 
 # =========================================================
-# 3. 【文章係】 AI生成 (総当たりリトライ機能付き)
+# 3. 【文章係】 AI生成 (広範囲対応版)
 # =========================================================
 def call_gemini(prompt):
     if not GEMINI_KEY:
         return "<div class='error-msg'>エラー: GitHub Secretsに GEMINI_API_KEY が設定されていません。</div>"
 
+    # モデル名の候補（上から順に試す）
+    # gemini-1.5-flash: 最新の標準
+    # gemini-1.0-pro: 安定版（これが一番つながりやすい）
     candidate_models = [
-        "gemini-1.5-flash-latest",
         "gemini-1.5-flash",
-        "gemini-1.5-flash-001",
-        "gemini-pro"
+        "gemini-1.5-flash-latest",
+        "gemini-1.0-pro",
+        "gemini-1.0-pro-latest"
     ]
-    last_error = ""
+
+    error_logs = []
+
     for model in candidate_models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}"
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         try:
-            r = requests.post(url, json=payload, timeout=10)
+            r = requests.post(url, json=payload, timeout=15)
             if r.status_code == 200:
+                # 成功したら即リターン！
                 return r.json()['candidates'][0]['content']['parts'][0]['text']
             else:
-                last_error = f"Error {r.status_code} on {model}"
+                error_logs.append(f"{model}: {r.status_code}")
                 continue
         except Exception as e:
-            last_error = str(e)
+            error_logs.append(f"{model}: {str(e)}")
             continue
-    return f"<div class='error-msg'>AI接続失敗: {last_error}</div>"
+
+    # 全部ダメだった場合、ログを出す
+    return f"<div class='error-msg'>AI全滅: {' / '.join(error_logs)}</div>"
 
 def get_ai_reason(facts):
     prompt = f"""
