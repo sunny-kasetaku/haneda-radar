@@ -22,7 +22,6 @@ jobs:
         with:
           python-version: '3.9'
 
-      # ▼▼▼ ここを修正しました！ (google-generativeai を追加) ▼▼▼
       - name: Install dependencies
         run: pip install requests beautifulsoup4 google-generativeai
 
@@ -32,15 +31,22 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
-      - name: Commit changes
+      - name: Commit and Push changes
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add index.html
+          
+          # 変更があるかチェック
           if git diff --staged --quiet; then
             echo "No changes"
           else
             git commit -m "Auto update Haneda stats"
+            
+            # ▼▼▼ ここが衝突防止の魔法！ ▼▼▼
+            # 「もし先に誰かが更新してたら、それを混ぜてから進め」という命令
+            git pull --rebase origin main
+            
             git push
           fi
 
