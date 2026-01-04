@@ -9,6 +9,11 @@ import time
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 DISCORD_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
+# ★★★ ここが修正ポイント！ ★★★
+# キーの前後に余計なスペースがあったら削除する（これが404の原因の9割です）
+if GEMINI_KEY:
+    GEMINI_KEY = GEMINI_KEY.strip()
+
 # =========================================================
 #  設定：置換する目印
 # =========================================================
@@ -152,7 +157,7 @@ def determine_facts():
         t3_status = "深夜便がわずかにありますが、到着の間隔が空いています。"
     else:
         time_zone = "DAYTIME"
-        ranks = ["🌈 S 【 確変・入れ食い 】", "🔥 A 【 超・推奨 】", "✨ B 【 狙い目 】", "⚠️ C 【 要・注意 】"]
+        ranks = ["🌈 S 【 確変・入れ食い 】", "🔥 A 【 超・推奨 】", "✨ B 【 狙い目 】", "⚠️ C 【 狙い目 】", "⚠️ C 【 要・注意 】"]
         rank = random.choice(ranks)
         
         if 6 <= current_hour < 16: target_lane = "3号レーン (T2)"
@@ -176,41 +181,40 @@ def determine_facts():
     }
 
 # =========================================================
-# 3. 【文章係】 AI生成 (広範囲対応版)
+# 3. 【文章係】 AI生成 (超・総当たり版)
 # =========================================================
 def call_gemini(prompt):
     if not GEMINI_KEY:
         return "<div class='error-msg'>エラー: GitHub Secretsに GEMINI_API_KEY が設定されていません。</div>"
 
-    # モデル名の候補（上から順に試す）
-    # gemini-1.5-flash: 最新の標準
-    # gemini-1.0-pro: 安定版（これが一番つながりやすい）
-    candidate_models = [
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.0-pro",
-        "gemini-1.0-pro-latest"
+    # バージョンとモデルの組み合わせを全部試す
+    # (v1beta と v1 の両方で、主要モデルを試す)
+    combinations = [
+        ("v1beta", "gemini-1.5-flash"),
+        ("v1beta", "gemini-1.5-flash-latest"),
+        ("v1", "gemini-pro"),        # 鉄板
+        ("v1beta", "gemini-pro"),
+        ("v1beta", "gemini-1.0-pro")
     ]
 
     error_logs = []
 
-    for model in candidate_models:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}"
+    for version, model in combinations:
+        url = f"https://generativelanguage.googleapis.com/{version}/models/{model}:generateContent?key={GEMINI_KEY}"
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         try:
-            r = requests.post(url, json=payload, timeout=15)
+            r = requests.post(url, json=payload, timeout=10)
             if r.status_code == 200:
                 # 成功したら即リターン！
                 return r.json()['candidates'][0]['content']['parts'][0]['text']
             else:
-                error_logs.append(f"{model}: {r.status_code}")
+                error_logs.append(f"{model}({version}):{r.status_code}")
                 continue
         except Exception as e:
-            error_logs.append(f"{model}: {str(e)}")
+            error_logs.append(f"{model}: error")
             continue
 
-    # 全部ダメだった場合、ログを出す
-    return f"<div class='error-msg'>AI全滅: {' / '.join(error_logs)}</div>"
+    return f"<div class='error-msg'>接続全滅: {' / '.join(error_logs)}</div>"
 
 def get_ai_reason(facts):
     prompt = f"""
