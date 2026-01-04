@@ -13,22 +13,15 @@ def get_haneda_data():
     """
     羽田空港のフライト情報を簡易的に取得し、到着便数をカウントする
     """
-    # 羽田公式サイト(国内線/国際線)のURL（※構造変更に強い簡易版として実装）
-    # ここでは例として、単純な時間帯別の便数予測ロジックまたは
-    # 以前の稼働コードに基づいたダミー数値をAPIから取得する想定で記述します
-    # ※もし以前の「スクレイピングコード」をお持ちなら、この関数の中身をそちらに戻してください。
-    # 今回は「エラー特定」が主目的なので、計算ロジックは動き続けるものを入れます。
+    # ※ここは現在テスト用の簡易データ生成モードです。
+    # AIが正常に動くのを確認したら、元のスクレイピングコードに戻します。
     
-    # 現在時刻
     now = datetime.datetime.now()
     hour = now.hour
 
-    # 簡易シミュレーション（深夜は少なく、昼は多い）
-    # エラーで止まらないように、確実に動く数値を返します
+    # 簡易シミュレーション
     estimated_arrivals = 10 if 6 <= hour <= 22 else 2
     
-    # タクシー待機台数の推計（計算式）
-    # ※本来はリアルタイムデータを入れますが、まずはシステム稼働を優先
     pool_d = 160 - (hour * 2) + estimated_arrivals * 3
     pool_i = 90 - (hour * 1) + estimated_arrivals * 2
     
@@ -43,16 +36,16 @@ def get_haneda_data():
 
 def analyze_with_gemini(traffic_info):
     """
-    Geminiで分析する。エラー時は詳細な英語メッセージを返す。
+    Geminiで分析する。
     """
     if not GEMINI_API_KEY:
         return "⛔ 【設定エラー】 APIキーが GitHub Secrets に登録されていません。"
 
-    # モデル設定（最新の軽量モデルを指定）
+    # モデル設定
     genai.configure(api_key=GEMINI_API_KEY)
     
-    # 以前のエラー原因の可能性をつぶすため、モデル名を明示
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # ▼▼▼ 修正ポイント！ここを確実な 'gemini-pro' に戻しました ▼▼▼
+    model = genai.GenerativeModel('gemini-pro')
 
     prompt = f"""
     あなたは羽田空港のタクシー需要予測のプロです。以下の情報を元に、運転手へのアドバイスを作成してください。
@@ -75,24 +68,10 @@ def analyze_with_gemini(traffic_info):
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        # ここでエラーの正体を暴く！
         error_msg = str(e)
-        print(f"Gemini Error: {error_msg}") # ログ用
-        
-        # 画面表示用
         return f"""
         ⛔ 【AI接続エラー発生】
-        
-        原因を特定しました。以下の英語メッセージを確認してください：
-        
-        ------------------------
-        {error_msg}
-        ------------------------
-        
-        【よくある原因】
-        ・400 Bad Request: キーが無効、またはプロジェクト設定ミス
-        ・429 Resource Exhausted: 無料枠の使いすぎ（一時的）
-        ・403 Permission Denied: キーに権限がない
+        エラー内容: {error_msg}
         """
 
 def update_html(content):
