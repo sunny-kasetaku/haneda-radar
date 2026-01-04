@@ -56,7 +56,7 @@ HTML_TEMPLATE = f"""
         #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
         h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }}
         strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
-        .error-msg {{ color: #ff4444; font-size: 0.8rem; background: #330000; padding: 5px; border-radius: 4px; border: 1px solid #ff0000; }}
+        .error-msg {{ color: #ff4444; font-size: 0.8rem; background: #330000; padding: 5px; border-radius: 4px; }}
         .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
     </style>
 </head>
@@ -172,24 +172,39 @@ def determine_facts():
     }
 
 # =========================================================
-# 3. 【文章係】 AI生成 (診断モード)
+# 3. 【文章係】 AI生成 (総当たりリトライ版)
 # =========================================================
 def call_gemini(prompt):
-    # そもそもキーが読み込めていない場合
     if not GEMINI_KEY:
-        return "<div class='error-msg'>エラー: GitHub Secretsに GEMINI_API_KEY が設定されていません。YAMLファイルを確認してください。</div>"
+        return "<div class='error-msg'>エラー: GitHub Secretsに GEMINI_API_KEY が設定されていません。</div>"
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    try:
-        r = requests.post(url, json=payload, timeout=30)
-        if r.status_code == 200:
-            return r.json()['candidates'][0]['content']['parts'][0]['text']
-        else:
-            # エラー内容を画面に出す
-            return f"<div class='error-msg'>API Error: {r.status_code}<br>{r.text[:100]}...</div>"
-    except Exception as e:
-        return f"<div class='error-msg'>Connection Error: {str(e)}</div>"
+    # 試すモデルのリスト（上から順に試す）
+    candidate_models = [
+        "gemini-1.5-flash-latest", # 最新版
+        "gemini-1.5-flash",        # 通常版
+        "gemini-1.5-flash-001",    # 固定版
+        "gemini-pro"               # 旧安定版（最終手段）
+    ]
+
+    last_error = ""
+
+    for model in candidate_models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}"
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        try:
+            r = requests.post(url, json=payload, timeout=10)
+            if r.status_code == 200:
+                # 成功したら即リターン！
+                return r.json()['candidates'][0]['content']['parts'][0]['text']
+            else:
+                last_error = f"Error {r.status_code} on {model}"
+                continue # 次のモデルを試す
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    # 全部ダメだった場合
+    return f"<div class='error-msg'>AI接続失敗: {last_error}</div>"
 
 def get_ai_reason(facts):
     prompt = f"""
