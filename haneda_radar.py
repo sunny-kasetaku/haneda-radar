@@ -9,11 +9,23 @@ import time
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 DISCORD_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
-# ---------------------------------------------------------
-# 1. 【テンプレート】 HTMLのデザイン（Pythonコードを含まない純粋なテキスト）
-#    ※ここに { } があってもエラーになりません。
-# ---------------------------------------------------------
-HTML_TEMPLATE = """
+# =========================================================
+#  設定：置換する目印（マーカー）をここで定義
+#  ※ここを変えると動かなくなるので触らないでください
+# =========================================================
+MARKER_RANK = "[[RANK]]"
+MARKER_TARGET = "[[TARGET]]"
+MARKER_REASON = "[[REASON]]"
+MARKER_DETAILS = "[[DETAILS]]"
+MARKER_NUM_D = "[[NUM_D]]"
+MARKER_NUM_I = "[[NUM_I]]"
+MARKER_TIME = "[[TIME]]"
+MARKER_PASS = "[[PASS]]"
+
+# =========================================================
+#  1. HTMLテンプレート (Pythonコードを含まない純粋なテキスト)
+# =========================================================
+HTML_TEMPLATE = f"""
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -22,30 +34,30 @@ HTML_TEMPLATE = """
     <title>KASETACK RADAR</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        input { padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }
-        button { padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        body {{ background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }}
+        #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }}
+        input {{ padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }}
+        button {{ padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
         
-        #main-content { display: none; max-width: 800px; margin: 0 auto; }
-        .header-logo { font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }
-        .main-title { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }
+        #main-content {{ display: none; max-width: 800px; margin: 0 auto; }}
+        .header-logo {{ font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }}
+        .main-title {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }}
         
-        .legend-box {
+        .legend-box {{
             background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 10px; margin-bottom: 20px;
             font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-        }
-        .legend-item { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #222; border: 1px solid #333; white-space: nowrap; }
-        .l-s { color: #00e676; border-color: #00e676; font-weight: bold; }
-        .l-a { color: #ff4081; border-color: #ff4081; }
-        .l-b { color: #00b0ff; }
-        .l-c { color: #ffea00; }
-        .l-d { color: #9e9e9e; }
+        }}
+        .legend-item {{ display: inline-block; padding: 2px 6px; border-radius: 4px; background: #222; border: 1px solid #333; white-space: nowrap; }}
+        .l-s {{ color: #00e676; border-color: #00e676; font-weight: bold; }}
+        .l-a {{ color: #ff4081; border-color: #ff4081; }}
+        .l-b {{ color: #00b0ff; }}
+        .l-c {{ color: #ffea00; }}
+        .l-d {{ color: #9e9e9e; }}
 
-        #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }
-        h3 { color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }
-        strong { color: #FF4500; font-weight: bold; font-size: 1.05em; }
-        .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }
+        #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
+        h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }}
+        strong {{ color: #FF4500; font-weight: bold; font-size: 1.05em; }}
+        .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
     </style>
 </head>
 <body>
@@ -71,53 +83,55 @@ HTML_TEMPLATE = """
 
         <div id="report-box">
             <h3>📊 羽田指数</h3>
-            <p></p>
+            <p>{MARKER_RANK}</p>
 
             <h3>🏁 狙うべき場所</h3>
-            <p>👉 <strong></strong></p>
+            <p>👉 <strong>{MARKER_TARGET}</strong></p>
 
-            <p><strong>判定理由：</strong><br></p>
+            <p><strong>判定理由：</strong><br>{MARKER_REASON}</p>
             <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
 
             <h3>1. ✈️ 供給データ詳細</h3>
+            {MARKER_DETAILS}
+
             <h3>2. 🚃 外部要因と待機台数</h3>
             <p><strong>【必須】タクシープール待機台数（AI推計値）</strong></p>
             <ul>
-                <li>国内線プール: <strong>推定 約 台</strong></li>
-                <li>国際線プール: <strong>推定 約 台</strong></li>
+                <li>国内線プール: <strong>推定 約 {MARKER_NUM_D} 台</strong></li>
+                <li>国際線プール: <strong>推定 約 {MARKER_NUM_I} 台</strong></li>
             </ul>
         </div>
         
-        <div class="footer">更新: (JST)</div>
+        <div class="footer">更新: {MARKER_TIME} (JST)</div>
     </div>
 
     <script>
-        const correctPass = "";
-        window.onload = function() {
+        const correctPass = "{MARKER_PASS}";
+        window.onload = function() {{
             const savedPass = localStorage.getItem("haneda_pass");
-            if (savedPass === correctPass) { showContent(); }
-        };
-        function check() {
+            if (savedPass === correctPass) {{ showContent(); }}
+        }};
+        function check() {{
             const val = document.getElementById("pass").value;
-            if (val === correctPass) {
+            if (val === correctPass) {{
                 localStorage.setItem("haneda_pass", correctPass);
                 showContent();
-            } else {
+            }} else {{
                 document.getElementById("msg").innerText = "パスワードが違います";
-            }
-        }
-        function showContent() {
+            }}
+        }}
+        function showContent() {{
             document.getElementById("login-screen").style.display = "none";
             document.getElementById("main-content").style.display = "block";
-        }
+        }}
     </script>
 </body>
 </html>
 """
 
-# ---------------------------------------------------------
+# =========================================================
 # 2. 【司令塔】 事実の確定
-# ---------------------------------------------------------
+# =========================================================
 def determine_facts():
     n = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     ns = n.strftime('%Y-%m-%d %H:%M')
@@ -157,9 +171,9 @@ def determine_facts():
         "t1_s": t1_status, "t2_s": t2_status, "t3_s": t3_status
     }
 
-# ---------------------------------------------------------
+# =========================================================
 # 3. 【文章係】 AI生成
-# ---------------------------------------------------------
+# =========================================================
 def call_gemini(prompt):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -188,28 +202,30 @@ def get_ai_details(facts):
         """
         return call_gemini(prompt)
 
-# ---------------------------------------------------------
+# =========================================================
 # 4. 【実行】 置換してファイルを保存
-# ---------------------------------------------------------
+# =========================================================
 def generate_report():
+    print("Processing started...")
     facts = determine_facts()
     reason_text = get_ai_reason(facts)
     time.sleep(1)
     details_text = get_ai_details(facts)
     
-    # HTML内の目印（）を、実際のデータに置き換える（一番安全な方法）
+    # HTML内の目印を、実際のデータに置き換える
+    # ここで MARKER_XXX 変数を使うので、絶対に空文字("")にはなりません
     html = HTML_TEMPLATE
-    html = html.replace("", str(facts['rank']))
-    html = html.replace("", str(facts['target']))
-    html = html.replace("", str(reason_text))
-    html = html.replace("", str(details_text))
-    html = html.replace("", str(facts['num_d']))
-    html = html.replace("", str(facts['num_i']))
-    html = html.replace("", str(facts['time_str']))
+    html = html.replace(MARKER_RANK, str(facts['rank']))
+    html = html.replace(MARKER_TARGET, str(facts['target']))
+    html = html.replace(MARKER_REASON, str(reason_text))
+    html = html.replace(MARKER_DETAILS, str(details_text))
+    html = html.replace(MARKER_NUM_D, str(facts['num_d']))
+    html = html.replace(MARKER_NUM_I, str(facts['num_i']))
+    html = html.replace(MARKER_TIME, str(facts['time_str']))
     
     # パスワード処理
     daily_pass = str(random.randint(1000, 9999))
-    html = html.replace("", daily_pass)
+    html = html.replace(MARKER_PASS, daily_pass)
     
     # Discord通知
     if DISCORD_URL:
@@ -219,6 +235,7 @@ def generate_report():
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
+    print("Processing finished successfully.")
 
 if __name__ == "__main__":
     generate_report()
