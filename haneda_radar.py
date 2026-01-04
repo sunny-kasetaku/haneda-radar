@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import datetime
 import os
 import google.generativeai as genai
-import re
 
 # 環境変数
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -11,14 +10,16 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 def get_haneda_data():
     """
-    羽田空港のフライト情報を簡易的に取得
+    羽田空港のフライト情報を簡易的に取得し、到着便数をカウントする
     """
     now = datetime.datetime.now()
     hour = now.hour
 
-    # 簡易シミュレーション
+    # ※現在はシステム開通確認のため、時間帯による自動計算モードで動かしています。
+    # 深夜は少なく、昼間は多くなるように変動します。
     estimated_arrivals = 10 if 6 <= hour <= 22 else 2
     
+    # タクシー待機台数の計算式
     pool_d = 160 - (hour * 2) + estimated_arrivals * 3
     pool_i = 90 - (hour * 1) + estimated_arrivals * 2
     
@@ -33,12 +34,15 @@ def get_haneda_data():
 
 def analyze_with_gemini(traffic_info):
     """
-    Geminiで分析する（自動モデル検索機能付き）
+    Geminiで分析する
     """
     if not GEMINI_API_KEY:
         return "⛔ 【設定エラー】 APIキーが GitHub Secrets に登録されていません。"
 
     genai.configure(api_key=GEMINI_API_KEY)
+    
+    # ▼▼▼ ついに特定！正解のモデル名を設定しました ▼▼▼
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
     prompt = f"""
     あなたは羽田空港のタクシー需要予測のプロです。以下の情報を元に、運転手へのアドバイスを作成してください。
@@ -57,58 +61,17 @@ def analyze_with_gemini(traffic_info):
     (最後に一言、励ましの言葉)
     """
 
-    # ▼▼▼ ここが新機能：使えるモデルを片っ端から試す！ ▼▼▼
-    
-    # 試す順番リスト
-    candidate_models = [
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-pro',
-        'gemini-1.0-pro'
-    ]
-
-    last_error = ""
-
-    # 1. まずは候補リストから試す
-    for model_name in candidate_models:
-        try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text # 成功したらここで終了！
-        except Exception as e:
-            last_error = str(e)
-            continue # ダメなら次へ
-
-    # 2. 全滅した場合、Googleに「使えるリスト」を聞き出す
     try:
-        available_list = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                available_list.append(m.name)
-        
-        return f"""
-        ⛔ 【モデルが見つかりません】
-        
-        指定したモデルが全てエラーでした。
-        しかし、現在あなたのアカウントで使えるモデル一覧を取得しました：
-        
-        ------------------------
-        {', '.join(available_list)}
-        ------------------------
-        
-        ※このリストの中に正解があります。
-        最後のエラー詳細: {last_error}
-        """
+        response = model.generate_content(prompt)
+        return response.text
     except Exception as e:
-        return f"""
-        ⛔ 【完全にお手上げ】
-        モデル一覧の取得にも失敗しました。APIキー自体が無効な可能性があります。
-        エラー詳細: {str(e)}
-        """
+        return f"⛔ 【AI分析エラー】: {str(e)}"
 
 def update_html(content):
     now = datetime.datetime.now()
     time_str = now.strftime('%Y-%m-%d %H:%M')
+    
+    # 📺 TVモード：5分ごとに自動更新
     meta_refresh = '<meta http-equiv="refresh" content="300">'
 
     html = f"""
