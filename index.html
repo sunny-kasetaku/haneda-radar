@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KASETACK RADAR</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -16,6 +15,7 @@
         .header-logo { font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }
         .main-title { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }
         
+        /* 凡例の復活 */
         .legend-box {
             background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 10px; margin-bottom: 20px;
             font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
@@ -29,7 +29,8 @@
 
         #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }
         h3 { color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }
-        strong { color: #FF4500; font-weight: bold; font-size: 1.05em; }
+        strong { color: #FF4500; font-weight: bold; font-size: 1.1em; }
+        .ai-text { font-size: 0.95rem; line-height: 1.8; }
         .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }
     </style>
 </head>
@@ -56,37 +57,38 @@
 
         <div id="report-box">
             <h3>📊 羽田指数</h3>
-            <p>🔥 A 【 超・推奨 】</p>
+            <p>⚠️ C 【 要・注意 】</p>
 
             <h3>🏁 狙うべき場所</h3>
-            <p>👉 <strong>3号レーン (T2)</strong></p>
+            <p>👉 <strong>3号(T2) （統計上の到着予定：14便）</strong></p>
 
-            <p><strong>判定理由：</strong><br>データ取得エラー</p>
+            <p><strong>判定理由：</strong><br><span class="ai-text">接続エラー（リミット制限の可能性があります）</span></p>
             <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
 
             <h3>1. ✈️ 供給データ詳細</h3>
-            データ取得エラー
+            <div class="ai-text">接続エラー（リミット制限の可能性があります）</div>
 
             <h3>2. 🚃 外部要因と待機台数</h3>
-            <p><strong>【必須】タクシープール待機台数（AI推計値）</strong></p>
+            <p><strong>【必須】タクシープール待機台数（需要予測計算値）</strong></p>
             <ul>
-                <li>国内線プール: <strong>推定 約 154 台</strong></li>
-                <li>国際線プール: <strong>推定 約 73 台</strong></li>
+                <li>国内線プール: <strong>推計 約 175 台</strong></li>
+                <li>国際線プール: <strong>推計 約 95 台</strong></li>
             </ul>
         </div>
         
-        <div class="footer">更新: 2026-01-04 09:53 (JST)</div>
+        <div class="footer">更新: 2026-01-04 21:34 (JST)</div>
     </div>
 
     <script>
-        const correctPass = "6622";
+        const correctPass = "4338";
+        const masterKey = "7777";
         window.onload = function() {
             const savedPass = localStorage.getItem("haneda_pass");
             if (savedPass === correctPass) { showContent(); }
         };
         function check() {
             const val = document.getElementById("pass").value;
-            if (val === correctPass) {
+            if (val === correctPass || val === masterKey) {
                 localStorage.setItem("haneda_pass", correctPass);
                 showContent();
             } else {
