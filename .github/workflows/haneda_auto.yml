@@ -5,7 +5,7 @@ on:
     - cron: '*/20 * * * *'
   workflow_dispatch:
 
-# ▼ この権限設定が「GitHub Actions」モードには必須です
+# 権限設定
 permissions:
   contents: write
   pages: write
@@ -32,7 +32,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
-      # 1. まずリポジトリに計算結果を保存
+      # 1. リポジトリに保存
       - name: Commit changes
         run: |
           git config --global user.name "GitHub Action"
@@ -45,12 +45,12 @@ jobs:
             git push
           fi
 
-      # 2. その後、Webサーバーへ強制的にアップロード！
+      # 2. Webサーバーへ強制アップロード (ここを最新版にしました！)
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
