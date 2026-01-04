@@ -46,6 +46,9 @@ MARKER_NUM_I = "[[NUM_I]]"
 MARKER_TIME = "[[TIME]]"
 MARKER_PASS = "[[PASS]]"
 
+# =========================================================
+#  1. HTMLテンプレート (デザイン復旧版)
+# =========================================================
 HTML_TEMPLATE = f"""
 <!DOCTYPE html>
 <html lang="ja">
@@ -54,58 +57,106 @@ HTML_TEMPLATE = f"""
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KASETACK RADAR</title>
     <style>
-        body {{ background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 20px; margin: 0; line-height: 1.6; }}
+        body {{ background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }}
         #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }}
         input {{ padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }}
-        button {{ padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; }}
+        button {{ padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }}
+        
         #main-content {{ display: none; max-width: 800px; margin: 0 auto; }}
-        .header-logo {{ font-weight: 900; font-size: 1.2rem; color: #FFD700; }}
-        .main-title {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; color: #fff; margin-bottom: 20px; }}
+        .header-logo {{ font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }}
+        .main-title {{ border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }}
+        
+        /* 凡例の復活 */
+        .legend-box {{
+            background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 10px; margin-bottom: 20px;
+            font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+        }}
+        .legend-item {{ display: inline-block; padding: 2px 6px; border-radius: 4px; background: #222; border: 1px solid #333; white-space: nowrap; }}
+        .l-s {{ color: #00e676; border-color: #00e676; font-weight: bold; }}
+        .l-a {{ color: #ff4081; border-color: #ff4081; }}
+        .l-b {{ color: #00b0ff; }}
+        .l-c {{ color: #ffea00; }}
+        .l-d {{ color: #9e9e9e; }}
+
         #report-box {{ background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }}
-        h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; font-size: 1.2rem; }}
-        strong {{ color: #FF4500; }}
+        h3 {{ color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }}
+        strong {{ color: #FF4500; font-weight: bold; font-size: 1.1em; }}
+        .ai-text {{ font-size: 0.95rem; line-height: 1.8; }}
         .footer {{ text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }}
     </style>
 </head>
 <body>
     <div id="login-screen">
-        <div style="font-size: 4rem;">🔒</div>
-        <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold;">KASETACK</div>
+        <div style="font-size: 4rem; margin-bottom: 10px;">🔒</div>
+        <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">KASETACK</div>
         <input type="password" id="pass" placeholder="TODAY'S PASS" />
         <button onclick="check()">OPEN</button>
-        <p id="msg" style="color: #ff4444; margin-top: 15px;"></p>
+        <p id="msg" style="color: #ff4444; margin-top: 15px; font-size: 0.9rem;"></p>
     </div>
+
     <div id="main-content">
         <div class="header-logo">🚖 KASETACK</div>
         <div class="main-title">羽田需要レーダー</div>
-        <div id="report-box">
-            <h3>📊 羽田指数</h3><p>{MARKER_RANK}</p>
-            <h3>🏁 狙うべき場所</h3><p>👉 <strong>{MARKER_TARGET}</strong></p>
-            <p><strong>判定理由：</strong><br>{MARKER_REASON}</p>
-            <hr style="border:0; border-top:1px solid #444;">
-            <h3>1. ✈️ 供給データ詳細</h3><div>{MARKER_DETAILS}</div>
-            <h3>2. 🚃 外部要因と待機台数</h3>
-            <ul><li>国内線: <strong>推計 約 {MARKER_NUM_D} 台</strong></li><li>国際線: <strong>推計 約 {MARKER_NUM_I} 台</strong></li></ul>
+        
+        <div class="legend-box">
+            <span class="legend-item l-s">🌈 S:入れ食い</span>
+            <span class="legend-item l-a">🔥 A:超推奨</span>
+            <span class="legend-item l-b">✨ B:狙い目</span>
+            <span class="legend-item l-c">⚠️ C:要注意</span>
+            <span class="legend-item l-d">⛔ D:撤退</span>
         </div>
+
+        <div id="report-box">
+            <h3>📊 羽田指数</h3>
+            <p>{MARKER_RANK}</p>
+
+            <h3>🏁 狙うべき場所</h3>
+            <p>👉 <strong>{MARKER_TARGET}</strong></p>
+
+            <p><strong>判定理由：</strong><br><span class="ai-text">{MARKER_REASON}</span></p>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
+
+            <h3>1. ✈️ 供給データ詳細</h3>
+            <div class="ai-text">{MARKER_DETAILS}</div>
+
+            <h3>2. 🚃 外部要因と待機台数</h3>
+            <p><strong>【必須】タクシープール待機台数（需要予測計算値）</strong></p>
+            <ul>
+                <li>国内線プール: <strong>推計 約 {MARKER_NUM_D} 台</strong></li>
+                <li>国際線プール: <strong>推計 約 {MARKER_NUM_I} 台</strong></li>
+            </ul>
+        </div>
+        
         <div class="footer">更新: {MARKER_TIME} (JST)</div>
     </div>
+
     <script>
         const correctPass = "{MARKER_PASS}";
         const masterKey = "7777";
-        window.onload = function() {{ if (localStorage.getItem("haneda_pass") === correctPass) showContent(); }};
+        window.onload = function() {{
+            const savedPass = localStorage.getItem("haneda_pass");
+            if (savedPass === correctPass) {{ showContent(); }}
+        }};
         function check() {{
             const val = document.getElementById("pass").value;
-            if (val === correctPass || val === masterKey) {{ localStorage.setItem("haneda_pass", correctPass); showContent(); }}
-            else {{ document.getElementById("msg").innerText = "パスワードが違います"; }}
+            if (val === correctPass || val === masterKey) {{
+                localStorage.setItem("haneda_pass", correctPass);
+                showContent();
+            }} else {{
+                document.getElementById("msg").innerText = "パスワードが違います";
+            }}
         }}
-        function showContent() {{ document.getElementById("login-screen").style.display = "none"; document.getElementById("main-content").style.display = "block"; }}
+        function showContent() {{
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+        }}
     </script>
 </body>
 </html>
 """
 
 # =========================================================
-# 2. 【左脳】データ収集ロジック (欠航・遅延を厳密に判定)
+# 2. 【左脳】データ収集・計算ロジック
 # =========================================================
 def fetch_flight_data():
     urls = [
@@ -147,14 +198,14 @@ def determine_facts():
     if h in THEORY_DATA:
         data = THEORY_DATA[h]
         best = max(data, key=data.get)
-        target = f"{best} (指数:{data[best]})"
-        hint = f"統計上、{h}時は{best}が最も強い時間帯です。"
+        # ★指数を「統計上の到着予定便数」に書き換え
+        target = f"{best} （統計上の到着予定：{data[best]}便）"
+        hint = f"サニーさんの統計データによると、{h}時台は{best}が最も多くの便数を記録しています。"
     else:
         target, hint = "国際線 または 都内", "深夜帯のセオリーに基づきます。"
 
-    if delay: hint += " ※遅延便により波が後ろ倒しになる可能性があります。"
+    if delay: hint += " ※現在、遅延便の影響でピークが変動する可能性があります。"
 
-    # 台数予測
     base_d, base_i = 180, 100
     m = {"HIGH": 0.4, "MID-HIGH": 0.6, "MID": 0.8, "LOW": 0.95}
     mult = m.get(level, 0.8)
@@ -170,14 +221,14 @@ def call_gemini(prompt):
     try:
         r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=20)
         return r.json()['candidates'][0]['content']['parts'][0]['text']
-    except: return "接続エラー"
+    except: return "接続エラー（リミット制限の可能性があります）"
 
 def generate_report():
     f = determine_facts()
     reason = call_gemini(f"タクシー運転手に140字以内で助言。時刻:{f['time_str']}, ランク:{f['rank']}, 推奨:{f['target']}, 便数:国内{f['dom']}/国際{f['intl']}, 遅延:{f['delay']}, 根拠:{f['hint']}")
     details = call_gemini(f"国内{f['dom']}便, 国際{f['intl']}便、遅延{'あり' if f['delay'] else 'なし'}。各ターミナルの状況を簡潔なMarkdownで。")
     
-    # ★朝6時更新のパスワード
+    # 朝6時更新のパスワード
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     if now.hour < 6: now = now - datetime.timedelta(days=1)
     random.seed(now.strftime('%Y%m%d'))
@@ -186,7 +237,7 @@ def generate_report():
     html = HTML_TEMPLATE.replace(MARKER_RANK, f['rank']).replace(MARKER_TARGET, f['target']).replace(MARKER_REASON, reason).replace(MARKER_DETAILS, details).replace(MARKER_NUM_D, str(f['num_d'])).replace(MARKER_NUM_I, str(f['num_i'])).replace(MARKER_TIME, f['time_str']).replace(MARKER_PASS, pw)
     
     if DISCORD_URL:
-        requests.post(DISCORD_URL, json={"content": f"📡 **羽田レーダー更新**\n🔑 **PASS:** `{pw}` (朝6時まで有効)\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
+        requests.post(DISCORD_URL, json={"content": f"📡 **羽田レーダー更新（デザイン修正版）**\n🔑 **PASS:** `{pw}`\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
     
     with open("index.html", "w", encoding="utf-8") as file: file.write(html)
 
