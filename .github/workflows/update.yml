@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v5  # v4 -> v5 に更新
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
           
@@ -35,7 +35,7 @@ jobs:
         run: python haneda_radar.py
         
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3  # 【重要】ここを v3 に修正！
+        uses: actions/upload-pages-artifact@v3  # 👈 ここが v3 になっているか確認！
         with:
           path: .
 
@@ -48,4 +48,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4  # 【重要】ここを v4 に修正！
+        uses: actions/deploy-pages@v4  # 👈 ここが v4 になっているか確認！
