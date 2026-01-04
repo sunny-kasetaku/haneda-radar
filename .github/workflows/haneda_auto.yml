@@ -2,14 +2,17 @@ name: Haneda Radar Auto Update
 
 on:
   schedule:
-    - cron: '*/20 * * * *' # 20分ごとに実行
-  workflow_dispatch: # 手動実行ボタン
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
 
+# ▼ これが「Web公開権限」を与える魔法です
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,11 +32,25 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
-      # ▼▼ これが抜けていたので追加します！ ▼▼
+      # 計算結果(index.html)をリポジトリに保存
       - name: Commit and Push
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add index.html
-          git commit -m "Auto update Haneda stats" || exit 0
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto update Haneda stats"
+            git push
+          fi
+
+      # ▼▼ ここからが新機能：Webサーバーへ強制反映 ▼▼
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
