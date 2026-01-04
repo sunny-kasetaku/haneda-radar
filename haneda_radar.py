@@ -47,7 +47,6 @@ MARKER_PASS = "[[PASS]]"
 # =========================================================
 #  1. HTMLテンプレート (強力な強制リロード版)
 # =========================================================
-# ★ <meta refresh> を削除し、最後に JavaScript を追加しています
 HTML_TEMPLATE = f"""
 <!DOCTYPE html>
 <html lang="ja">
@@ -131,13 +130,9 @@ HTML_TEMPLATE = f"""
     <script>
         const correctPass = "{MARKER_PASS}";
         const masterKey = "7777";
-        
-        // ▼▼▼ ここが強力なリロード機能です！ ▼▼▼
         setTimeout(function() {{
-            // 現在時刻をURLにくっつけて、ブラウザに「新しいページだ！」と騙して読み込ませる
             window.location.href = window.location.pathname + "?t=" + new Date().getTime();
-        }}, 300000); // 300000ミリ秒 = 5分
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+        }}, 300000); 
 
         window.onload = function() {{
             const savedPass = localStorage.getItem("haneda_pass");
@@ -235,8 +230,24 @@ def call_gemini(prompt):
 
 def generate_report():
     print("Starting update...")
+    
+    # 1. 前回のパスワードをこっそり盗み見る
+    old_pass = ""
+    if os.path.exists("index.html"):
+        try:
+            with open("index.html", "r", encoding="utf-8") as f:
+                content = f.read()
+                # HTMLの中から 'const correctPass = "1234";' を探す
+                match = re.search(r'const correctPass = "(\d{4})";', content)
+                if match:
+                    old_pass = match.group(1)
+        except:
+            pass # 読み込めなくても気にしない
+
+    # 2. データを集める
     f = determine_facts()
     
+    # 3. AIに書かせる
     reason_prompt = f"""
     タクシー運転手へ140字以内で助言をしてください。
     【条件】挨拶や前置きは禁止。「はい、承知しました」等は不要。いきなり本文から始めること。
@@ -251,18 +262,22 @@ def generate_report():
     """
     details = call_gemini(details_prompt)
     
+    # 4. 新しいパスワードを決める（朝6時に切り替わる）
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     if now.hour < 6: now = now - datetime.timedelta(days=1)
     random.seed(now.strftime('%Y%m%d'))
     pw = str(random.randint(1000, 9999))
     
+    # 5. HTMLを保存する
     html = HTML_TEMPLATE.replace(MARKER_RANK, f['rank']).replace(MARKER_TARGET, f['target']).replace(MARKER_REASON, reason).replace(MARKER_DETAILS, details).replace(MARKER_NUM_D, str(f['num_d'])).replace(MARKER_NUM_I, str(f['num_i'])).replace(MARKER_TIME, f['time_str']).replace(MARKER_PASS, pw)
     
-    if DISCORD_URL:
-        requests.post(DISCORD_URL, json={"content": f"📡 **羽田レーダー更新**\n🔑 **PASS:** `{pw}`\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
-    
     with open("index.html", "w", encoding="utf-8") as file: file.write(html)
+    
+    # 6. 【ここが重要】パスワードが変わった時だけ Discord 通知する！
+    if DISCORD_URL and old_pass != pw:
+        requests.post(DISCORD_URL, json={"content": f"📡 **KASETACK 羽田レーダー**\n🌞 **今日のパスワード:** `{pw}`\n(パスワードが更新されました)\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
+    
     print("Done!")
 
 if __name__ == "__main__":
