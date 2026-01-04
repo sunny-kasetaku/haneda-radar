@@ -1,112 +1,102 @@
 
-    <!DOCTYPE html>
-    <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <meta http-equiv="refresh" content="1260">
-        <title>KASETACK RADAR</title>
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <style>
-            body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
-            #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-            input { padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }
-            button { padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-            
-            #main-content { display: none; max-width: 800px; margin: 0 auto; }
-            .header-logo { font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }
-            .main-title { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }
-            
-            /* 凡例（レジェンド）固定エリア */
-            .legend-box {
-                background: #1a1a1a;
-                border: 1px solid #444;
-                border-radius: 8px;
-                padding: 10px;
-                margin-bottom: 20px;
-                font-size: 0.8rem;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                justify-content: center;
-            }
-            .legend-item { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #222; border: 1px solid #333; white-space: nowrap; }
-            .l-s { color: #00e676; border-color: #00e676; font-weight: bold; }
-            .l-a { color: #ff4081; border-color: #ff4081; }
-            .l-b { color: #00b0ff; }
-            .l-c { color: #ffea00; }
-            .l-d { color: #9e9e9e; }
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KASETACK RADAR</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        input { padding: 12px; font-size: 1.2rem; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; text-align: center; margin-bottom: 20px; width: 60%; }
+        button { padding: 12px 40px; font-size: 1rem; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        #main-content { display: none; max-width: 800px; margin: 0 auto; }
+        .header-logo { font-weight: 900; font-size: 1.2rem; color: #FFD700; margin-bottom: 5px; }
+        .main-title { border-bottom: 2px solid #FFD700; padding-bottom: 10px; font-size: 1.5rem; letter-spacing: 1px; color: #fff; margin-bottom: 20px; }
+        
+        .legend-box {
+            background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 10px; margin-bottom: 20px;
+            font-size: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+        }
+        .legend-item { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #222; border: 1px solid #333; white-space: nowrap; }
+        .l-s { color: #00e676; border-color: #00e676; font-weight: bold; }
+        .l-a { color: #ff4081; border-color: #ff4081; }
+        .l-b { color: #00b0ff; }
+        .l-c { color: #ffea00; }
+        .l-d { color: #9e9e9e; }
 
-            #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }
-            
-            h3 { color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }
-            h3:nth-of-type(1) { margin-top: 0; color: #00e676; border-left: 4px solid #00e676; }
-            h3:nth-of-type(2) { color: #ff4081; border-left: 6px solid #ff4081; background: rgba(255, 64, 129, 0.1); padding: 10px; border-radius: 0 8px 8px 0; }
+        #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        h3 { color: #FFD700; border-left: 4px solid #FFD700; padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-size: 1.2rem; clear: both; }
+        strong { color: #FF4500; font-weight: bold; font-size: 1.05em; }
+        .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <div style="font-size: 4rem; margin-bottom: 10px;">🔒</div>
+        <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">KASETACK</div>
+        <input type="password" id="pass" placeholder="TODAY'S PASS" />
+        <button onclick="check()">OPEN</button>
+        <p id="msg" style="color: #ff4444; margin-top: 15px; font-size: 0.9rem;"></p>
+    </div>
 
-            strong { color: #FF4500; font-weight: bold; font-size: 1.05em; }
-            ul { padding-left: 20px; margin: 10px 0; }
-            li { margin-bottom: 8px; }
-            p { margin-bottom: 15px; }
-
-            /* 強制改行CSS */
-            pre { white-space: pre-wrap; word-wrap: break-word; overflow-x: auto; background: #222; padding: 10px; border-radius: 5px; }
-            code { white-space: pre-wrap; word-wrap: break-word; }
-            div { word-break: break-word; }
-
-            .footer { text-align: right; font-size: 0.7rem; color: #666; margin-top: 30px; border-top: 1px solid #333; padding-top: 10px; }
-            .tag { background: #333; color: #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
-        </style>
-    </head>
-    <body>
-        <div id="login-screen">
-            <div style="font-size: 4rem; margin-bottom: 10px;">🔒</div>
-            <div style="color: #FFD700; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">KASETACK</div>
-            <input type="password" id="pass" placeholder="TODAY'S PASS" />
-            <button onclick="check()">OPEN</button>
-            <p id="msg" style="color: #ff4444; margin-top: 15px; font-size: 0.9rem;"></p>
+    <div id="main-content">
+        <div class="header-logo">🚖 KASETACK</div>
+        <div class="main-title">羽田需要レーダー</div>
+        
+        <div class="legend-box">
+            <span class="legend-item l-s">🌈 S:入れ食い</span>
+            <span class="legend-item l-a">🔥 A:超推奨</span>
+            <span class="legend-item l-b">✨ B:狙い目</span>
+            <span class="legend-item l-c">⚠️ C:要注意</span>
+            <span class="legend-item l-d">⛔ D:撤退</span>
         </div>
 
-        <div id="main-content">
-            <div class="header-logo">🚖 KASETACK</div>
-            <div class="main-title">羽田需要レーダー</div>
-            
-            <div class="legend-box">
-                <span class="legend-item l-s">🌈 S:入れ食い</span>
-                <span class="legend-item l-a">🔥 A:超推奨</span>
-                <span class="legend-item l-b">✨ B:狙い目</span>
-                <span class="legend-item l-c">⚠️ C:要注意</span>
-                <span class="legend-item l-d">⛔ D:撤退</span>
-            </div>
+        <div id="report-box">
+            <h3>📊 羽田指数</h3>
+            <p>🔥 A 【 超・推奨 】</p>
 
-            <div id="report-box"></div>
-            <div class="footer">
-                更新: 2026-01-04 08:49 (JST)<br>
-                <span class="tag">models/gemma-3-1b-it</span>
-            </div>
+            <h3>🏁 狙うべき場所</h3>
+            <p>👉 <strong>3号レーン (T2)</strong></p>
+
+            <p><strong>判定理由：</strong><br>データ取得エラー</p>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
+
+            <h3>1. ✈️ 供給データ詳細</h3>
+            データ取得エラー
+
+            <h3>2. 🚃 外部要因と待機台数</h3>
+            <p><strong>【必須】タクシープール待機台数（AI推計値）</strong></p>
+            <ul>
+                <li>国内線プール: <strong>推定 約 154 台</strong></li>
+                <li>国際線プール: <strong>推定 約 73 台</strong></li>
+            </ul>
         </div>
+        
+        <div class="footer">更新: 2026-01-04 09:53 (JST)</div>
+    </div>
 
-        <script>
-            const rawText = "### \ud83d\udcca \u7fbd\u7530\u6307\u6570\nS\n\n### \ud83c\udfc1 \u72d9\u3046\u3079\u304d\u5834\u6240\n\ud83d\udc49 T2\u306e\u30bf\u30af\u30b7\u30fc\u9700\u8981\u3092\u628a\u63e1\n\n**\u5224\u5b9a\u7406\u7531\uff1a**\n\u7fbd\u7530\u7a7a\u6e2f\u306e2\u53f7\u30ec\u30fc\u30f3\uff08T2\uff09\u306f\u3001JAL\u5230\u7740\u4fbf\u3068ANA\u5230\u7740\u4fbf\u306e\u4e21\u65b9\u306b\u5bfe\u5fdc\u3059\u308b\u30bf\u30af\u30b7\u30fc\u306e\u9700\u8981\u304c\u96c6\u4e2d\u3057\u3066\u3044\u308b\u72b6\u6cc1\u3067\u3059\u3002JAL\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\uff08\u901a\u5e38\u3001JAL\u306f\u56fd\u5185\u7dda\u306b\u504f\u308b\u50be\u5411\u304c\u3042\u308b\u305f\u3081\uff09\u3068\u3001ANA\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\uff08\u56fd\u969b\u7dda\u306b\u504f\u308b\u50be\u5411\u304c\u3042\u308b\u305f\u3081\uff09\u3092\u8003\u616e\u3059\u308b\u3068\u3001T2\u306e\u30bf\u30af\u30b7\u30fc\u9700\u8981\u306f\u3001JAL\u5230\u7740\u4fbf\u3068ANA\u5230\u7740\u4fbf\u306e\u540c\u6642\u5230\u7740\u3092\u4f34\u3046\u5834\u5408\u306b\u5927\u304d\u304f\u5897\u52a0\u3059\u308b\u53ef\u80fd\u6027\u304c\u3042\u308a\u307e\u3059\u3002\u7279\u306b\u3001JAL\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\u304c\u56fd\u5185\u7dda\u306b\u504f\u3063\u3066\u3044\u308b\u5834\u5408\u3001T2\u306e\u5f85\u6a5f\u53f0\u6570\u306f\u5897\u52a0\u3057\u3001\u56fd\u969b\u7dda\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\u304c\u56fd\u969b\u7dda\u306b\u504f\u3063\u3066\u3044\u308b\u5834\u5408\u3001T2\u306e\u5f85\u6a5f\u53f0\u6570\u306f\u5897\u52a0\u3059\u308b\u53ef\u80fd\u6027\u304c\u3042\u308a\u307e\u3059\u3002\n\n---\n### 1. \u2708\ufe0f \u4f9b\u7d66\u30c7\u30fc\u30bf\u8a73\u7d30\n**\u3010 \u7b2c1\u30bf\u30fc\u30df\u30ca\u30eb (JAL) \u3011**\nJAL\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\u306b\u57fa\u3065\u304d\u8a18\u8ff0\n\n**\u3010 \u7b2c2\u30bf\u30fc\u30df\u30ca\u30eb (ANA) \u3011**\nANA\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\u306b\u57fa\u3065\u304d\u8a18\u8ff0\n\n**\u3010 \u7b2c3\u30bf\u30fc\u30df\u30ca\u30eb (\u56fd\u969b\u7dda) \u3011**\n\u56fd\u969b\u7dda\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\u306b\u57fa\u3065\u304d\u8a18\u8ff0\n\n### 2. \ud83d\ude83 \u5916\u90e8\u8981\u56e0\u3068\u5f85\u6a5f\u53f0\u6570\n* \u56fd\u5185\u7dda\u30d7\u30fc\u30eb: **\u63a8\u5b9a \u7d04 131 \u53f0**\n* \u56fd\u969b\u7dda\u30d7\u30fc\u30eb: **\u63a8\u5b9a \u7d04 46 \u53f0**\n\n### 3. \ud83e\udde0 AI\u30ed\u30b8\u30c3\u30af\u89e3\u8aac\n\u3053\u306e\u30c7\u30fc\u30bf\u306b\u57fa\u3065\u304d\u3001T2\u306e\u30bf\u30af\u30b7\u30fc\u9700\u8981\u306f\u3001JAL\u5230\u7740\u4fbf\u3068ANA\u5230\u7740\u4fbf\u306e\u540c\u6642\u5230\u7740\u3092\u4f34\u3046\u5834\u5408\u306b\u5897\u52a0\u3059\u308b\u53ef\u80fd\u6027\u304c\u9ad8\u3044\u3067\u3059\u3002JAL\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\u304c\u56fd\u5185\u7dda\u306b\u504f\u3063\u3066\u3044\u308b\u5834\u5408\u3001T2\u306e\u5f85\u6a5f\u53f0\u6570\u306f\u5897\u52a0\u3057\u3001ANA\u5230\u7740\u4fbf\u306e\u72b6\u6cc1\u304c\u56fd\u969b\u7dda\u306b\u504f\u3063\u3066\u3044\u308b\u5834\u5408\u3001T2\u306e\u5f85\u6a5f\u53f0\u6570\u306f\u5897\u52a0\u3059\u308b\u53ef\u80fd\u6027\u304c\u3042\u308a\u307e\u3059\u3002\n";
-            const correctPass = "4338";
-            window.onload = function() {
-                const savedPass = localStorage.getItem("haneda_pass");
-                if (savedPass === correctPass) { showContent(); }
-            };
-            function check() {
-                const val = document.getElementById("pass").value;
-                if (val === correctPass) {
-                    localStorage.setItem("haneda_pass", correctPass);
-                    showContent();
-                } else {
-                    document.getElementById("msg").innerText = "パスワードが違います";
-                }
+    <script>
+        const correctPass = "6622";
+        window.onload = function() {
+            const savedPass = localStorage.getItem("haneda_pass");
+            if (savedPass === correctPass) { showContent(); }
+        };
+        function check() {
+            const val = document.getElementById("pass").value;
+            if (val === correctPass) {
+                localStorage.setItem("haneda_pass", correctPass);
+                showContent();
+            } else {
+                document.getElementById("msg").innerText = "パスワードが違います";
             }
-            function showContent() {
-                document.getElementById("login-screen").style.display = "none";
-                document.getElementById("main-content").style.display = "block";
-                document.getElementById("report-box").innerHTML = marked.parse(rawText);
-            }
-        </script>
-    </body>
-    </html>
-    
+        }
+        function showContent() {
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+        }
+    </script>
+</body>
+</html>
