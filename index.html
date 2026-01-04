@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="refresh" content="300">
     <title>KASETACK RADAR</title>
     <style>
         body { background: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
@@ -62,36 +61,41 @@
             <h3>🏁 狙うべき場所</h3>
             <p>👉 <strong>4号(T2) （統計上の到着予定：3便）</strong></p>
 
-            <p><strong>判定理由：</strong><br><span class="ai-text">23:47、T2は統計上便数が多いが、現在の到着便は0便で「要・注意」ランク。統計データのみを信用するのは危険です。T2で長時間待機のリスクあり。リアルタイム情報と他のターミナルの状況も確認し、冷静に判断してください。</span></p>
+            <p><strong>判定理由：</strong><br><span class="ai-text">深夜23:59、要・注意ランク。現在便数0ですが、23時台は4号(T2)が統計上最多便数、到着予定3便。T2周辺での待機が効率的です。少ない便数でも乗客は見込めます。深夜運転の疲労、飲酒客対応には細心の注意を払い、安全運転を最優先に。</span></p>
             <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
 
             <h3>1. ✈️ 供給データ詳細</h3>
-            <div class="ai-text">*   **国内線ターミナル**:
-    *   運航便は0便。
-    *   チェックインカウンター、セキュリティチェック、搭乗ゲートは全て閉鎖または無人状態。
-    *   ターミナル内に旅客の姿はほとんどなく、非常に閑散としている。
-*   **国際線ターミナル**:
-    *   運航便は0便。
-    *   チェックインカウンター、出国審査場、搭乗ゲートは全て閉鎖または無人状態。
-    *   ターミナル内に旅客の姿はほとんどなく、非常に閑散としている。
-*   **全ターミナル共通**:
-    *   遅延便は発生していない（運航便がないため）。
-    *   空港全体が静まり返っており、通常の活気は見られない。</div>
+            <div class="ai-text">*   **国内線ターミナル**
+    *   国内線の発着便はなし。
+    *   全ての国内線カウンターおよび搭乗ゲートは閉鎖または無人。
+    *   ターミナル内は閑散としている。
+*   **国際線ターミナル**
+    *   国際線の発着便はなし。
+    *   全ての国際線カウンターおよび搭乗ゲートは閉鎖または無人。
+    *   ターミナル内は閑散としている。</div>
 
             <h3>2. 🚃 外部要因と待機台数</h3>
             <p><strong>【必須】タクシープール待機台数（需要予測計算値）</strong></p>
             <ul>
-                <li>国内線プール: <strong>推計 約 168 台</strong></li>
-                <li>国際線プール: <strong>推計 約 92 台</strong></li>
+                <li>国内線プール: <strong>推計 約 162 台</strong></li>
+                <li>国際線プール: <strong>推計 約 96 台</strong></li>
             </ul>
         </div>
         
-        <div class="footer">更新: 2026-01-04 23:47 (JST) <br>📺 自動更新モード: ON</div>
+        <div class="footer">更新: 2026-01-04 23:59 (JST) <br>📺 自動更新モード: 強制リロードON</div>
     </div>
 
     <script>
         const correctPass = "4338";
         const masterKey = "7777";
+        
+        // ▼▼▼ ここが強力なリロード機能です！ ▼▼▼
+        setTimeout(function() {
+            // 現在時刻をURLにくっつけて、ブラウザに「新しいページだ！」と騙して読み込ませる
+            window.location.href = window.location.pathname + "?t=" + new Date().getTime();
+        }, 300000); // 300000ミリ秒 = 5分
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
         window.onload = function() {
             const savedPass = localStorage.getItem("haneda_pass");
             if (savedPass === correctPass) { showContent(); }
