@@ -5,6 +5,7 @@ import random
 import re
 
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+# 🌟 プロデューサー提案の移動時間変数
 TRAVEL_TIME = 20 
 
 HTML_TEMPLATE = """
@@ -19,10 +20,11 @@ HTML_TEMPLATE = """
     strong { color: #FF4500; font-size: 1.1em; }
     .cancel-info { color: #ff4444; font-weight: bold; background:rgba(255,68,68,0.15); padding:12px; border-radius:8px; margin: 10px 0; border: 1px solid #ff4444; text-align: center; }
     .update-area { text-align: center; margin-top: 25px; background: #222; padding: 20px; border-radius: 12px; border: 1px solid #444; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.1s; }
+    .reload-btn:active { transform: scale(0.98); }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
     .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
-    .snippet { color: #444; font-size: 0.6rem; margin-top: 5px; }
+    .ai-text { line-height: 1.8; font-size: 1.05rem; }
 </style></head>
 <body><div class="container">
 <div class="header-logo">🚖 KASETACK</div>
@@ -33,10 +35,10 @@ HTML_TEMPLATE = """
     <div class="cancel-info">[[CANCEL_BLOCK]]</div>
     <h3>🏁 推奨アクション</h3>
     <p>👉 <strong>[[TARGET]]</strong></p>
-    <p><strong>判定理由：</strong><br>[[REASON]]</p>
+    <p><strong>判定理由（今から[[T_TIME]]分で到着想定）：</strong><br><span class="ai-text">[[REASON]]</span></p>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 供給データ詳細</h3>
-    <div>[[DETAILS]]</div>
+    <div class="ai-text">[[DETAILS]]</div>
     <div class="update-area">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
@@ -51,10 +53,13 @@ HTML_TEMPLATE = """
 </body></html>
 """
 
-def fetch_definitive_flights():
-    # 💡 確実に存在する正しいURL（kind=1:国内, kind=2:国際）
-    urls = ["https://transit.yahoo.co.jp/airport/arrival/23/?kind=1", "https://transit.yahoo.co.jp/airport/arrival/23/?kind=2"]
-    # 🌟 Googlebotに完全偽装してアクセス
+def fetch_corrected_flights():
+    # 💡 確実に存在する正しいURL（kind=1:国内線, kind=2:国際線）
+    urls = [
+        "https://transit.yahoo.co.jp/airport/arrival/23/?kind=1",
+        "https://transit.yahoo.co.jp/airport/arrival/23/?kind=2"
+    ]
+    # 🌟 Googlebotに偽装してガードを突破
     headers = {
         "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
     }
@@ -69,38 +74,39 @@ def fetch_definitive_flights():
             r = requests.get(url, headers=headers, timeout=15)
             status_code = r.status_code
             html = r.text
-            
-            # 正規表現で時刻を抽出
+            # 正規表現で時刻（XX:XX）を全抽出
             times = re.findall(r'(\d{1,2}):(\d{2})', html)
             raw_count += len(times)
             cancel += html.count("欠航")
             
             for h, m in times:
                 f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
-                # 深夜・翌日補正
+                # 深夜の翌日補正
                 if now.hour >= 20 and int(h) <= 5:
                     f_time += datetime.timedelta(days=1)
                 
                 diff = (f_time - now).total_seconds() / 60
-                # 到着済みから150分後までを有効需要とする
+                # 現在から150分後までを「有効需要」としてカウント
                 if -15 < diff < 150:
                     valid += 1
         except:
             pass
     
-    # 共通パーツの時間を引き、現実的な数にする
-    valid = max(0, valid - 8) 
+    # 共通パーツ（現在時刻など）を少し補正して現実的な便数にする
+    valid = max(0, valid - 6) 
     return valid, cancel, raw_count, status_code
 
 def call_ai(v, c, raw):
-    if v < 1: return {"reason": "有効な便データがまだ反映されていません。更新を待機してください。","details": f"Raw Detect: {raw}"}
+    if v < 1:
+        return {"reason": "有効な到着便データがまだ捉えられていません。リロードして数秒お待ちください。","details": f"Raw Detect: {raw}"}
     if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    p = f"羽田空港 現在22時台後半: 有効到着便{v}件, 欠航{c}。タクシー運転手に向けた超短文のアドバイスを。"
+    # 現場のプロ向けの短い指示
+    p = f"羽田空港 23時台: 有効便{v}件, 欠航{c}。移動時間{TRAVEL_TIME}分。タクシー運転手に向けた超短文のアドバイス（30字以内）を。"
     try:
         res = requests.post(url, json={"contents": [{"parts": [{"text": p}]}]}, timeout=20).json()
         if "candidates" in res:
-            return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"予測有効便: {v}便 / 検知数: {raw}"}
+            return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"予測有効便: {v}便 / データ検知数: {raw}"}
         return {"reason": f"現在、予測有効便は {v}件です。","details": "AI制限中"}
     except: return {"reason": "通信エラー", "details": "再試行"}
 
@@ -108,10 +114,11 @@ def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
-    v, c, raw, status = fetch_definitive_flights()
+    v, c, raw, status = fetch_corrected_flights()
     
-    if v >= 10: rk = "🔥 A 【 今すぐ出撃 】"
-    elif v >= 4: rk = "✨ B 【 狙い目 】"
+    # ランク判定（23時台は需要が貴重なので判定を少し甘めに）
+    if v >= 8: rk = "🔥 A 【 今すぐ出撃 】"
+    elif v >= 3: rk = "✨ B 【 狙い目 】"
     else: rk = "⚠️ C 【 待機推奨 】"
     
     cb = f"❌ 欠航：{c} 便" if c > 0 else "✅ 運行は順調です"
@@ -121,7 +128,7 @@ def generate_report():
     pw = str(random.randint(1000, 9999))
     debug_info = f"Status:{status} | Raw:{raw}"
     
-    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", "T2(国内線)またはT3").replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb).replace("[[DEBUG]]", debug_info)
+    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", "T2(国内線)またはT3").replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb).replace("[[DEBUG]]", debug_info).replace("[[T_TIME]]", str(TRAVEL_TIME))
     
     with open("index.html", "w", encoding="utf-8") as f: f.write(html)
 
