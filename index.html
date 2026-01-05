@@ -7,13 +7,13 @@
     .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 15px; font-size: 1.6rem; padding-bottom: 5px; color: #fff; }
     #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     h3 { color: #FFD700; margin-top:20px; border-left:5px solid #FFD700; padding-left:12px; font-size: 1.2rem; }
-    strong { color: #FF4500; font-size: 1.1em; }
+    strong { color: #FF4500; font-size: 1.2em; }
     .cancel-info { color: #ff4444; font-weight: bold; background:rgba(255,68,68,0.15); padding:12px; border-radius:8px; margin: 10px 0; border: 1px solid #ff4444; font-size: 1.1rem; text-align: center; }
     .update-area { text-align: center; margin-top: 25px; background: #222; padding: 20px; border-radius: 12px; border: 1px solid #444; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 #b89b00; transition: 0.1s; -webkit-tap-highlight-color: transparent; }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 #b89b00; transition: 0.1s; }
     .reload-btn:active { transform: translateY(4px); box-shadow: none; }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
-    .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; line-height: 1.5; }
+    .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
     .ai-text { line-height: 1.8; font-size: 1.05rem; }
 </style></head>
 <body><div class="container">
@@ -21,26 +21,25 @@
 <div class="main-title">羽田需要レーダー</div>
 <div id="report-box">
     <h3>📊 羽田指数</h3>
-    <p style="font-size: 1.2rem;">⚠️ C 【 要・注意 】</p>
-    <div class="cancel-info">✅ 現在、大規模な欠航はありません</div>
+    <p style="font-size: 1.2rem;">⚠️ C 【 ハマる危険大 】</p>
+    <div class="cancel-info">✅ 順調な運行です</div>
     <h3>🏁 狙うべき場所</h3>
-    <p>👉 <strong>3号(T2)付近</strong></p>
-    <p><strong>判定理由：</strong><br><span class="ai-text">現在、有効到着便数が 0便（欠航 0便）と極めて少ない状態です。深夜のセオリーまたは都内への移動を検討してください。</span></p>
+    <p>👉 <strong>T3(国際線)</strong></p>
+    <p><strong>判定理由（時間効率重視）：</strong><br><span class="ai-text">【システム推計】時間効率を計算中。</span></p>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 供給データ詳細</h3>
-    <div class="ai-text">✈️ 羽田全体で動きが止まっています。無理なプール待機は非推奨です。</div>
+    <div class="ai-text">AI制限につき、過去データから推計しています。</div>
     <div class="update-area">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-05 21:31 (JST) <br>🔑 PASS: 2620</div>
+<div class="footer">更新: 2026-01-05 21:41 (JST) <br>🔑 PASS: 2620</div>
 </div>
 <script>
     let s = 60;
     setInterval(() => {
-        s--;
-        document.getElementById('sec').innerText = s;
+        s--; document.getElementById('sec').innerText = s;
         if(s <= 0) location.reload();
     }, 1000);
 </script>
