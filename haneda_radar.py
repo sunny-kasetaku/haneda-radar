@@ -19,7 +19,6 @@ HTML_TEMPLATE = """
     h3 { color: #FFD700; margin-top:20px; border-left:6px solid #FFD700; padding-left:15px; font-size: 1.3rem; }
     .rank-text { font-size: 2.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
     .ai-advice { line-height: 1.8; font-size: 1.1rem; color: #fff; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; }
     .footer { font-size: 0.8rem; color: #555; margin-top: 25px; text-align: right; }
 </style></head>
 <body><div class="container">
@@ -33,11 +32,11 @@ HTML_TEMPLATE = """
     <p style="font-size: 1.1rem;">👉 <strong>[[TARGET]]</strong></p>
     <div class="ai-advice">[[REASON]]</div>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-    <h3>✈️ 需要データ詳細（フライト直撃）</h3>
+    <h3>✈️ 需要データ詳細（クローラー解析）</h3>
     <div style="font-size: 0.95rem; color:#aaa;">[[DETAILS]]</div>
     <div class="update-area" style="text-align:center; margin-top:30px;">
-        <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
-        <div id="timer" style="color:#FFD700; margin-top:10px; font-weight:bold;">自動更新まで あと <span id="sec">60</span> 秒</div>
+        <button class="reload-btn" style="background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer;" onclick="location.reload()">最新情報に更新</button>
+        <div id="timer" style="color:#FFD700; margin-top:15px; font-weight:bold;">自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
 <div class="footer">更新: [[TIME]] (JST) | [[DEBUG]]<br>🔑 PASS: [[PASS]]</div>
@@ -49,45 +48,51 @@ HTML_TEMPLATE = """
 </body></html>
 """
 
-def fetch_haneda_flights_direct():
-    # 💡 404が出にくい「Yahoo!フライト」のメインページを直撃
-    # URLにランダムな値を足してキャッシュを強制排除
-    url = f"https://flights.yahoo.co.jp/airport/HND/arrival?v={int(time.time())}"
+def fetch_haneda_stealth_crawler():
+    # 💡 Yahoo!フライト(kind=2は国際)と、羽田空港公式サイトの両方を狙う
+    urls = [
+        "https://flights.yahoo.co.jp/airport/HND/arrival?kind=2",
+        "https://tokyo-haneda.com/flight/flight_info_arrival.html"
+    ]
+    # 🌟 Googlebotになりすます
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept-Language": "ja,en-US;q=0.9"
+        "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
     }
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    valid, cancel, raw_count, status = 0, 0, 0, "Wait"
+    valid, cancel, raw_count, last_status = 0, 0, 0, "NoData"
 
-    try:
-        r = requests.get(url, headers=headers, timeout=15)
-        status = str(r.status_code)
-        if r.status_code == 200:
-            html = r.text
-            # 時刻（HH:MM）を全取得
-            times = re.findall(r'(\d{1,2}):(\d{2})', html)
-            raw_count = len(times)
-            cancel = html.count("欠航") + html.count("Cancelled")
-            for h, m in times:
-                f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
-                if now.hour >= 20 and int(h) <= 5: f_time += datetime.timedelta(days=1)
-                diff = (f_time - now).total_seconds() / 60
-                if -15 < diff < 150: valid += 1
-    except:
-        status = "ConnErr"
+    for url in urls:
+        try:
+            r = requests.get(url, headers=headers, timeout=15)
+            last_status = str(r.status_code)
+            if r.status_code == 200:
+                html = r.text
+                # タグの間にある「時:分」を幅広く拾う
+                times = re.findall(r'(\d{1,2}):(\d{2})', html)
+                if len(times) > 0:
+                    raw_count = len(times)
+                    cancel = html.count("欠航") + html.count("Cancelled")
+                    for h, m in times:
+                        f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
+                        if now.hour >= 20 and int(h) <= 5: f_time += datetime.timedelta(days=1)
+                        diff = (f_time - now).total_seconds() / 60
+                        if -10 < diff < 150: valid += 1
+                    break # 成功したら終了
+            time.sleep(2)
+        except Exception as e:
+            last_status = "ConnErr"
     
-    # 0時台〜1時まではSランク保証
     is_prime = (now.hour == 0)
-    return valid, cancel, raw_count, status, is_prime
+    return valid, cancel, raw_count, last_status, is_prime
 
 def call_ai(v, c, raw, prime):
     if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    p = f"羽田深夜 0時台。有効便{v}件。タクシー運転手に向けた、高単価確定の深夜戦略を熱く短く。"
-    if prime and v == 0: p += " (注意: 通信環境によりデータ0だが、0時台のSランクは確定として助言して)"
+    p = f"羽田 0時〜1時。深夜ラッシュ。有効便{v}件。タクシー運転手に向けた、高単価確定の深夜戦略を熱く短く。"
+    if prime and v == 0: p += " (注意: 通信状況によりデータ0だが、0時台のSランク需要は確定。熱く励まして)"
     
     try:
         res = requests.post(url, json={"contents": [{"parts": [{"text": p}]}]}, timeout=15).json()
@@ -99,7 +104,7 @@ def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
-    v, c, raw, debug, prime = fetch_haneda_flights_direct()
+    v, c, raw, debug, prime = fetch_haneda_stealth_crawler()
     
     if prime or v >= 10: rk = "🌈 S 【 深夜爆発・出撃一択 】"
     elif v >= 5: rk = "🔥 A 【 稼ぎ時・急行推奨 】"
