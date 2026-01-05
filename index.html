@@ -10,6 +10,8 @@
     .rank-text { font-size: 2.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
     .ai-advice { line-height: 1.8; font-size: 1.1rem; color: #fff; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
     .footer { font-size: 0.8rem; color: #555; margin-top: 25px; text-align: right; }
+    .update-area { text-align: center; margin-top: 30px; }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #b89b00; }
 </style></head>
 <body><div class="container">
 <div class="header-logo">🚖 KASETACK</div>
@@ -20,16 +22,16 @@
     <div style="background:rgba(255,215,0,0.1); padding:10px; border-radius:8px; margin:15px 0; color:#FFD700; text-align:center; font-weight:bold;">✅ 運行は極めて順調です</div>
     <h3>🏁 推奨アクション</h3>
     <p style="font-size: 1.1rem;">👉 <strong>T3(国際線) > T2国内最終</strong></p>
-    <div class="ai-advice">0時台はT3(国際線)が黄金郷。データ不通を跳ね除ける勢いで急行しましょう！</div>
-    <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-    <h3>✈️ 需要データ詳細（クローラー解析）</h3>
+    <div class="ai-advice">現在は国際線T3の黄金時間です。サイトに頼らず、現場の熱気を感じて急行しましょう！</div>
+    <hr style="border:0; border-top:1px solid #333; margin:25px 0;">
+    <h3>✈️ 需要データ詳細（多サイト統合）</h3>
     <div style="font-size: 0.95rem; color:#aaa;">Raw Detect: 0</div>
-    <div class="update-area" style="text-align:center; margin-top:30px;">
-        <button class="reload-btn" style="background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer;" onclick="location.reload()">最新情報に更新</button>
+    <div class="update-area">
+        <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer" style="color:#FFD700; margin-top:15px; font-weight:bold;">自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-06 00:53 (JST) | 404<br>🔑 PASS: 1662</div>
+<div class="footer">更新: 2026-01-06 00:56 (JST) | 404/403/Err<br>🔑 PASS: 1662</div>
 </div>
 <script>
     let s = 60;
