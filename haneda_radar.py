@@ -76,33 +76,48 @@ def fetch_flight_data():
     for url in urls:
         try:
             r = requests.get(url, timeout=10)
+            r.encoding = r.apparent_encoding
             soup = BeautifulSoup(r.text, 'html.parser')
-            for el in soup.select('li.element, tr'):
-                txt = el.get_text()
-                if "欠航" in txt: c_count += 1
-            rows = soup.find_all('li', class_='element')
+            
+            # ページ全体から「欠航」の出現回数をカウント
+            text_body = soup.get_text()
+            c_count += text_body.count("欠航")
+            
+            # 便のカウントをより汎用的なセレクタで実行
+            items = soup.select('.element, .arrivalList tr, #main table tr')
             v = 0
-            for row in rows:
-                t = row.get_text()
-                if "欠航" in t or "到着済" in t: continue
-                if "遅れ" in t or "変更" in t: has_delay = True
-                v += 1
+            for item in items:
+                t = item.get_text()
+                if "到着済" in t or "欠航" in t: continue
+                # 時刻形式（00:00）が含まれる行のみカウント
+                if re.search(r'\d{1,2}:\d{2}', t):
+                    if any(kw in t for kw in ["遅れ", "変更", "延着"]): has_delay = True
+                    v += 1
             counts.append(v)
-        except: counts.append(5)
-    return counts[0], counts[1], has_delay, c_count
+        except:
+            counts.append(0)
+    
+    dom = counts[0] if len(counts) > 0 else 0
+    intl = counts[1] if len(counts) > 1 else 0
+    return dom, intl, has_delay, c_count
 
 def call_gemini_single(prompt, total, cancel):
     if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    payload = {"contents": [{"parts": [{"text": f"{prompt}\n回答形式：判定理由：(文)\n詳細：(箇条書き)"}]}]}
+    # プロンプトを極限まで短くしてクォータを節約
+    payload = {"contents": [{"parts": [{"text": f"Status:{prompt}. Help taxi drivers. Format:Reason:(text)\nDetails:(bullets)"}]}]}
     try:
         res = requests.post(url, json=payload, timeout=30).json()
         if "candidates" in res:
             t = res["candidates"][0]["content"]["parts"][0]["text"]
-            p = t.split("詳細：")
-            return {"reason": p[0].replace("判定理由：","").strip(), "details": p[1].strip() if len(p)>1 else "解析中"}
-        return {"reason": f"【システム代読】到着{total}便/欠航{cancel}便に基づき算出。現在AI制限中。", "details": "AI通信制限のため簡易表示中"}
-    except: return {"reason": "通信エラー", "details": "再試行中"}
+            p = t.split("Details:")
+            return {"reason": p[0].replace("Reason:","").strip(), "details": p[1].strip() if len(p)>1 else "解析中"}
+        
+        # 代読ロジックの強化：AIが死んでいても数字を元にまともな日本語を出す
+        msg = f"到着{total}便・欠航{cancel}便。便数が少ないため、現在は待機効率が低い「要注意」の時間帯です。" if total < 8 else f"到着{total}便あり。欠航も{cancel}便確認。供給は一定数ありますが、無理な待機は避けてください。"
+        return {"reason": f"【システム代読】{msg}", "details": "⚠️ AI通信制限中につき、5分後の自動更新で再起動を試みます。"}
+    except:
+        return {"reason": "通信エラー", "details": "再試行中"}
 
 def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
@@ -110,17 +125,22 @@ def generate_report():
     ns = n.strftime('%Y-%m-%d %H:%M')
     dom, intl, delay, cancel = fetch_flight_data()
     total = dom + intl
+    
     if total >= 30: rk = "🌈 S 【 確変・入れ食い 】"
     elif total >= 15: rk = "🔥 A 【 超・推奨 】"
     elif total >= 8: rk = "✨ B 【 狙い目 】"
     else: rk = "⚠️ C 【 要・注意 】"
+    
     h = n.hour
     tg = f"{max(THEORY_DATA[h], key=THEORY_DATA[h].get)}付近" if h in THEORY_DATA else "国際線/都内"
-    pr = f"時刻{ns}, ランク{rk}, 到着{total}(内{dom}/外{intl}), 欠航{cancel}。ドライバー向け助言と詳細を。"
+    pr = f"Time:{ns}, Rank:{rk}, Arrivals:{total}, Canceled:{cancel}"
     ai = call_gemini_single(pr, total, cancel)
+    
     random.seed(n.strftime('%Y%m%d'))
     pw = str(random.randint(1000, 9999))
+    
     html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", tg).replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[NUM_D]]", str(random.randint(150,210))).replace("[[NUM_I]]", str(random.randint(80,115))).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL]]", str(cancel))
+    
     with open("index.html", "w", encoding="utf-8") as f: f.write(html)
 
 if __name__ == "__main__":
