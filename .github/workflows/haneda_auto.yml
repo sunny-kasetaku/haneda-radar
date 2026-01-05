@@ -25,8 +25,10 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        # ▼▼▼ ここを --upgrade に変更しました ▼▼▼
-        run: pip install --upgrade requests beautifulsoup4 google-generativeai
+        run: |
+          python -m pip install --upgrade pip
+          pip cache purge
+          pip install requests beautifulsoup4 "google-generativeai>=0.8.3"
 
       - name: Run Haneda Radar
         env:
