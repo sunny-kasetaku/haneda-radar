@@ -6,7 +6,6 @@ import os
 import random
 import time
 import re
-import google.generativeai as genai
 
 # =========================================================
 #   設定 & 環境変数
@@ -175,29 +174,33 @@ def determine_facts():
     pd, pi = int(base_d * mult) + random.randint(-10,10), int(base_i * mult) + random.randint(-5,5)
     return {"time_str": ns, "hour": h, "rank": rank, "target": target, "num_d": pd, "num_i": pi, "dom": dom, "intl": intl, "delay": delay, "hint": hint}
 
-# 🛠️ AI呼び出し関数の徹底的な改良
 def call_gemini(prompt):
     if not GEMINI_KEY: return "⚠️ APIキー未設定"
     
-    # 物理的な通信を強制的に v1 に向けるための URL
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+    # 修正: エンドポイントを v1beta に戻し、モデル名を gemini-1.5-flash に固定
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     
     payload = {
         "contents": [{"parts": [{"text": prompt}]}]
     }
     
     try:
-        # 404 (v1beta) を回避するため、ライブラリを使わず直接 requests で叩く
         response = requests.post(url, json=payload, timeout=30)
         res_json = response.json()
         
         if "candidates" in res_json:
             return res_json["candidates"][0]["content"]["parts"][0]["text"]
         elif "error" in res_json:
+            # もし 1.5-flash が見つからないと言われたら、1.5-pro で最後の悪あがきをする
+            if "not found" in res_json["error"]["message"]:
+                url_pro = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={GEMINI_KEY}"
+                response_pro = requests.post(url_pro, json=payload, timeout=30)
+                res_pro = response_pro.json()
+                if "candidates" in res_pro:
+                    return res_pro["candidates"][0]["content"]["parts"][0]["text"]
             return f"AI通信エラー(API): {res_json['error']['message']}"
         else:
             return "AI返答なし(不明な形式)"
-            
     except Exception as e:
         return f"AI通信エラー(通信): {str(e)}"
 
