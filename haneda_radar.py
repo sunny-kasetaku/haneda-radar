@@ -177,8 +177,8 @@ def determine_facts():
 def call_gemini(prompt):
     if not GEMINI_KEY: return "⚠️ APIキー未設定"
     
-    # 修正: エンドポイントを v1beta に戻し、モデル名を gemini-1.5-flash に固定
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+    # 修正: 最も安定している gemini-pro を指定
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_KEY}"
     
     payload = {
         "contents": [{"parts": [{"text": prompt}]}]
@@ -191,13 +191,6 @@ def call_gemini(prompt):
         if "candidates" in res_json:
             return res_json["candidates"][0]["content"]["parts"][0]["text"]
         elif "error" in res_json:
-            # もし 1.5-flash が見つからないと言われたら、1.5-pro で最後の悪あがきをする
-            if "not found" in res_json["error"]["message"]:
-                url_pro = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={GEMINI_KEY}"
-                response_pro = requests.post(url_pro, json=payload, timeout=30)
-                res_pro = response_pro.json()
-                if "candidates" in res_pro:
-                    return res_pro["candidates"][0]["content"]["parts"][0]["text"]
             return f"AI通信エラー(API): {res_json['error']['message']}"
         else:
             return "AI返答なし(不明な形式)"
