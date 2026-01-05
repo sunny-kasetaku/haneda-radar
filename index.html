@@ -10,8 +10,7 @@
     strong { color: #FF4500; font-size: 1.2em; }
     .cancel-info { color: #ff4444; font-weight: bold; background:rgba(255,68,68,0.15); padding:12px; border-radius:8px; margin: 10px 0; border: 1px solid #ff4444; text-align: center; }
     .update-area { text-align: center; margin-top: 25px; background: #222; padding: 20px; border-radius: 12px; border: 1px solid #444; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 5px 0 #b89b00; }
-    .reload-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #b89b00; }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
     .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
     .ai-advice { line-height: 1.6; font-size: 1.05rem; color: #fff; background: #2a2a2a; padding: 15px; border-radius: 8px; border-left: 4px solid #FFD700; }
@@ -21,11 +20,11 @@
 <div class="main-title">羽田需要レーダー</div>
 <div id="report-box">
     <h3>📊 羽田出撃指数</h3>
-    <p style="font-size: 1.5rem; font-weight: bold;">⚠️ C 【 待機推奨・都内優先 】</p>
-    <div class="cancel-info">✅ 運行は極めて順調です</div>
+    <p style="font-size: 1.5rem; font-weight: bold;">⚠️ C 【 待機推奨 】</p>
+    <div class="cancel-info">✅ 運行順調</div>
     <h3>🏁 推奨アクション</h3>
-    <p>👉 <strong>T3(国際線) または T2最終便</strong></p>
-    <div class="ai-advice"><strong>判定（20分後到着想定）：</strong><br>有効な便データが取得できていません。まもなく深夜ラッシュが反映されます。</div>
+    <p>👉 <strong>T3(国際線) または 都内狙い</strong></p>
+    <div class="ai-advice"><strong>判定：</strong><br>現在、到着便の狭間にいます。0時台の国際線ラッシュに備えてください。</div>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 需要データ詳細</h3>
     <div style="font-size: 1rem;">Status: OK / Raw Detect: 0</div>
@@ -34,7 +33,7 @@
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-05 23:48 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
+<div class="footer">更新: 2026-01-05 23:52 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
 </div>
 <script>
     let s = 60;
