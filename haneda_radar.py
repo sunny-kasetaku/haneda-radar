@@ -22,6 +22,7 @@ HTML_TEMPLATE = """
     .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
     .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
+    .url-debug { color: #f39c12; font-size: 0.7rem; margin-top: 5px; word-break: break-all; }
 </style></head>
 <body><div class="container">
 <div class="header-logo">🚖 KASETACK</div>
@@ -32,7 +33,7 @@ HTML_TEMPLATE = """
     <div class="cancel-info">[[CANCEL_BLOCK]]</div>
     <h3>🏁 推奨アクション</h3>
     <p>👉 <strong>[[TARGET]]</strong></p>
-    <p><strong>判定（[[T_TIME]]分後の需要予測）：</strong><br>[[REASON]]</p>
+    <p><strong>判定理由：</strong><br>[[REASON]]</p>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 供給データ詳細</h3>
     <div>[[DETAILS]]</div>
@@ -42,6 +43,7 @@ HTML_TEMPLATE = """
     </div>
 </div>
 <div class="footer">更新: [[TIME]] (JST) | [[DEBUG]]<br>🔑 PASS: [[PASS]]</div>
+<div class="url-debug">Try URL: [[URL]]</div>
 </div>
 <script>
     let s = 60;
@@ -50,54 +52,43 @@ HTML_TEMPLATE = """
 </body></html>
 """
 
-def fetch_haneda_flights():
-    # 💡 確実に存在する正しいURL（この構造が絶対です）
-    urls = [
-        "https://transit.yahoo.co.jp/airport/arrival/23/?kind=1",
-        "https://transit.yahoo.co.jp/airport/arrival/23/?kind=2"
-    ]
+def fetch_final_flights():
+    # 💡 パラメータなしの最もシンプルなURLでテスト
+    url = "https://transit.yahoo.co.jp/airport/arrival/23/"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    valid, cancel, raw_count = 0, 0, 0
-    status_code = 0
+    valid, cancel, raw_count, status_code = 0, 0, 0, 0
 
-    for url in urls:
-        try:
-            r = requests.get(url, headers=headers, timeout=15)
-            status_code = r.status_code
-            html = r.text
-            # ページ内の時刻を全抽出
-            times = re.findall(r'(\d{1,2}):(\d{2})', html)
-            raw_count += len(times)
-            cancel += html.count("欠航")
-            
-            for h, m in times:
-                f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
-                # 深夜・翌日補正
-                if now.hour >= 20 and int(h) <= 5:
-                    f_time += datetime.timedelta(days=1)
-                
-                diff = (f_time - now).total_seconds() / 60
-                # 現在から2時間半後までを有効需要とする
-                if -15 < diff < 150:
-                    valid += 1
-        except:
-            pass
-    
-    # 共通パーツの時間を補正
-    valid = max(0, valid - 8) 
-    return valid, cancel, raw_count, status_code
+    try:
+        r = requests.get(url, headers=headers, timeout=15)
+        status_code = r.status_code
+        html = r.text
+        
+        times = re.findall(r'(\d{1,2}):(\d{2})', html)
+        raw_count = len(times)
+        cancel = html.count("欠航")
+        
+        for h, m in times:
+            f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
+            if now.hour >= 20 and int(h) <= 5: f_time += datetime.timedelta(days=1)
+            diff = (f_time - now).total_seconds() / 60
+            if -15 < diff < 150:
+                valid += 1
+    except Exception as e:
+        status_code = 999
+        
+    valid = max(0, valid - 5) 
+    return valid, cancel, raw_count, status_code, url
 
 def call_ai(v, c, raw):
-    if v < 1:
-        return {"reason": "有効なデータがまだ取得できていません。数秒おきにリロードしてください。","details": f"Raw Detect: {raw}"}
+    if v < 1: return {"reason": "有効な便データが取得できません。","details": f"Raw Detect: {raw}"}
     if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    p = f"羽田空港 23時台: 有効到着便{v}件, 欠航{c}。移動想定{TRAVEL_TIME}分。タクシー運転手に向けた20文字程度の助言を。"
+    p = f"羽田 23時台: 有効到着便{v}件。タクシー運転手に超短文アドバイス。"
     try:
         res = requests.post(url, json={"contents": [{"parts": [{"text": p}]}]}, timeout=20).json()
         if "candidates" in res:
@@ -109,7 +100,7 @@ def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
-    v, c, raw, status = fetch_haneda_flights()
+    v, c, raw, status, try_url = fetch_final_flights()
     
     if v >= 8: rk = "🔥 A 【 今すぐ出撃 】"
     elif v >= 3: rk = "✨ B 【 狙い目 】"
@@ -122,7 +113,7 @@ def generate_report():
     pw = str(random.randint(1000, 9999))
     debug_info = f"Status:{status} | Raw:{raw}"
     
-    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", "T2またはT3").replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb).replace("[[DEBUG]]", debug_info).replace("[[T_TIME]]", str(TRAVEL_TIME))
+    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", "T2またはT3").replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb).replace("[[DEBUG]]", debug_info).replace("[[URL]]", try_url)
     
     with open("index.html", "w", encoding="utf-8") as f: f.write(html)
 
