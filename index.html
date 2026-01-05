@@ -7,8 +7,8 @@
     .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 15px; font-size: 1.6rem; padding-bottom: 5px; color: #fff; }
     #report-box { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
     h3 { color: #FFD700; margin-top:20px; border-left:6px solid #FFD700; padding-left:15px; font-size: 1.3rem; }
-    .rank-text { font-size: 2.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
-    .ai-advice { line-height: 1.8; font-size: 1.15rem; color: #fff; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
+    .rank-text { font-size: 2rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
+    .ai-advice { line-height: 1.8; font-size: 1.1rem; color: #fff; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
     .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #b89b00; transition: 0.1s; }
     .reload-btn:active { transform: translateY(4px); box-shadow: none; }
     #timer { color: #FFD700; margin-top: 15px; font-weight: bold; font-size: 1.1rem; }
@@ -19,20 +19,20 @@
 <div class="main-title">羽田需要レーダー</div>
 <div id="report-box">
     <h3>📊 羽田出撃指数</h3>
-    <p class="rank-text">🌈 S 【 深夜爆発・即出撃 】</p>
-    <div style="background:rgba(255,215,0,0.1); padding:10px; border-radius:8px; margin:15px 0; color:#FFD700; text-align:center; font-weight:bold;">✅ 運行は極めて順調です</div>
+    <p class="rank-text">🌈 S 【 深夜爆発・国内国際統合 】</p>
+    <div style="background:rgba(255,215,0,0.1); padding:10px; border-radius:8px; margin:15px 0; color:#FFD700; text-align:center; font-weight:bold;">✅ 運行は順調です</div>
     <h3>🏁 推奨アクション</h3>
-    <p style="font-size: 1.2rem;">👉 <strong>T3(国際線) の一択です！</strong></p>
-    <div class="ai-advice"><strong>判定：</strong><br>現在、深夜の爆速タイムです！全ての信号をチャンスに変えて羽田へ！</div>
+    <p style="font-size: 1.1rem;">👉 <strong>T3(国際線) または T2国内最終</strong></p>
+    <div class="ai-advice">深夜1時までが勝負！国際線T3は現在、高単価案件の宝庫です。急ぎましょう！</div>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-    <h3>✈️ 需要データ詳細</h3>
-    <div style="font-size: 1rem; color:#aaa;">AI解析中</div>
+    <h3>✈️ 需要データ詳細（国内＋国際 統合解析）</h3>
+    <div style="font-size: 0.95rem; color:#aaa;">データ検知0</div>
     <div class="update-area" style="text-align:center; margin-top:30px;">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-06 00:01 (JST) | Status:999 | Raw:0<br>🔑 PASS: 1662</div>
+<div class="footer">更新: 2026-01-06 00:09 (JST) | Err/Err<br>🔑 PASS: 1662</div>
 </div>
 <script>
     let s = 60;
