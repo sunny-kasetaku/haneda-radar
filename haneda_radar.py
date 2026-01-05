@@ -7,8 +7,6 @@ import random
 import time
 import re
 import google.generativeai as genai
-# 追加: エラー回避用の低層ライブラリ
-from google.generativeai.types import RequestOptions
 
 # =========================================================
 #   設定 & 環境変数
@@ -181,12 +179,9 @@ def call_gemini(prompt):
     if not GEMINI_KEY: return "⚠️ APIキー未設定"
     try:
         genai.configure(api_key=GEMINI_KEY)
-        # 強制的に「v1」正式版エンドポイントを使うオプションを付与
+        # 最もシンプルに、モデル名のみを指定
         model = genai.GenerativeModel('gemini-1.5-flash') 
-        response = model.generate_content(
-            prompt,
-            request_options=RequestOptions(api_version='v1') # 👈 ここが最強の回避策
-        )
+        response = model.generate_content(prompt)
         return response.text if response.text else "AI返答なし"
     except Exception as e:
         return f"AI通信エラー: {str(e)}"
