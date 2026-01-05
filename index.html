@@ -3,49 +3,38 @@
 <style>
     body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 15px; display: flex; justify-content: center; }
     .container { max-width: 600px; width: 100%; }
-    .header-logo { color: #FFD700; font-weight: bold; font-size: 1.1rem; }
-    .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 15px; font-size: 1.6rem; padding-bottom: 5px; color: #fff; }
-    #report-box { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    h3 { color: #FFD700; margin-top:20px; border-left:6px solid #FFD700; padding-left:15px; font-size: 1.2rem; }
-    .rank-text { font-size: 2.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px rgba(255,215,0,0.5); margin-bottom: 5px; }
-    .status-badge { background: rgba(255, 215, 0, 0.15); color: #FFD700; padding: 8px 15px; border-radius: 5px; font-size: 0.9rem; font-weight: bold; display: block; margin-bottom: 10px; border: 1px solid rgba(255,215,0,0.3); }
-    .pool-info { background: #2a2a2a; border: 1px solid #444; padding: 15px; border-radius: 10px; margin: 15px 0; }
-    .ai-advice { line-height: 1.8; font-size: 1.1rem; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #b89b00; }
-    .disclaimer { font-size: 0.75rem; color: #888; margin-top: 15px; line-height: 1.4; border-top: 1px solid #333; padding-top: 10px; }
+    .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 15px; font-size: 1.6rem; color: #fff; }
+    #report-box { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #444; }
+    .rank-text { font-size: 2.2rem; font-weight: bold; color: #fff; }
+    .occupancy-tag { background: rgba(0, 255, 127, 0.15); color: #00ff7f; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+    .terminal-box { display: flex; gap: 10px; margin: 15px 0; }
+    .t-card { flex: 1; background: #2a2a2a; padding: 12px; border-radius: 8px; border: 1px solid #444; text-align: center; }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; }
     .footer { font-size: 0.8rem; color: #555; margin-top: 25px; text-align: right; }
 </style></head>
 <body><div class="container">
-<div class="header-logo">🚖 KASETACK</div>
-<div class="main-title">羽田需要レーダー</div>
+<div class="main-title">🚖 羽田需要レーダー</div>
 <div id="report-box">
-    <h3>📊 総合出撃判定</h3>
-    <p class="rank-text">⚠️ 判定不能</p>
-    <div class="status-badge">データ取得エラー</div>
+    <p class="rank-text">✨ B 【 注意 】</p>
+    <div style="margin-bottom:15px; color:#FFD700; font-weight:bold;">推計212名の小規模需要</div>
     
-    <div class="pool-info">
-        <span style="color:#FFD700; font-weight:bold;">🅿️ タクシープール予測</span><br>
-        <span style="font-size:1.2rem;">混雑度: 高 (推測待ち 60-90分)</span>
+    <div class="terminal-box">
+        <div class="t-card">T1/T2 (国内)<br><span style="color:#fff; font-size:1.2rem;">0 人</span><br><span class="occupancy-tag">搭乗率:60%</span></div>
+        <div class="t-card">T3 (国際)<br><span style="color:#fff; font-size:1.2rem;">212 人</span><br><span class="occupancy-tag">搭乗率:85%</span></div>
     </div>
 
-    <h3>🏁 推奨アクション</h3>
-    <p style="font-size: 1.1rem;">👉 <strong>T3 国際線</strong></p>
-    <div class="ai-advice">需要と供給のバランスに注意。プール情報と合わせて最終判断を。</div>
-    
-    <div class="disclaimer">※本情報はフライト統計と予測に基づいています。実際のプール混雑状況は、現地のカメラや目視確認、仲間の無線情報と照らし合わせ、最終的な判断はご自身で行ってください。</div>
+    <div style="background:#2a2a2a; padding:10px; border-radius:8px; margin-bottom:15px;">
+        <span style="color:#FFD700;">🅿️ プール予測: 統計的に混雑中</span>
+    </div>
 
-    <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-    <h3>✈️ 需要詳細（グローバル統合）</h3>
-    <div style="font-size: 0.95rem; color:#aaa;">直近需要:7便 / 全検知:83便</div>
+    <div style="background:#222; padding:15px; border-radius:10px; border-left:5px solid #FFD700;">
+        <strong>推奨アクション: T3(国際線)</strong><br>
+        <span style="font-size:0.95rem;">深夜の国際線は搭乗率が高く、高単価が狙える『確率』が高いです。</span>
+    </div>
+
     <div class="update-area" style="text-align:center; margin-top:30px;">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
-        <div id="timer" style="color:#FFD700; margin-top:10px; font-weight:bold;">自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-06 02:31 (JST) | NetErr<br>🔑 PASS: 1662</div>
-</div>
-<script>
-    let s = 60;
-    setInterval(() => { s--; document.getElementById('sec').innerText = s; if(s <= 0) location.reload(); }, 1000);
-</script>
-</body></html>
+<div class="footer">更新: 02:35 | OK</div>
+</div></body></html>
