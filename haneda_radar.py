@@ -14,7 +14,6 @@ import google.generativeai as genai
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 DISCORD_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
-# 統計データ
 THEORY_DATA = {
     7:  {"1号(T1)": 2,  "2号(T1)": 0,  "3号(T2)": 1,  "4号(T2)": 0,  "国際": 8},
     8:  {"1号(T1)": 8,  "2号(T1)": 9,  "3号(T2)": 13, "4号(T2)": 4,  "国際": 0},
@@ -179,20 +178,12 @@ def determine_facts():
 def call_gemini(prompt):
     if not GEMINI_KEY: return "⚠️ APIキー未設定"
     try:
-        # 【重要】ライブラリのバージョンを問わず動く最新の書き方に固定
         genai.configure(api_key=GEMINI_KEY)
-        # models/ をつけず、直接指定
         model = genai.GenerativeModel('gemini-1.5-flash') 
         response = model.generate_content(prompt)
         return response.text if response.text else "AI返答なし"
     except Exception as e:
-        # 万が一失敗したら、別ルート（旧モデル名）で1回だけ再試行する
-        try:
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(prompt)
-            return response.text
-        except:
-            return f"AI通信エラー: {str(e)}"
+        return f"AI通信エラー: {str(e)}"
 
 def generate_report():
     print("Starting update...")
