@@ -5,7 +5,7 @@ import random
 import re
 
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
-TRAVEL_TIME = 20  # 移動想定時間（分）
+TRAVEL_TIME = 20 # 羽田への移動時間（分）
 
 HTML_TEMPLATE = """
 <!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK RADAR</title>
@@ -22,7 +22,6 @@ HTML_TEMPLATE = """
     .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
     .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
-    .ai-text { line-height: 1.8; font-size: 1.05rem; }
 </style></head>
 <body><div class="container">
 <div class="header-logo">🚖 KASETACK</div>
@@ -33,16 +32,16 @@ HTML_TEMPLATE = """
     <div class="cancel-info">[[CANCEL_BLOCK]]</div>
     <h3>🏁 推奨アクション</h3>
     <p>👉 <strong>[[TARGET]]</strong></p>
-    <p><strong>判定理由：</strong><br><span class="ai-text">[[REASON]]</span></p>
+    <p><strong>判定理由：</strong><br>[[REASON]]</p>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 供給データ詳細</h3>
-    <div class="ai-text">[[DETAILS]]</div>
+    <div>[[DETAILS]]</div>
     <div class="update-area">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: [[TIME]] (JST) | 移動想定: [[T_TIME]]分<br>🔑 PASS: [[PASS]]</div>
+<div class="footer">更新: [[TIME]] (JST) <br>🔑 PASS: [[PASS]]</div>
 </div>
 <script>
     let s = 60;
@@ -54,81 +53,64 @@ HTML_TEMPLATE = """
 </body></html>
 """
 
-def fetch_flights_brute_force():
+def fetch_debug_flights():
     urls = ["https://transit.yahoo.co.jp/airport/arrival/23/?kind=1", "https://transit.yahoo.co.jp/airport/arrival/23/?kind=2"]
-    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+    headers = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"}
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    total_valid = 0
+    raw_time_count = 0
+    valid_count = 0
     c_count = 0
-    d_count = 0
     
     for url in urls:
         try:
             r = requests.get(url, headers=headers, timeout=15)
             r.encoding = "utf-8"
             html = r.text
-            
-            # 欠航と遅延のカウント（テキストから直接）
             c_count += html.count("欠航")
-            d_count += html.count("遅れ") + html.count("延着") + html.count("変更")
-            
-            # 💡 時刻（XX:XX）をすべて抽出
             times = re.findall(r'(\d{1,2}):(\d{2})', html)
+            raw_time_count += len(times)
+            
             for h, m in times:
-                f_hour, f_min = int(h), int(m)
-                f_time = now.replace(hour=f_hour, minute=f_min, second=0, microsecond=0)
-                
-                # 深夜の翌日補正 (例: 現在23時、便が01時なら翌日とする)
-                if now.hour >= 20 and f_hour <= 4:
-                    f_time += datetime.timedelta(days=1)
-                
+                f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
+                if now.hour >= 21 and int(h) <= 4: f_time += datetime.timedelta(days=1)
                 diff = (f_time - now).total_seconds() / 60
                 
-                # 移動時間(TRAVEL_TIME)の20分後から、その先2時間までを「有効需要」とする
-                if (TRAVEL_TIME - 10) < diff < (TRAVEL_TIME + 120):
-                    total_valid += 1
-        except:
-            pass
-    # ページ上部の現在時刻なども拾ってしまうため、少し多めに出るのを補正(各ページ5件分くらいを共通パーツとして引く)
-    total_valid = max(0, total_valid - 10)
-    return total_valid, c_count, d_count
+                # 💡 判定を緩める：今から120分先まで全部数える
+                if -10 < diff < 120:
+                    valid_count += 1
+        except: pass
+    return valid_count, c_count, raw_time_count
 
-def call_ai(total, cancel, delay):
+def call_ai(v, c, raw):
+    if v < 1: return {"reason": f"現在、データ上の有効便数は0件です（解析対象数:{raw}）。Yahoo!側のリストが更新されるまで待機を。","details": f"検出された全時刻数: {raw} / 欠航: {c}"}
     if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    # プロンプトを日本語で直接指示
-    p = f"羽田タクシー需要予測: 今から{TRAVEL_TIME}分後に到着した場合、有効便数は{total}便(遅延{delay}, 欠航{cancel})。運転手への助言を100文字以内で。"
+    p = f"羽田: 有効便{v}件(全検知{raw}, 欠航{c})。タクシー運転手に簡潔な助言を。"
     try:
         res = requests.post(url, json={"contents": [{"parts": [{"text": p}]}]}, timeout=20).json()
         if "candidates" in res:
-            return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"✈️ 2時間以内の予測有効便: {total}便 / 遅延傾向あり"}
-        return {"reason": f"【システム推計】有効便数 {total}便。移動時間 {TRAVEL_TIME}分を考慮し、現在は慎重な判断を。","details": f"AI制限中 (生データ有効便数: {total})"}
+            return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"生データ検知: {raw}件 / 有効判定: {v}件"}
+        return {"reason": "AI制限中。数値から判断してください。","details": f"検知数: {raw}"}
     except: return {"reason": "通信エラー", "details": "再試行"}
 
 def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
+    v, c, raw = fetch_debug_flights()
     
-    v, c, d = fetch_flights_brute_force()
+    if v >= 10: rk = "🔥 A 【 稼ぎ時 】"
+    elif v >= 4: rk = "✨ B 【 狙い目 】"
+    else: rk = "⚠️ C 【 ハマる危険 】"
     
-    # ランク判定
-    if v >= 15: rk = "🌈 S 【 激アツ・即出撃 】"
-    elif v >= 7: rk = "🔥 A 【 推奨・1時間以内出庫 】"
-    elif v >= 3: rk = "✨ B 【 狙い目・効率重視 】"
-    else: rk = "⚠️ C 【 ハマる危険大 】"
-    
-    target = "T2(国内線)またはT3" if v > 5 else "T3(国際線)または都内"
-    cb = f"❌ 欠航：{c} 便 / ⚠️ 遅延：{d} 便" if (c + d) > 0 else "✅ 順調な運行です"
-    ai = call_ai(v, c, d)
+    cb = f"❌ 欠航：{c} 便" if c > 0 else "✅ 順調な運行"
+    ai = call_ai(v, c, raw)
     
     random.seed(n.strftime('%Y%m%d'))
     pw = str(random.randint(1000, 9999))
-    
-    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", target).replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb).replace("[[T_TIME]]", str(TRAVEL_TIME))
-    
+    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", "T3または都内").replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb)
     with open("index.html", "w", encoding="utf-8") as f: f.write(html)
 
 if __name__ == "__main__":
