@@ -3,6 +3,7 @@ import datetime
 import os
 import random
 import re
+import time
 
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 TRAVEL_TIME = 20 
@@ -18,9 +19,6 @@ HTML_TEMPLATE = """
     h3 { color: #FFD700; margin-top:20px; border-left:6px solid #FFD700; padding-left:15px; font-size: 1.3rem; }
     .rank-text { font-size: 2rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
     .ai-advice { line-height: 1.8; font-size: 1.1rem; color: #fff; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #b89b00; transition: 0.1s; }
-    .reload-btn:active { transform: translateY(4px); box-shadow: none; }
-    #timer { color: #FFD700; margin-top: 15px; font-weight: bold; font-size: 1.1rem; }
     .footer { font-size: 0.8rem; color: #555; margin-top: 25px; text-align: right; }
 </style></head>
 <body><div class="container">
@@ -37,8 +35,8 @@ HTML_TEMPLATE = """
     <h3>✈️ 需要データ詳細（国内＋国際 統合解析）</h3>
     <div style="font-size: 0.95rem; color:#aaa;">[[DETAILS]]</div>
     <div class="update-area" style="text-align:center; margin-top:30px;">
-        <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
-        <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
+        <button class="reload-btn" style="background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer;" onclick="location.reload()">最新情報に更新</button>
+        <div id="timer" style="color:#FFD700; margin-top:15px; font-weight:bold;">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
 <div class="footer">更新: [[TIME]] (JST) | [[DEBUG]]<br>🔑 PASS: [[PASS]]</div>
@@ -50,67 +48,68 @@ HTML_TEMPLATE = """
 </body></html>
 """
 
-def fetch_haneda_stealth():
-    # 💡 最もガードが緩い、メインの到着一覧ページを狙う
-    url = "https://flights.yahoo.co.jp/airport/HND/arrival"
-    # 🌟 Google Chromeの最新バージョンを装うヘッダー
+def fetch_haneda_stealth_v2():
+    # 💡 ページ構成が安定しているフライトタブへ
+    urls = [
+        "https://flights.yahoo.co.jp/airport/HND/arrival?kind=1",
+        "https://flights.yahoo.co.jp/airport/HND/arrival?kind=2"
+    ]
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache"
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
     }
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    valid, cancel, raw_count, status = 0, 0, 0, "NoConn"
+    valid, cancel, raw_count, status_log = 0, 0, 0, []
 
-    try:
-        # セッションを使ってCookieを保持するフリをする
-        session = requests.Session()
-        r = session.get(url, headers=headers, timeout=15)
-        status = str(r.status_code)
-        
-        if r.status_code == 200:
-            html = r.text
-            times = re.findall(r'(\d{1,2}):(\d{2})', html)
-            raw_count = len(times)
-            cancel = html.count("欠航") + html.count("Cancelled")
-            for h, m in times:
-                f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
-                if now.hour >= 20 and int(h) <= 5: f_time += datetime.timedelta(days=1)
-                diff = (f_time - now).total_seconds() / 60
-                if -15 < diff < 150: valid += 1
-    except Exception as e:
-        status = "Err"
+    # セッションを開始して人間らしさを出す
+    session = requests.Session()
+    session.headers.update(headers)
+
+    for url in urls:
+        try:
+            r = session.get(url, timeout=15)
+            status_log.append(str(r.status_code))
+            if r.status_code == 200:
+                html = r.text
+                times = re.findall(r'(\d{1,2}):(\d{2})', html)
+                raw_count += len(times)
+                cancel += html.count("欠航") + html.count("Cancelled")
+                for h, m in times:
+                    f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
+                    if now.hour >= 20 and int(h) <= 5: f_time += datetime.timedelta(days=1)
+                    diff = (f_time - now).total_seconds() / 60
+                    if -10 < diff < 150: valid += 1
+            # 連続アクセスを避けるための小さな休憩
+            time.sleep(1)
+        except:
+            status_log.append("ConnErr")
     
-    # 深夜特別判定（0時台はデータが少なくてもSランクを死守）
     is_prime = (now.hour == 0)
-    return valid, cancel, raw_count, status, is_prime
+    return valid, cancel, raw_count, "/".join(status_log), is_prime
 
 def call_ai(v, c, raw, prime):
     if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
     
-    p = f"羽田 0時台。国内線最終の残り客と国際線深夜ラッシュ。有効便{v}件。タクシー運転手に向けた『深夜割増を最大化する』熱い助言を30文字で。"
-    if prime: p += " (注意: 現在データ取得に苦戦中だが、0時台のSランク需要は確定として励まして)"
+    p = f"羽田 0時台。国内線最終の残り客と国際線深夜ラッシュ。有効便{v}件。タクシー運転手に向けた具体的な『稼ぎのコツ』を30文字で。"
+    if prime: p += " (注意: 通信が不安定だが0時台の需要は確定。熱く励まして)"
     
     try:
         res = requests.post(url, json={"contents": [{"parts": [{"text": p}]}]}, timeout=15).json()
-        return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"需要予測: {v}便 / データ検知: {raw}"}
+        return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"国内＋国際統合解析: 有効{v}便 / 検知{raw}"}
     except:
-        return {"reason": "0時台は国際線T3の独壇場です。国内線遅延客も狙える絶好のチャンス！", "details": f"Raw Detect: {raw}"}
+        return {"reason": "0時台はT3(国際線)が主役。国内線遅延客も狙えるボーナスタイムです！", "details": f"データ検知{raw}"}
 
 def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
-    v, c, raw, debug, prime = fetch_haneda_stealth()
+    v, c, raw, debug, prime = fetch_haneda_stealth_v2()
     
-    # 0時台は無条件でSランクを表示（プロデューサーの熱意を反映）
     if prime or v >= 10: rk = "🌈 S 【 深夜爆発・国内国際統合 】"
-    elif v >= 5: rk = "🔥 A 【 稼ぎ時・即急行 】"
+    elif v >= 5: rk = "🔥 A 【 稼ぎ時・即出撃 】"
     else: rk = "✨ B 【 粘り目 】"
     
     cb = "✅ 運行は順調です" if c == 0 else f"❌ {c}件に欠航/遅延あり"
