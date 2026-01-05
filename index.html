@@ -10,11 +10,9 @@
     strong { color: #FF4500; font-size: 1.1em; }
     .cancel-info { color: #ff4444; font-weight: bold; background:rgba(255,68,68,0.15); padding:12px; border-radius:8px; margin: 10px 0; border: 1px solid #ff4444; text-align: center; }
     .update-area { text-align: center; margin-top: 25px; background: #222; padding: 20px; border-radius: 12px; border: 1px solid #444; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.1s; }
-    .reload-btn:active { transform: scale(0.98); }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
     .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
-    .ai-text { line-height: 1.8; font-size: 1.05rem; }
 </style></head>
 <body><div class="container">
 <div class="header-logo">🚖 KASETACK</div>
@@ -24,17 +22,17 @@
     <p style="font-size: 1.2rem;">⚠️ C 【 待機推奨 】</p>
     <div class="cancel-info">✅ 運行は順調です</div>
     <h3>🏁 推奨アクション</h3>
-    <p>👉 <strong>T2(国内線)またはT3</strong></p>
-    <p><strong>判定理由（今から20分で到着想定）：</strong><br><span class="ai-text">有効な到着便データがまだ捉えられていません。リロードして数秒お待ちください。</span></p>
+    <p>👉 <strong>T2またはT3</strong></p>
+    <p><strong>判定（20分後の需要予測）：</strong><br>有効なデータがまだ取得できていません。数秒おきにリロードしてください。</p>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 供給データ詳細</h3>
-    <div class="ai-text">Raw Detect: 0</div>
+    <div>Raw Detect: 0</div>
     <div class="update-area">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-05 23:06 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
+<div class="footer">更新: 2026-01-05 23:11 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
 </div>
 <script>
     let s = 60;
