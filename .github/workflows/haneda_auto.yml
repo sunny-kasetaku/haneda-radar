@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: '*/20 * * * *'
   workflow_dispatch:
+  repository_dispatch:      # 👈 追加：ここがGASからの受信口
+    types: [trigger-radar]  # 👈 追加：合言葉
 
 permissions:
   contents: write
