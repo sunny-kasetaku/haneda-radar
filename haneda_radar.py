@@ -222,8 +222,8 @@ def call_gemini(prompt):
         return "⚠️ APIキーが設定されていません"
     try:
         genai.configure(api_key=GEMINI_KEY)
-        # ▼▼▼ ここを修正しました（2.5 -> 1.5） ▼▼▼
-        model = genai.GenerativeModel('gemini-1.5-flash') 
+        # ▼▼▼ 修正箇所：models/ を追加 ▼▼▼
+        model = genai.GenerativeModel('models/gemini-1.5-flash') 
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
