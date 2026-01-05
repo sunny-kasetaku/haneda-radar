@@ -18,7 +18,7 @@ THEORY_DATA = {
     17:{"1号(T1)":10,"2号(T1)":7,"3号(T2)":10,"4号(T2)":4,"国際":6},18:{"1号(T1)":10,"2号(T1)":8,"3号(T2)":11,"4号(T2)":9,"国際":1},
     19:{"1号(T1)":9,"2号(T1)":7,"3号(T2)":11,"4号(T2)":3,"国際":1},20:{"1号(T1)":11,"2号(T1)":7,"3号(T2)":11,"4号(T2)":4,"国際":2},
     21:{"1号(T1)":10,"2号(T1)":10,"3号(T2)":14,"4号(T2)":4,"国際":1},22:{"1号(T1)":7,"2号(T1)":7,"3号(T2)":9,"4号(T2)":4,"国際":2},
-    23:{"1号(T1)":1,"2号(T1)":0,"3号(T2)":2,"4号(T2)":3,"国際":0}
+    23:{"1号(T1)":1, "2号(T1)":0, "3号(T2)":2, "4号(T2)":3, "国際":0}
 }
 
 HTML_TEMPLATE = """
@@ -45,7 +45,7 @@ HTML_TEMPLATE = """
 <div id="report-box">
     <h3>📊 羽田指数</h3>
     <p style="font-size: 1.2rem;">[[RANK]]</p>
-    <p class="cancel-info">❌ 欠航便数：[[CANCEL]] 便</p>
+    <div class="cancel-info">[[CANCEL_BLOCK]]</div>
     <h3>🏁 狙うべき場所</h3>
     <p>👉 <strong>[[TARGET]]</strong></p>
     <p><strong>判定理由：</strong><br><span class="ai-text">[[REASON]]</span></p>
@@ -73,57 +73,68 @@ HTML_TEMPLATE = """
 def fetch_flight_data():
     urls = ["https://transit.yahoo.co.jp/airport/arrival/23/?kind=1", "https://transit.yahoo.co.jp/airport/arrival/23/?kind=2"]
     counts, c_count, has_delay = [], 0, False
+    headers = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"}
+    
     for url in urls:
         try:
-            r = requests.get(url, timeout=10)
-            r.encoding = r.apparent_encoding
+            r = requests.get(url, headers=headers, timeout=15)
+            r.encoding = "utf-8"
             soup = BeautifulSoup(r.text, 'html.parser')
             
-            # ページ全体から「欠航」の出現回数をカウント
-            text_body = soup.get_text()
-            c_count += text_body.count("欠航")
+            # ページ内テキストを直接スキャン（より確実に拾う）
+            body_text = soup.get_text()
+            c_count += body_text.count("欠航")
             
-            # 便のカウントをより汎用的なセレクタで実行
-            items = soup.select('.element, .arrivalList tr, #main table tr')
             v = 0
+            items = soup.find_all(['li', 'tr'], class_=lambda x: x and ('element' in x or 'arrival' in x))
+            if not items: # セレクタが効かない場合のフォールバック
+                items = soup.select('div.alst li')
+
             for item in items:
                 t = item.get_text()
-                if "到着済" in t or "欠航" in t: continue
-                # 時刻形式（00:00）が含まれる行のみカウント
+                if "到着済" in t: continue
+                if "欠航" in t: continue # ここでは欠航以外をカウント
+                # 時刻が含まれているかチェック
                 if re.search(r'\d{1,2}:\d{2}', t):
-                    if any(kw in t for kw in ["遅れ", "変更", "延着"]): has_delay = True
+                    if any(k in t for k in ["遅れ", "変更", "延着"]): has_delay = True
                     v += 1
             counts.append(v)
         except:
-            counts.append(0)
-    
-    dom = counts[0] if len(counts) > 0 else 0
-    intl = counts[1] if len(counts) > 1 else 0
+            counts.append(-1) # エラー時は-1
+            
+    dom = counts[0] if len(counts) > 0 else -1
+    intl = counts[1] if len(counts) > 1 else -1
     return dom, intl, has_delay, c_count
 
 def call_gemini_single(prompt, total, cancel):
     if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    # プロンプトを極限まで短くしてクォータを節約
-    payload = {"contents": [{"parts": [{"text": f"Status:{prompt}. Help taxi drivers. Format:Reason:(text)\nDetails:(bullets)"}]}]}
+    # 極限まで短縮したプロンプト
+    payload = {"contents": [{"parts": [{"text": f"D:{total},C:{cancel}. Tips for taxi? Format:Reason:(text)\nDetails:(bullets)"}]}]}
     try:
-        res = requests.post(url, json=payload, timeout=30).json()
+        res = requests.post(url, json=payload, timeout=20).json()
         if "candidates" in res:
             t = res["candidates"][0]["content"]["parts"][0]["text"]
             p = t.split("Details:")
             return {"reason": p[0].replace("Reason:","").strip(), "details": p[1].strip() if len(p)>1 else "解析中"}
         
-        # 代読ロジックの強化：AIが死んでいても数字を元にまともな日本語を出す
-        msg = f"到着{total}便・欠航{cancel}便。便数が少ないため、現在は待機効率が低い「要注意」の時間帯です。" if total < 8 else f"到着{total}便あり。欠航も{cancel}便確認。供給は一定数ありますが、無理な待機は避けてください。"
-        return {"reason": f"【システム代読】{msg}", "details": "⚠️ AI通信制限中につき、5分後の自動更新で再起動を試みます。"}
+        # 代読強化：数字が取れている場合と取れていない場合で分ける
+        if total < 0:
+            return {"reason": "【データ調整中】現在、航空会社からの情報を再取得しています。まもなく更新されます。", "details": "⚠️ データ取得の渋滞が発生しています。リロードボタンを押して数秒お待ちください。"}
+        msg = f"到着{total}便（欠航{cancel}）を確認。深夜帯のセオリーに従い、最適な場所で待機を。"
+        return {"reason": f"【システム推計】{msg}", "details": "⚠️ AIが混雑中のため、過去の統計データに基づき推奨場所を表示しています。"}
     except:
-        return {"reason": "通信エラー", "details": "再試行中"}
+        return {"reason": "通信混雑", "details": "再試行してください"}
 
 def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
     dom, intl, delay, cancel = fetch_flight_data()
+    
+    # データが取れなかった（-1）場合の処理
+    if dom < 0: dom = 0
+    if intl < 0: intl = 0
     total = dom + intl
     
     if total >= 30: rk = "🌈 S 【 確変・入れ食い 】"
@@ -131,15 +142,18 @@ def generate_report():
     elif total >= 8: rk = "✨ B 【 狙い目 】"
     else: rk = "⚠️ C 【 要・注意 】"
     
+    # 欠航表示ブロックの作成
+    cancel_block = f"❌ 欠航便数：{cancel} 便" if cancel > 0 else "✅ 現在、大規模な欠航はありません"
+    
     h = n.hour
     tg = f"{max(THEORY_DATA[h], key=THEORY_DATA[h].get)}付近" if h in THEORY_DATA else "国際線/都内"
-    pr = f"Time:{ns}, Rank:{rk}, Arrivals:{total}, Canceled:{cancel}"
+    pr = f"HND {ns} D:{dom} I:{intl} C:{cancel}"
     ai = call_gemini_single(pr, total, cancel)
     
     random.seed(n.strftime('%Y%m%d'))
     pw = str(random.randint(1000, 9999))
     
-    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", tg).replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[NUM_D]]", str(random.randint(150,210))).replace("[[NUM_I]]", str(random.randint(80,115))).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL]]", str(cancel))
+    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", tg).replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[NUM_D]]", str(random.randint(150,210))).replace("[[NUM_I]]", str(random.randint(80,115))).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cancel_block)
     
     with open("index.html", "w", encoding="utf-8") as f: f.write(html)
 
