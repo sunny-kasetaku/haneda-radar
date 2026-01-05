@@ -2,10 +2,15 @@ name: Haneda Radar Auto Update
 
 on:
   schedule:
-    - cron: '*/20 * * * *'
+    - cron: '*/20 * * * *'  # 20分おきに実行
   workflow_dispatch:
   repository_dispatch:
     types: [trigger-radar]
+
+# 🌟 魔法の1行：新しい実行が始まったら、古い「くるくる」を自動キャンセル
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -15,6 +20,9 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # 🌟 安全装置：5分以上かかったら異常とみなして強制終了させる
+    timeout-minutes: 5
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -27,7 +35,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip cache purge
           pip install requests beautifulsoup4 "google-generativeai>=0.8.3"
 
       - name: Run Haneda Radar
