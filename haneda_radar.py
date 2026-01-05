@@ -9,7 +9,7 @@ import re
 import google.generativeai as genai
 
 # =========================================================
-#  設定 & 環境変数
+#   設定 & 環境変数
 # =========================================================
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 DISCORD_URL = os.environ.get("DISCORD_WEBHOOK_URL")
@@ -222,7 +222,8 @@ def call_gemini(prompt):
         return "⚠️ APIキーが設定されていません"
     try:
         genai.configure(api_key=GEMINI_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash') 
+        # ▼▼▼ ここを修正しました（2.5 -> 1.5） ▼▼▼
+        model = genai.GenerativeModel('gemini-1.5-flash') 
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
