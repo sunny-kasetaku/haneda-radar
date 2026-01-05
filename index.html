@@ -13,6 +13,7 @@
     .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
     .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
+    .snippet { color: #444; font-size: 0.6rem; margin-top: 5px; }
 </style></head>
 <body><div class="container">
 <div class="header-logo">🚖 KASETACK</div>
@@ -23,16 +24,16 @@
     <div class="cancel-info">✅ 運行は順調です</div>
     <h3>🏁 推奨アクション</h3>
     <p>👉 <strong>T2(国内線)またはT3</strong></p>
-    <p><strong>判定理由：</strong><br>現在、有効な到着便データが取得できていません。</p>
+    <p><strong>判定理由：</strong><br>有効な便データがまだ反映されていません。更新を待機してください。</p>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 供給データ詳細</h3>
-    <div>Status:0</div>
+    <div>Raw Detect: 0</div>
     <div class="update-area">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-05 22:58 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
+<div class="footer">更新: 2026-01-05 23:01 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
 </div>
 <script>
     let s = 60;
