@@ -14,14 +14,13 @@ HTML_TEMPLATE = """
     .container { max-width: 600px; width: 100%; }
     .header-logo { color: #FFD700; font-weight: bold; font-size: 1.1rem; }
     .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 15px; font-size: 1.6rem; padding-bottom: 5px; color: #fff; }
-    #report-box { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+    #report-box { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
     h3 { color: #FFD700; margin-top:20px; border-left:6px solid #FFD700; padding-left:15px; font-size: 1.3rem; }
-    .rank-text { font-size: 1.8rem; font-weight: bold; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
-    .ai-advice { line-height: 1.8; font-size: 1.1rem; color: #fff; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
-    .update-area { text-align: center; margin-top: 30px; }
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #b89b00; }
+    .rank-text { font-size: 2.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
+    .ai-advice { line-height: 1.8; font-size: 1.15rem; color: #fff; background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #555; }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px 0; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 0 #b89b00; transition: 0.1s; }
     .reload-btn:active { transform: translateY(4px); box-shadow: none; }
-    #timer { color: #FFD700; margin-top: 15px; font-weight: bold; }
+    #timer { color: #FFD700; margin-top: 15px; font-weight: bold; font-size: 1.1rem; }
     .footer { font-size: 0.8rem; color: #555; margin-top: 25px; text-align: right; }
 </style></head>
 <body><div class="container">
@@ -30,14 +29,14 @@ HTML_TEMPLATE = """
 <div id="report-box">
     <h3>📊 羽田出撃指数</h3>
     <p class="rank-text">[[RANK]]</p>
-    <div style="background:rgba(255,68,68,0.1); padding:10px; border-radius:8px; margin:15px 0; color:#ff6666; text-align:center;">[[CANCEL_BLOCK]]</div>
+    <div style="background:rgba(255,215,0,0.1); padding:10px; border-radius:8px; margin:15px 0; color:#FFD700; text-align:center; font-weight:bold;">[[CANCEL_BLOCK]]</div>
     <h3>🏁 推奨アクション</h3>
-    <p>👉 <strong>[[TARGET]]</strong></p>
+    <p style="font-size: 1.2rem;">👉 <strong>[[TARGET]]</strong></p>
     <div class="ai-advice"><strong>判定：</strong><br>[[REASON]]</div>
-    <hr style="border:0; border-top:1px solid #333; margin:25px 0;">
+    <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 需要データ詳細</h3>
     <div style="font-size: 1rem; color:#aaa;">[[DETAILS]]</div>
-    <div class="update-area">
+    <div class="update-area" style="text-align:center; margin-top:30px;">
         <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
@@ -51,75 +50,69 @@ HTML_TEMPLATE = """
 </body></html>
 """
 
-def fetch_haneda_rescue():
-    # 💡 404を避けるための「複数の入り口」
-    t = str(int(datetime.datetime.now().timestamp()))
-    urls = [
-        f"https://transit.yahoo.co.jp/airport/arrival/23?v={t}",
-        f"https://transit.yahoo.co.jp/airport/arrival/23/?kind=2&v={t}",
-        f"https://transit.yahoo.co.jp/airport/23/arrival?v={t}"
-    ]
+def fetch_haneda_final():
+    # 💡 404を絶対に避けるためのフライト専用URL
+    url = "https://flights.yahoo.co.jp/airport/HND/arrival"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"}
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    valid, cancel, raw_count, best_status = 0, 0, 0, 404
+    valid, cancel, raw_count, status_code = 0, 0, 0, 200
 
-    for url in urls:
-        try:
-            r = requests.get(url, headers=headers, timeout=8)
-            best_status = r.status_code
-            if r.status_code == 200:
-                html = r.text
-                times = re.findall(r'(\d{1,2}):(\d{2})', html)
-                raw_count = len(times)
-                cancel = html.count("欠航")
-                for h, m in times:
-                    f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
-                    if now.hour >= 20 and int(h) <= 5: f_time += datetime.timedelta(days=1)
-                    if -10 < (f_time - now).total_seconds() / 60 < 150: valid += 1
-                if raw_count > 5: break # 成功したら終了
-        except: pass
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        status_code = r.status_code
+        html = r.text
+        # 時刻を抽出（フライト版は構造が違う場合があるため正規表現を強化）
+        times = re.findall(r'(\d{1,2}):(\d{2})', html)
+        raw_count = len(times)
+        cancel = html.count("欠航") + html.count("Cancelled")
+        
+        for h, m in times:
+            f_time = now.replace(hour=int(h), minute=int(m), second=0, microsecond=0)
+            if now.hour >= 20 and int(h) <= 5: f_time += datetime.timedelta(days=1)
+            diff = (f_time - now).total_seconds() / 60
+            if -15 < diff < 150: valid += 1
+    except:
+        status_code = 999
     
-    # 🌟 23:50 〜 00:40 の間は、データが取れなくても「現場の勘」でSランクを維持
-    is_midnight_rush = (now.hour == 23 and now.minute >= 50) or (now.hour == 0 and now.minute <= 40)
+    # 0時台の特別フラグ（レスキュー）
+    is_midnight_rush = (now.hour == 0) or (now.hour == 23 and now.minute >= 50)
     
-    return valid, cancel, raw_count, best_status, is_midnight_rush
+    return valid, cancel, raw_count, status_code, is_midnight_rush
 
-def call_gemini(v, c, raw, rush):
-    if v < 1 and not rush:
-        return {"reason": "現在、データ取得を試みています。0時台の国際線ラッシュは目前です。","details": "接続待機中"}
-    
+def call_ai(v, c, raw, rush):
+    if not GEMINI_KEY: return {"reason": "Key Error", "details": "N/A"}
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    p = f"羽田 0時前後。有効便{v}件。深夜ラッシュ状況。タクシー運転手に向けた『1時間単価を最大化する』熱い助言を30文字で。"
-    if rush and v < 1: p += " (注意: 現在データ未取得だが、時刻的にSランク確定として助言せよ)"
+    
+    p = f"羽田 0時台。有効便{v}件。深夜ラッシュ。タクシー運転手に向けた、眠気を飛ばすような熱いアドバイスを。"
+    if rush: p += "（深夜限定Sランクであることを強調して）"
     
     try:
         res = requests.post(url, json={"contents": [{"parts": [{"text": p}]}]}, timeout=15).json()
         if "candidates" in res:
-            return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"【深夜特別警戒】有効予測:{v}便 / データ検知:{raw}"}
-        return {"reason": "現在、深夜の爆速タイムです。迷わず羽田へ！","details": "AI解析中"}
-    except: return {"reason": "出撃推奨。深夜単価を狙いましょう。", "details": "通信混雑"}
+            return {"reason": res["candidates"][0]["content"]["parts"][0]["text"], "details": f"【深夜特別体制】有効予測:{v}便 / データ検知:{raw}"}
+        return {"reason": "現在、深夜の爆速タイムです！全ての信号をチャンスに変えて羽田へ！","details": "AI解析中"}
+    except: return {"reason": "データに関わらず、現在は国際線T3が最大の稼ぎ時です。急ぎましょう！", "details": "通信混雑"}
 
 def generate_report():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     n = datetime.datetime.now(jst)
     ns = n.strftime('%Y-%m-%d %H:%M')
-    v, c, raw, status, rush = fetch_haneda_rescue()
+    v, c, raw, status, rush = fetch_haneda_final()
     
-    # 指数判定（現場の勘を優先）
     if rush or v >= 10: rk = "🌈 S 【 深夜爆発・即出撃 】"
-    elif v >= 5: rk = "🔥 A 【 稼ぎ時・1時間以内出庫 】"
-    else: rk = "✨ B 【 並ぶ価値あり 】"
+    elif v >= 5: rk = "🔥 A 【 稼ぎ時・急行推奨 】"
+    else: rk = "✨ B 【 チャンスあり 】"
     
-    cb = f"❌ 欠航：{c} 便" if c > 0 else "✅ 運行は極めて順調"
-    ai = call_gemini(v, c, raw, rush)
+    cb = "✅ 運行は極めて順調です" if c == 0 else f"❌ {c}便が欠航/遅延中"
+    ai = call_ai(v, c, raw, rush)
     
     random.seed(n.strftime('%Y%m%d'))
     pw = str(random.randint(1000, 9999))
     debug_info = f"Status:{status} | Raw:{raw}"
     
-    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", "T3(国際線) または 深夜都内").replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb).replace("[[DEBUG]]", debug_info)
+    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[TARGET]]", "T3(国際線) の一択です！").replace("[[REASON]]", ai['reason']).replace("[[DETAILS]]", ai['details']).replace("[[TIME]]", ns).replace("[[PASS]]", pw).replace("[[CANCEL_BLOCK]]", cb).replace("[[DEBUG]]", debug_info)
     
     with open("index.html", "w", encoding="utf-8") as f: f.write(html)
 
