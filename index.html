@@ -13,6 +13,7 @@
     .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px 0; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; }
     #timer { color: #FFD700; font-size: 1rem; margin-top: 15px; font-weight: bold; }
     .footer { font-size: 0.8rem; color: #666; margin-top: 20px; text-align: right; }
+    .url-debug { color: #f39c12; font-size: 0.7rem; margin-top: 5px; word-break: break-all; }
 </style></head>
 <body><div class="container">
 <div class="header-logo">🚖 KASETACK</div>
@@ -23,7 +24,7 @@
     <div class="cancel-info">✅ 運行は順調です</div>
     <h3>🏁 推奨アクション</h3>
     <p>👉 <strong>T2またはT3</strong></p>
-    <p><strong>判定（20分後の需要予測）：</strong><br>有効なデータがまだ取得できていません。数秒おきにリロードしてください。</p>
+    <p><strong>判定理由：</strong><br>有効な便データが取得できません。</p>
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3>✈️ 供給データ詳細</h3>
     <div>Raw Detect: 0</div>
@@ -32,7 +33,8 @@
         <div id="timer">次回自動更新まで あと <span id="sec">60</span> 秒</div>
     </div>
 </div>
-<div class="footer">更新: 2026-01-05 23:11 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
+<div class="footer">更新: 2026-01-05 23:15 (JST) | Status:404 | Raw:0<br>🔑 PASS: 2620</div>
+<div class="url-debug">Try URL: https://transit.yahoo.co.jp/airport/arrival/23/</div>
 </div>
 <script>
     let s = 60;
