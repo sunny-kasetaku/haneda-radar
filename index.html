@@ -3,52 +3,51 @@
 <style>
     body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 15px; display: flex; justify-content: center; }
     .container { max-width: 600px; width: 100%; }
-    .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 10px; font-size: 1.5rem; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-    #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 10px; font-size: 1.5rem; color: #fff; display: flex; justify-content: space-between; }
+    #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #444; }
     .rank-display { text-align: center; margin-bottom: 15px; }
-    .rank-text { font-size: 2.5rem; font-weight: bold; color: #fff; margin: 0; }
-    .basis-badge { background: rgba(255,215,0,0.1); color: #FFD700; padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #FFD700; }
+    .rank-text { font-size: 2.8rem; font-weight: bold; color: #fff; margin: 0; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .basis-badge { background: rgba(255,215,0,0.1); color: #FFD700; padding: 6px 15px; border-radius: 20px; font-size: 0.95rem; border: 1px solid #FFD700; display: inline-block; margin-top: 5px; }
     
-    .stand-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
-    .stand-card { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #555; text-align: center; }
-    .stand-card.highlight { border-color: #FFD700; background: rgba(255,215,0,0.05); }
-    .stand-name { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
-    .stand-pax { font-size: 1.3rem; font-weight: bold; color: #fff; }
+    .stand-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+    .stand-card { background: #2a2a2a; padding: 12px; border-radius: 10px; border: 2px solid #444; text-align: center; transition: 0.3s; }
+    .stand-card.highlight { border-color: #FFD700; background: rgba(255,215,0,0.1); box-shadow: 0 0 15px rgba(255,215,0,0.2); }
+    .stand-name { font-size: 0.85rem; color: #bbb; margin-bottom: 5px; }
+    .stand-pax { font-size: 1.5rem; font-weight: bold; color: #fff; }
 
-    .advice-box { background: #222; border-left: 5px solid #FFD700; padding: 15px; border-radius: 4px; margin-bottom: 20px; line-height: 1.6; }
+    .advice-box { background: #222; border-left: 6px solid #FFD700; padding: 15px; border-radius: 4px; margin: 15px 0; }
+    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 15px; background: #1a1a1a; }
+    .flight-list th { text-align: left; color: #FFD700; border-bottom: 2px solid #333; padding: 10px; }
+    .flight-list td { padding: 10px; border-bottom: 1px solid #2a2a2a; }
     
-    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 15px; }
-    .flight-list th { text-align: left; color: #FFD700; border-bottom: 1px solid #444; padding: 8px; }
-    .flight-list td { padding: 8px; border-bottom: 1px solid #333; }
-    
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 20px; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
-    .footer { font-size: 0.75rem; color: #666; margin-top: 20px; text-align: center; }
+    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; margin-top: 15px; box-shadow: 0 6px 0 #b89b00; }
+    .footer { font-size: 0.75rem; color: #555; margin-top: 25px; text-align: center; line-height: 1.5; }
 </style></head>
 <body><div class="container">
-<div class="main-title">🚖 KASETACK <span>02:53</span></div>
+<div class="main-title">🚖 KASETACK <span>03:24</span></div>
 <div id="report-box">
     <div class="rank-display">
         <p class="rank-text">🌑 D 【 撤退 】</p>
-        <span class="basis-badge">有効な到着便なし</span>
+        <div class="basis-badge">有効な到着便なし(安全装置)</div>
     </div>
 
     <div class="stand-container">
-        <div class="stand-card highlight"><div class="stand-name">1号 (T1南)</div><div class="stand-pax">0 人</div></div>
-        <div class="stand-card "><div class="stand-name">2号 (T1北)</div><div class="stand-pax">0 人</div></div>
-        <div class="stand-card "><div class="stand-name">3・4号 (T2)</div><div class="stand-pax">0 人</div></div>
-        <div class="stand-card "><div class="stand-name">国際 (T3)</div><div class="stand-pax">0 人</div></div>
+        <div class="stand-card highlight"><div class="stand-name">1号 (T1南)</div><div class="stand-pax">0人</div></div>
+        <div class="stand-card "><div class="stand-name">2号 (T1北)</div><div class="stand-pax">0人</div></div>
+        <div class="stand-card "><div class="stand-name">3・4号 (T2)</div><div class="stand-pax">0人</div></div>
+        <div class="stand-card "><div class="stand-name">国際 (T3)</div><div class="stand-pax">0人</div></div>
     </div>
 
     <div class="advice-box">
-        <strong>⚡ 推奨：周辺待機・休憩推奨</strong><br>
-        <span>有効な到着便がありません。無理な入庫は避け、次回の波を待ちましょう。</span>
+        <strong style="color:#FFD700;">🎯 戦術目標：待機・休憩推奨</strong><br>
+        <span style="font-size:0.95rem;">現在は需要が枯渇しています。次回の波に備えて体力を温存してください。</span>
     </div>
 
-    <div style="background:#2a2a2a; padding:10px; border-radius:8px; font-size:0.9rem;">
-        🅿️ プール予測: 混雑：中（30-50分）
+    <div style="background:#2a2a2a; padding:12px; border-radius:8px; font-size:0.9rem; border:1px solid #444;">
+        🅿️ プール予測 (統計): <span style="color:#FFD700; font-weight:bold;">20-30分</span>
     </div>
 
-    <h3>✈️ 到着便明細 (直近60分)</h3>
+    <h3 style="color:#FFD700; border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">✈️ 到着エビデンス (直近60分)</h3>
     <table class="flight-list">
         <thead><tr><th>時刻</th><th>便名</th><th>出発地</th><th>予測</th></tr></thead>
         <tbody><tr><td colspan='4' style='text-align:center;'>対象便なし</td></tr></tbody>
@@ -57,7 +56,8 @@
     <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
 </div>
 <div class="footer">
-    ※推計人数は搭乗率統計に基づく予測です。最終判断は自己責任でお願いします。<br>
-    DEBUG: OK | PASS: 2067
+    【統計ハイブリッド型ロジック v2.0】<br>
+    ※推計人数：機材定数×搭乗率統計（-15/+45分ウィンドウ）<br>
+    DEBUG: OK | PASS: 7473
 </div>
 </div></body></html>
