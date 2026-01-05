@@ -4,8 +4,8 @@ on:
   schedule:
     - cron: '*/20 * * * *'
   workflow_dispatch:
-  repository_dispatch:      # 👈 追加：ここがGASからの受信口
-    types: [trigger-radar]  # 👈 追加：合言葉
+  repository_dispatch:
+    types: [trigger-radar]
 
 permissions:
   contents: write
@@ -25,7 +25,8 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 google-generativeai
+        # ▼▼▼ ここを --upgrade に変更しました ▼▼▼
+        run: pip install --upgrade requests beautifulsoup4 google-generativeai
 
       - name: Run Haneda Radar
         env:
@@ -38,17 +39,11 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add index.html
-          
-          # 変更があるかチェック
           if git diff --staged --quiet; then
             echo "No changes"
           else
             git commit -m "Auto update Haneda stats"
-            
-            # ▼▼▼ ここが衝突防止の魔法！ ▼▼▼
-            # 「もし先に誰かが更新してたら、それを混ぜてから進め」という命令
             git pull --rebase origin main
-            
             git push
           fi
 
