@@ -45,7 +45,7 @@ MARKER_TIME = "[[TIME]]"
 MARKER_PASS = "[[PASS]]"
 
 # =========================================================
-#  1. HTMLテンプレート (強力な強制リロード版)
+#  1. HTMLテンプレート
 # =========================================================
 HTML_TEMPLATE = f"""
 <!DOCTYPE html>
@@ -221,12 +221,18 @@ def call_gemini(prompt):
     if not GEMINI_KEY:
         return "⚠️ APIキーが設定されていません"
     try:
+        # 設定を初期化（最もシンプルな形）
         genai.configure(api_key=GEMINI_KEY)
-        # ▼▼▼ 修正箇所：models/ を追加 ▼▼▼
-        model = genai.GenerativeModel('models/gemini-1.5-flash') 
+        # モデル呼び出し（v1betaを使わない標準形式）
+        model = genai.GenerativeModel('gemini-1.5-flash') 
         response = model.generate_content(prompt)
-        return response.text
+        
+        if response and response.text:
+            return response.text
+        else:
+            return "AIが空の返答をしました"
     except Exception as e:
+        # エラーが起きた場合、詳細な内容を返す
         return f"AI通信エラー: {str(e)}"
 
 def generate_report():
@@ -238,12 +244,11 @@ def generate_report():
         try:
             with open("index.html", "r", encoding="utf-8") as f:
                 content = f.read()
-                # HTMLの中から 'const correctPass = "1234";' を探す
                 match = re.search(r'const correctPass = "(\d{4})";', content)
                 if match:
                     old_pass = match.group(1)
         except:
-            pass # 読み込めなくても気にしない
+            pass
 
     # 2. データを集める
     f = determine_facts()
@@ -251,7 +256,7 @@ def generate_report():
     # 3. AIに書かせる
     reason_prompt = f"""
     タクシー運転手へ140字以内で助言をしてください。
-    【条件】挨拶や前置きは禁止。「はい、承知しました」等は不要。いきなり本文から始めること。
+    【条件】挨拶や前置きは禁止。いきなり本文から始めること。
     状況: 時刻{f['time_str']}, ランク{f['rank']}, 推奨{f['target']}, 便数:国内{f['dom']}/国際{f['intl']}, 遅延:{f['delay']}, 根拠:{f['hint']}
     """
     reason = call_gemini(reason_prompt)
@@ -259,11 +264,11 @@ def generate_report():
     details_prompt = f"""
     国内{f['dom']}便, 国際{f['intl']}便、遅延{'あり' if f['delay'] else 'なし'}。
     各ターミナルの状況を簡潔な箇条書きで出力してください。
-    【条件】「Markdown形式で記述します」等の挨拶や前置きは一切禁止。いきなり箇条書きから始めること。
+    【条件】挨拶や前置きは禁止。
     """
     details = call_gemini(details_prompt)
     
-    # 4. 新しいパスワードを決める（朝6時に切り替わる）
+    # 4. 新しいパスワードを決める
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     if now.hour < 6: now = now - datetime.timedelta(days=1)
@@ -275,9 +280,9 @@ def generate_report():
     
     with open("index.html", "w", encoding="utf-8") as file: file.write(html)
     
-    # 6. 【ここが重要】パスワードが変わった時だけ Discord 通知する！
+    # 6. Discord 通知
     if DISCORD_URL and old_pass != pw:
-        requests.post(DISCORD_URL, json={"content": f"📡 **KASETACK 羽田レーダー**\n🌞 **今日のパスワード:** `{pw}`\n(パスワードが更新されました)\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
+        requests.post(DISCORD_URL, json={"content": f"📡 **KASETACK 羽田レーダー**\n🌞 **今日のパスワード:** `{pw}`\nhttps://sunny-kasetaku.github.io/haneda-radar/"})
     
     print("Done!")
 
