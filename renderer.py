@@ -1,6 +1,7 @@
 import json
 from config import CONFIG
 
+# HTMLテンプレートの定義（トリプルクォートの閉じを確認済み）
 HTML_TEMPLATE = """
 <!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK 羽田レーダー v3.8</title>
 <style>
@@ -22,7 +23,6 @@ HTML_TEMPLATE = """
     .update-btn { background: #FFD700; color: #000; border: none; padding: 20px; width: 100%; font-size: 1.4rem; font-weight: bold; border-radius: 15px; cursor: pointer; margin-top: 15px; }
     .timer-info { text-align: center; margin-top: 10px; color: #888; font-size: 0.8rem; }
     #timer { color: #FFD700; font-weight: bold; }
-    /* 15分更新を強調する注釈 */
     .notice { color: #FFD700; background: rgba(255, 215, 0, 0.1); padding: 10px; border-radius: 5px; font-size: 0.8rem; text-align: center; margin-bottom: 15px; border: 1px solid #FFD700; }
 </style></head>
 <body onload="startTimer()"><div class="container">
@@ -66,7 +66,6 @@ HTML_TEMPLATE = """
 </script>
 </body></html>
 """
-"""
 
 def run_render():
     with open(CONFIG["RESULT_JSON"], "r", encoding="utf-8") as f:
@@ -79,13 +78,14 @@ def run_render():
     elif tp > 100: rk, col, msg = ("✨ B", "#00ff7f", "【注意】小規模")
     
     # ターミナルカード生成
-    best_key = max(data["stands"], key=data["stands"].get) if tp > 0 else ""
+    best_key = max(data["stands"], key=data["stands"].get) if tp > 0 else "P1"
     cards = ""
-    for i, label in enumerate(["1号 (T1南)", "2号 (T1北)", "3号 (T2)", "4号 (T2)", "国際 (T3)"], 1):
+    labels = ["1号 (T1南)", "2号 (T1北)", "3号 (T2)", "4号 (T2)", "国際 (T3)"]
+    for i, label in enumerate(labels, 1):
         key = f"P{i}"
-        is_best = "best-stand" if key == best_key else ""
+        is_best = "border: 2px solid #FFD700;" if key == best_key and tp > 0 else ""
         is_intl = "intl" if key == "P5" else ""
-        cards += f'<div class="stand-card {is_best} {is_intl}"><span class="label">{label}</span><span class="val">{data["stands"][key]}人</span></div>'
+        cards += f'<div class="stand-card {is_intl}" style="{is_best}"><span class="label">{label}</span><span class="val">{data["stands"].get(key, 0)}人</span></div>'
 
     # 行生成
     rows = ""
@@ -94,7 +94,7 @@ def run_render():
 
     html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[RANK_COLOR]]", col).replace("[[RANK_MSG]]", msg) \
         .replace("[[CARDS]]", cards) \
-        .replace("[[REASON]]", f"羽田全体で約{tp}名の需要を検知。{best_key.replace('P','')}番付近が有力。") \
+        .replace("[[REASON]]", f"羽田全体で約{tp}名の需要を検知。{best_key.replace('P','')}番付近が有力です。") \
         .replace("[[ROWS]]", rows if rows else "<tr><td colspan='4'>対象なし</td></tr>") \
         .replace("[[TIME]]", data["update_time"])
 
