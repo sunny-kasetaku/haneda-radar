@@ -4,22 +4,22 @@
     "P2": 0,
     "P3": 0,
     "P4": 0,
-    "P5": 364
+    "P5": 458
   },
-  "total_pax": 364,
+  "total_pax": 458,
   "rows": [
     {
       "time": "17:14",
       "flight": "144",
       "origin": "不明",
-      "pax": 182
+      "pax": 229
     },
     {
-      "time": "16:22",
+      "time": "17:22",
       "flight": "224",
       "origin": "不明",
-      "pax": 182
+      "pax": 229
     }
   ],
-  "update_time": "16:49"
+  "update_time": "17:01"
 }
