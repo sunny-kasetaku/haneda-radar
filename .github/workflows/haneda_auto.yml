@@ -1,10 +1,10 @@
 name: Haneda Radar Auto Update
 
 on:
-  schedule:
-    - cron: '*/20 * * * *'  # 20分おきに自動実行
-  workflow_dispatch:        # 手動実行も可能
-  repository_dispatch:
+#  schedule:
+#    - cron: '*/20 * * * *'  # GitHub自身の定期実行を一旦お休みさせる
+  workflow_dispatch:        # 手動実行ボタンは残す
+  repository_dispatch:      # GAS（15分おき）のトリガーを優先する
     types: [trigger-radar]
 
 # 🌟 古い実行を自動キャンセル（サニーさんの採用した魔法の1行）
