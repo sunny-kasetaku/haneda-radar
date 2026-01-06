@@ -1,40 +1,63 @@
 
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK 5-STANDS</title>
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK FINAL UI</title>
 <style>
-    body { background: #0f0f0f; color: #eee; font-family: sans-serif; padding: 10px; margin: 0; }
+    body { background: #0a0a0a; color: #eee; font-family: sans-serif; padding: 10px; margin: 0; }
     .container { max-width: 600px; margin: 0 auto; }
-    .stand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 15px; }
-    .stand-card { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; text-align: center; }
-    .stand-card.intl { grid-column: span 2; background: #262626; border-color: #FFD700; }
-    .best { border-color: #00ff7f; background: rgba(0,255,127,0.1); }
-    .val { font-size: 1.6rem; font-weight: bold; color: #fff; display: block; }
-    .label { font-size: 0.75rem; color: #888; }
-    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; }
-    .flight-list th { text-align: left; color: #FFD700; border-bottom: 1px solid #444; padding: 5px; }
-    .flight-list td { padding: 8px; border-bottom: 1px solid #222; }
-    .big-bird { color: #FF4500; font-weight: bold; }
-    .update-btn { background: #FFD700; color: #000; border: none; padding: 20px; width: 100%; font-size: 1.2rem; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+    
+    /* 総合判定ランク */
+    .rank-box { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 3px solid #00ff7f; text-align: center; margin-bottom: 15px; }
+    .rank-main { font-size: 3.8rem; font-weight: 900; color: #00ff7f; margin: 0; }
+    .rank-desc { font-size: 1.1rem; font-weight: bold; margin-top: 5px; color: #fff; }
+
+    /* 5エリアグリッド */
+    .stand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+    .stand-card { background: #222; padding: 15px; border-radius: 10px; border: 1px solid #444; text-align: center; }
+    .stand-card.intl { grid-column: span 2; border-color: #FFD700; }
+    .val { font-size: 1.8rem; font-weight: bold; color: #fff; display: block; }
+    .label { font-size: 0.8rem; color: #aaa; }
+    .best-stand { border-color: #00ff7f; background: rgba(0,255,127,0.1); }
+
+    /* 判例 (Legend) */
+    .legend { background: #151515; padding: 10px; border-radius: 8px; font-size: 0.75rem; color: #888; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+
+    .advice-box { background: #222; border-left: 6px solid #FFD700; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size: 0.95rem; }
+    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #111; }
+    .flight-list th { text-align: left; color: #FFD700; border-bottom: 2px solid #333; padding: 10px; }
+    .flight-list td { padding: 10px; border-bottom: 1px solid #222; }
+
+    .update-btn { background: #FFD700; color: #000; border: none; padding: 25px; width: 100%; font-size: 1.6rem; font-weight: bold; border-radius: 15px; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 0 #b89b00; }
 </style></head>
 <body><div class="container">
-    <h2 style="text-align:center; color:#FFD700; margin:10px 0;">🚖 羽田 5エリア需要レーダー</h2>
+    <h2 style="text-align:center; color:#FFD700; margin:10px 0;">🚖 KASETACK 羽田需要攻略</h2>
     
+    <div class="rank-box">
+        <p class="rank-main">✨ B</p>
+        <p class="rank-desc">【注意】小規模需要あり。効率を重視。</p>
+    </div>
+
+    <div class="legend">
+        <span>🌈S: 激熱(800人~)</span><span>🔥A: 推奨(400人~)</span><span>✨B: 注意(100人~)</span>
+        <span>☁️C: 微妙(1人~)</span><span>🌑D: 撤退(到着なし)</span>
+    </div>
+
     <div class="stand-grid">
-        <div class="stand-card "><span class="label">1号 (T1南)</span><span class="val">0</span><span class="label">名</span></div>
-        <div class="stand-card "><span class="label">2号 (T1北)</span><span class="val">0</span><span class="label">名</span></div>
-        <div class="stand-card "><span class="label">3号 (T2)</span><span class="val">0</span><span class="label">名</span></div>
-        <div class="stand-card "><span class="label">4号 (T2)</span><span class="val">0</span><span class="label">名</span></div>
-        <div class="stand-card intl best"><span class="label">国際 (T3)</span><span class="val">168</span><span class="label">名</span></div>
+        <div class="stand-card "><span class="label">1号 (T1南)</span><span class="val">0人</span></div>
+        <div class="stand-card "><span class="label">2号 (T1北)</span><span class="val">0人</span></div>
+        <div class="stand-card "><span class="label">3号 (T2)</span><span class="val">0人</span></div>
+        <div class="stand-card "><span class="label">4号 (T2)</span><span class="val">0人</span></div>
+        <div class="stand-card intl best-stand"><span class="label">国際 (T3)</span><span class="val">182人</span></div>
     </div>
 
-    <div style="background:#222; padding:15px; border-radius:8px; border-left:5px solid #FFD700; margin-bottom:15px;">
-        <strong>📋 解析根拠:</strong> 直近60分で最も期待値が高いのは【国際 (T3)】です。機体サイズと統計搭乗率に基づき算出。
+    <div class="advice-box">
+        <strong>⚡ 根拠・戦術：</strong><br>直近60分の推計降機人数は計 182 名です。特に【国際(T3)】への需要が集中しています。
     </div>
 
+    <h3>✈️ 到着エビデンス (直近60分)</h3>
     <table class="flight-list">
         <thead><tr><th>時刻</th><th>便名</th><th>タイプ</th><th>推計</th></tr></thead>
-        <tbody><tr><td>14:11</td><td>130</td><td class='big-bird'>大型機</td><td>168名</td></tr></tbody>
+        <tbody><tr><td>14:11</td><td>130</td><td>大型</td><td>182名</td></tr></tbody>
     </table>
     
     <button class="update-btn" onclick="location.reload()">最新情報に更新</button>
-    <div style="text-align:right; font-size:0.7rem; color:#555; margin-top:10px;">14:02 | DEBUG: OK</div>
+    <div style="text-align:center; font-size:0.75rem; color:#555; margin-top:20px;">更新: 14:16 | v3.5 FIXED UI</div>
 </div></body></html>
