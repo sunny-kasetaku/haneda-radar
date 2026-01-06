@@ -4,172 +4,133 @@ import os
 import random
 import re
 
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
-
 # ==========================================================
-# 📊 【マスターデータ】 現場の統計・定数（ここでチューニング可能）
+# 📊 【マスターデータ】 現場の物理制約と統計
 # ==========================================================
 STATS_CONFIG = {
-    "BASE_PAX": {"INTL": 250, "DOM": 180},  # 1便あたりの基本定員
-    "LOAD_FACTORS": {
-        "MIDNIGHT": 0.85, # 22時-02時（深夜ボーナス）
-        "RUSH": 0.80,     # 05時-09時 / 17時-20時
-        "NORMAL": 0.65    # その他
-    },
+    "AIRCRAFT_CAPACITY": {"BIG": 350, "SMALL": 180, "INTL": 280}, # 物理的な最大定員
+    "LOAD_FACTORS": {"MIDNIGHT": 0.85, "RUSH": 0.80, "NORMAL": 0.60}, # 搭乗率の統計
+    # 5つの乗り場への振り分け設定
     "STAND_MAP": {
-        "P1": ["JL", "JTA", "NU", "BC"],      # 1号 (T1南)
-        "P2": [],                             # 2号 (T1北) ※JLの北行便
-        "P3": ["NH", "ADO", "SNA", "FW", "7G"], # 3・4号 (T2)
-        "P4": ["INTL"]                        # 国際 (T3) ※キャリアにないものは全てココ
-    },
-    "POOL_EXPECTATION": { # 時間帯別の予測待ち時間（統計）
-        "0-2": "30-45分", "5-9": "90分超(回避推奨)", "DEFAULT": "20-30分"
+        "P1": {"carriers": ["JL", "BC"], "desc": "1号 (T1南)"}, # JAL(西日本等), スカイマーク
+        "P2": {"carriers": ["JL", "NU", "JTA"], "desc": "2号 (T1北)"}, # JAL(北日本等), JTA
+        "P3": {"carriers": ["NH", "FW"], "desc": "3号 (T2)"}, # ANA
+        "P4": {"carriers": ["ADO", "SNA", "SFJ", "7G"], "desc": "4号 (T2)"}, # エアドゥ, ソラシド等
+        "P5": {"carriers": ["INTL"], "desc": "国際 (T3)"} # 国際線
     }
 }
 
-HTML_TEMPLATE = """
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK RADAR</title>
-<style>
-    body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 15px; display: flex; justify-content: center; }
-    .container { max-width: 600px; width: 100%; }
-    .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 10px; font-size: 1.5rem; color: #fff; display: flex; justify-content: space-between; }
-    #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #444; }
-    .rank-display { text-align: center; margin-bottom: 15px; }
-    .rank-text { font-size: 2.8rem; font-weight: bold; color: #fff; margin: 0; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
-    .basis-badge { background: rgba(255,215,0,0.1); color: #FFD700; padding: 6px 15px; border-radius: 20px; font-size: 0.95rem; border: 1px solid #FFD700; display: inline-block; margin-top: 5px; }
-    
-    .stand-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-    .stand-card { background: #2a2a2a; padding: 12px; border-radius: 10px; border: 2px solid #444; text-align: center; transition: 0.3s; }
-    .stand-card.highlight { border-color: #FFD700; background: rgba(255,215,0,0.1); box-shadow: 0 0 15px rgba(255,215,0,0.2); }
-    .stand-name { font-size: 0.85rem; color: #bbb; margin-bottom: 5px; }
-    .stand-pax { font-size: 1.5rem; font-weight: bold; color: #fff; }
+def get_realistic_pax(carrier, fnum, now_hour):
+    # 大型機判定（便名が3桁以下は大型の確率が高い統計）
+    is_big = False
+    try:
+        if int(fnum) < 1000: is_big = True
+    except: pass
 
-    .advice-box { background: #222; border-left: 6px solid #FFD700; padding: 15px; border-radius: 4px; margin: 15px 0; }
-    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 15px; background: #1a1a1a; }
-    .flight-list th { text-align: left; color: #FFD700; border-bottom: 2px solid #333; padding: 10px; }
-    .flight-list td { padding: 10px; border-bottom: 1px solid #2a2a2a; }
-    
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; margin-top: 15px; box-shadow: 0 6px 0 #b89b00; }
-    .footer { font-size: 0.75rem; color: #555; margin-top: 25px; text-align: center; line-height: 1.5; }
+    # 搭乗率の決定
+    rate = STATS_CONFIG["LOAD_FACTORS"]["NORMAL"]
+    if 22 <= now_hour or now_hour <= 2: rate = STATS_CONFIG["LOAD_FACTORS"]["MIDNIGHT"]
+    elif 7 <= now_hour <= 9 or 17 <= now_hour <= 20: rate = STATS_CONFIG["LOAD_FACTORS"]["RUSH"]
+
+    # 物理的な上限に基づいた推計（嘘をつかない計算）
+    capacity = STATS_CONFIG["AIRCRAFT_CAPACITY"]["BIG"] if is_big else STATS_CONFIG["AIRCRAFT_CAPACITY"]["SMALL"]
+    if carrier not in ["JL", "NH", "BC", "7G", "6J", "ADO", "SNA", "SFJ"]:
+        capacity = STATS_CONFIG["AIRCRAFT_CAPACITY"]["INTL"]
+
+    return int(capacity * rate), "大型機" if is_big else "中小型"
+
+HTML_TEMPLATE = """
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK 5-STANDS</title>
+<style>
+    body { background: #0f0f0f; color: #eee; font-family: sans-serif; padding: 10px; margin: 0; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .stand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 15px; }
+    .stand-card { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; text-align: center; }
+    .stand-card.intl { grid-column: span 2; background: #262626; border-color: #FFD700; }
+    .best { border-color: #00ff7f; background: rgba(0,255,127,0.1); }
+    .val { font-size: 1.6rem; font-weight: bold; color: #fff; display: block; }
+    .label { font-size: 0.75rem; color: #888; }
+    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; }
+    .flight-list th { text-align: left; color: #FFD700; border-bottom: 1px solid #444; padding: 5px; }
+    .flight-list td { padding: 8px; border-bottom: 1px solid #222; }
+    .big-bird { color: #FF4500; font-weight: bold; }
+    .update-btn { background: #FFD700; color: #000; border: none; padding: 20px; width: 100%; font-size: 1.2rem; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
 </style></head>
 <body><div class="container">
-<div class="main-title">🚖 KASETACK <span>[[TIME]]</span></div>
-<div id="report-box">
-    <div class="rank-display">
-        <p class="rank-text">[[RANK]]</p>
-        <div class="basis-badge">[[BASIS]]</div>
+    <h2 style="text-align:center; color:#FFD700; margin:10px 0;">🚖 羽田 5エリア需要レーダー</h2>
+    
+    <div class="stand-grid">
+        <div class="stand-card [[H1]]"><span class="label">1号 (T1南)</span><span class="val">[[P1]]</span><span class="label">名</span></div>
+        <div class="stand-card [[H2]]"><span class="label">2号 (T1北)</span><span class="val">[[P2]]</span><span class="label">名</span></div>
+        <div class="stand-card [[H3]]"><span class="label">3号 (T2)</span><span class="val">[[P3]]</span><span class="label">名</span></div>
+        <div class="stand-card [[H4]]"><span class="label">4号 (T2)</span><span class="val">[[P4]]</span><span class="label">名</span></div>
+        <div class="stand-card intl [[H5]]"><span class="label">国際 (T3)</span><span class="val">[[P5]]</span><span class="label">名</span></div>
     </div>
 
-    <div class="stand-container">
-        <div class="stand-card [[H1]]"><div class="stand-name">1号 (T1南)</div><div class="stand-pax">[[P1]]人</div></div>
-        <div class="stand-card [[H2]]"><div class="stand-name">2号 (T1北)</div><div class="stand-pax">[[P2]]人</div></div>
-        <div class="stand-card [[H3]]"><div class="stand-name">3・4号 (T2)</div><div class="stand-pax">[[P3]]人</div></div>
-        <div class="stand-card [[H4]]"><div class="stand-name">国際 (T3)</div><div class="stand-pax">[[P4]]人</div></div>
+    <div style="background:#222; padding:15px; border-radius:8px; border-left:5px solid #FFD700; margin-bottom:15px;">
+        <strong>📋 解析根拠:</strong> [[REASON]]
     </div>
 
-    <div class="advice-box">
-        <strong style="color:#FFD700;">🎯 戦術目標：[[TARGET]]</strong><br>
-        <span style="font-size:0.95rem;">[[REASON]]</span>
-    </div>
-
-    <div style="background:#2a2a2a; padding:12px; border-radius:8px; font-size:0.9rem; border:1px solid #444;">
-        🅿️ プール予測 (統計): <span style="color:#FFD700; font-weight:bold;">[[POOL_WAIT]]</span>
-    </div>
-
-    <h3 style="color:#FFD700; border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">✈️ 到着エビデンス (直近60分)</h3>
     <table class="flight-list">
-        <thead><tr><th>時刻</th><th>便名</th><th>出発地</th><th>予測</th></tr></thead>
-        <tbody>[[FLIGHT_ROWS]]</tbody>
+        <thead><tr><th>時刻</th><th>便名</th><th>タイプ</th><th>推計</th></tr></thead>
+        <tbody>[[ROWS]]</tbody>
     </table>
-
-    <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
-</div>
-<div class="footer">
-    【統計ハイブリッド型ロジック v2.0】<br>
-    ※推計人数：機材定数×搭乗率統計（-15/+45分ウィンドウ）<br>
-    DEBUG: [[DEBUG]] | PASS: [[PASS]]
-</div>
+    
+    <button class="update-btn" onclick="location.reload()">最新情報に更新</button>
+    <div style="text-align:right; font-size:0.7rem; color:#555; margin-top:10px;">[[TIME]] | DEBUG: [[DEBUG]]</div>
 </div></body></html>
 """
 
-def fetch_haneda_hybrid():
+def fetch_and_generate():
     url = "https://www.flightview.com/traveltools/FlightStatusByAirport.asp?airport=HND&at=A"
-    headers = {"User-Agent": "Mozilla/5.0"}
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0}
-    flight_rows = ""
-    total_pax = 0
-
+    stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
+    rows = ""
+    
     try:
-        r = requests.get(url, headers=headers, timeout=15)
-        if r.status_code == 200:
-            # 航空会社・便名・時刻・出発地を抽出
-            flights = re.findall(r'(\d{1,2}):(\d{2})\s?([AP]M)?.*?(\w{2,3})\s?(\d+).*?<td>(.*?)</td>', r.text, re.DOTALL)
-            
-            # 搭乗率の決定
-            rate = STATS_CONFIG["LOAD_FACTORS"]["NORMAL"]
-            if 22 <= now.hour or now.hour <= 2: rate = STATS_CONFIG["LOAD_FACTORS"]["MIDNIGHT"]
-            elif (5 <= now.hour <= 9) or (17 <= now.hour <= 20): rate = STATS_CONFIG["LOAD_FACTORS"]["RUSH"]
-
-            for h, m, ampm, carrier, fnum, origin in flights:
-                f_h = int(h)
-                if ampm == "PM" and f_h < 12: f_h += 12
-                elif ampm == "AM" and f_h == 12: f_h = 0
-                f_t = now.replace(hour=f_h % 24, minute=int(m), second=0, microsecond=0)
-                diff = (f_t - now).total_seconds() / 60
-                
-                # 🌟 60分ウィンドウ (-15分 〜 +45分)
-                if -15 < diff < 45:
-                    is_domestic = carrier in (STATS_CONFIG["STAND_MAP"]["P1"] + STATS_CONFIG["STAND_MAP"]["P3"])
-                    base_cap = STATS_CONFIG["BASE_PAX"]["DOM"] if is_domestic else STATS_CONFIG["BASE_PAX"]["INTL"]
-                    est_pax = int(base_cap * rate)
-                    
-                    # 乗り場判定
-                    s_key = "P4" # デフォルト国際
-                    if carrier in STATS_CONFIG["STAND_MAP"]["P1"]: s_key = "P1"
-                    elif carrier in STATS_CONFIG["STAND_MAP"]["P3"]: s_key = "P3"
-                    
-                    stands[s_key] += est_pax
-                    total_pax += est_pax
-                    flight_rows += f"<tr><td>{f_h:02d}:{int(m):02d}</td><td>{carrier}{fnum}</td><td>{origin[:8]}</td><td>{est_pax}名</td></tr>"
+        # タイムアウトを5秒に設定し「くるくる」を防止
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
+        flights = re.findall(r'(\d{1,2}):(\d{2})\s?([AP]M)?.*?(\w{2,3})\s?(\d+)', r.text, re.DOTALL)
         
-        status = "OK"
-    except: status = "NetErr"
-    
-    return stands, flight_rows, total_pax, status
+        for h, m, ampm, carrier, fnum in flights:
+            f_h = int(h)
+            if ampm == "PM" and f_h < 12: f_h += 12
+            elif ampm == "AM" and f_h == 12: f_h = 0
+            f_t = now.replace(hour=f_h % 24, minute=int(m), second=0, microsecond=0)
+            
+            diff = (f_t - now).total_seconds() / 60
+            if -10 < diff < 50: # 60分ウィンドウ
+                pax, p_type = get_realistic_pax(carrier, fnum, now.hour)
+                
+                # 5エリアへの正確な振り分け
+                s_key = "P5" # デフォルト国際
+                if carrier in STATS_CONFIG["STAND_MAP"]["P1"]["carriers"]: s_key = "P1"
+                elif carrier in STATS_CONFIG["STAND_MAP"]["P2"]["carriers"]: s_key = "P2"
+                elif carrier in STATS_CONFIG["STAND_MAP"]["P3"]["carriers"]: s_key = "P3"
+                elif carrier in STATS_CONFIG["STAND_MAP"]["P4"]["carriers"]: s_key = "P4"
+                
+                stands[s_key] += pax
+                bird_class = "class='big-bird'" if p_type == "大型機" else ""
+                rows += f"<tr><td>{f_h:02d}:{m}</td><td>{carrier}{fnum}</td><td {bird_class}>{p_type}</td><td>{pax}名</td></tr>"
+        debug = "OK"
+    except Exception as e:
+        debug = f"Error: {str(e)}"
 
-def generate_report():
-    jst = datetime.timezone(datetime.timedelta(hours=9))
-    n = datetime.datetime.now(jst)
-    stands, rows, total, debug = fetch_haneda_hybrid()
+    # 最も人数が多いエリアを特定
+    best_key = max(stands, key=stands.get) if sum(stands.values()) > 0 else ""
+    reason = f"直近60分で最も期待値が高いのは【{STATS_CONFIG['STAND_MAP'].get(best_key, {'desc':'-'})['desc']}】です。機体サイズと統計搭乗率に基づき算出。"
     
-    # 判定・推奨アクション
-    best_key = max(stands, key=stands.get)
-    target_map = {"P1": "1号 (T1南)", "P2": "2号 (T1北)", "P3": "3・4号 (T2)", "P4": "国際線 (T3)"}
-    target = target_map[best_key] if total > 0 else "待機・休憩推奨"
-    
-    if total > 800: rk, basis = "🌈 S 【 激熱 】", f"統計予測：計{total}名の集中降機"
-    elif total > 300: rk, basis = "🔥 A 【 推奨 】", f"安定需要：計{total}名の降機予測"
-    elif total > 0: rk, basis = "✨ B 【 注意 】", f"分散需要：計{total}名の降機予測"
-    else: rk, basis = "🌑 D 【 撤退 】", "有効な到着便なし(安全装置)"
-
-    # プール予測
-    h_str = f"{n.hour}"
-    pool = STATS_CONFIG["POOL_EXPECTATION"].get("0-2" if 0 <= n.hour <= 2 else ("5-9" if 5 <= n.hour <= 9 else "DEFAULT"))
-    
-    reason = f"【{target}】に需要が集中しています。統計上の搭乗率も高く、並ぶ価値は十分にあります。" if total > 0 else "現在は需要が枯渇しています。次回の波に備えて体力を温存してください。"
-
-    html = HTML_TEMPLATE.replace("[[RANK]]", rk).replace("[[BASIS]]", basis).replace("[[TIME]]", n.strftime('%H:%M')) \
-        .replace("[[P1]]", str(stands['P1'])).replace("[[P2]]", str(stands['P2'])).replace("[[P3]]", str(stands['P3'])).replace("[[P4]]", str(stands['P4'])) \
-        .replace("[[H1]]", "highlight" if best_key=="P1" else "").replace("[[H2]]", "highlight" if best_key=="P2" else "") \
-        .replace("[[H3]]", "highlight" if best_key=="P3" else "").replace("[[H4]]", "highlight" if best_key=="P4" else "") \
-        .replace("[[TARGET]]", target).replace("[[REASON]]", reason).replace("[[POOL_WAIT]]", pool) \
-        .replace("[[FLIGHT_ROWS]]", rows if rows else "<tr><td colspan='4' style='text-align:center;'>対象便なし</td></tr>") \
-        .replace("[[DEBUG]]", debug).replace("[[PASS]]", str(random.randint(1000, 9999)))
+    html = HTML_TEMPLATE.replace("[[P1]]", str(stands["P1"])).replace("[[P2]]", str(stands["P2"])) \
+        .replace("[[P3]]", str(stands["P3"])).replace("[[P4]]", str(stands["P4"])).replace("[[P5]]", str(stands["P5"])) \
+        .replace("[[H1]]", "best" if best_key=="P1" else "").replace("[[H2]]", "best" if best_key=="P2" else "") \
+        .replace("[[H3]]", "best" if best_key=="P3" else "").replace("[[H4]]", "best" if best_key=="P4" else "") \
+        .replace("[[H5]]", "best" if best_key=="P5" else "") \
+        .replace("[[REASON]]", reason).replace("[[ROWS]]", rows if rows else "<tr><td colspan='4'>対象便なし</td></tr>") \
+        .replace("[[TIME]]", now.strftime("%H:%M")).replace("[[DEBUG]]", debug)
 
     with open("index.html", "w", encoding="utf-8") as f: f.write(html)
 
 if __name__ == "__main__":
-    generate_report()
+    fetch_and_generate()
