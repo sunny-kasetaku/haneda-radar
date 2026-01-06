@@ -1,63 +1,40 @@
 
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK RADAR</title>
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK 5-STANDS</title>
 <style>
-    body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 15px; display: flex; justify-content: center; }
-    .container { max-width: 600px; width: 100%; }
-    .main-title { border-bottom: 3px solid #FFD700; margin-bottom: 10px; font-size: 1.5rem; color: #fff; display: flex; justify-content: space-between; }
-    #report-box { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #444; }
-    .rank-display { text-align: center; margin-bottom: 15px; }
-    .rank-text { font-size: 2.8rem; font-weight: bold; color: #fff; margin: 0; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
-    .basis-badge { background: rgba(255,215,0,0.1); color: #FFD700; padding: 6px 15px; border-radius: 20px; font-size: 0.95rem; border: 1px solid #FFD700; display: inline-block; margin-top: 5px; }
-    
-    .stand-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-    .stand-card { background: #2a2a2a; padding: 12px; border-radius: 10px; border: 2px solid #444; text-align: center; transition: 0.3s; }
-    .stand-card.highlight { border-color: #FFD700; background: rgba(255,215,0,0.1); box-shadow: 0 0 15px rgba(255,215,0,0.2); }
-    .stand-name { font-size: 0.85rem; color: #bbb; margin-bottom: 5px; }
-    .stand-pax { font-size: 1.5rem; font-weight: bold; color: #fff; }
-
-    .advice-box { background: #222; border-left: 6px solid #FFD700; padding: 15px; border-radius: 4px; margin: 15px 0; }
-    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 15px; background: #1a1a1a; }
-    .flight-list th { text-align: left; color: #FFD700; border-bottom: 2px solid #333; padding: 10px; }
-    .flight-list td { padding: 10px; border-bottom: 1px solid #2a2a2a; }
-    
-    .reload-btn { background: #FFD700; color: #000; border: none; padding: 22px; width: 100%; font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; margin-top: 15px; box-shadow: 0 6px 0 #b89b00; }
-    .footer { font-size: 0.75rem; color: #555; margin-top: 25px; text-align: center; line-height: 1.5; }
+    body { background: #0f0f0f; color: #eee; font-family: sans-serif; padding: 10px; margin: 0; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .stand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 15px; }
+    .stand-card { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; text-align: center; }
+    .stand-card.intl { grid-column: span 2; background: #262626; border-color: #FFD700; }
+    .best { border-color: #00ff7f; background: rgba(0,255,127,0.1); }
+    .val { font-size: 1.6rem; font-weight: bold; color: #fff; display: block; }
+    .label { font-size: 0.75rem; color: #888; }
+    .flight-list { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; }
+    .flight-list th { text-align: left; color: #FFD700; border-bottom: 1px solid #444; padding: 5px; }
+    .flight-list td { padding: 8px; border-bottom: 1px solid #222; }
+    .big-bird { color: #FF4500; font-weight: bold; }
+    .update-btn { background: #FFD700; color: #000; border: none; padding: 20px; width: 100%; font-size: 1.2rem; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
 </style></head>
 <body><div class="container">
-<div class="main-title">🚖 KASETACK <span>03:24</span></div>
-<div id="report-box">
-    <div class="rank-display">
-        <p class="rank-text">🌑 D 【 撤退 】</p>
-        <div class="basis-badge">有効な到着便なし(安全装置)</div>
+    <h2 style="text-align:center; color:#FFD700; margin:10px 0;">🚖 羽田 5エリア需要レーダー</h2>
+    
+    <div class="stand-grid">
+        <div class="stand-card "><span class="label">1号 (T1南)</span><span class="val">0</span><span class="label">名</span></div>
+        <div class="stand-card "><span class="label">2号 (T1北)</span><span class="val">0</span><span class="label">名</span></div>
+        <div class="stand-card "><span class="label">3号 (T2)</span><span class="val">0</span><span class="label">名</span></div>
+        <div class="stand-card "><span class="label">4号 (T2)</span><span class="val">0</span><span class="label">名</span></div>
+        <div class="stand-card intl best"><span class="label">国際 (T3)</span><span class="val">168</span><span class="label">名</span></div>
     </div>
 
-    <div class="stand-container">
-        <div class="stand-card highlight"><div class="stand-name">1号 (T1南)</div><div class="stand-pax">0人</div></div>
-        <div class="stand-card "><div class="stand-name">2号 (T1北)</div><div class="stand-pax">0人</div></div>
-        <div class="stand-card "><div class="stand-name">3・4号 (T2)</div><div class="stand-pax">0人</div></div>
-        <div class="stand-card "><div class="stand-name">国際 (T3)</div><div class="stand-pax">0人</div></div>
+    <div style="background:#222; padding:15px; border-radius:8px; border-left:5px solid #FFD700; margin-bottom:15px;">
+        <strong>📋 解析根拠:</strong> 直近60分で最も期待値が高いのは【国際 (T3)】です。機体サイズと統計搭乗率に基づき算出。
     </div>
 
-    <div class="advice-box">
-        <strong style="color:#FFD700;">🎯 戦術目標：待機・休憩推奨</strong><br>
-        <span style="font-size:0.95rem;">現在は需要が枯渇しています。次回の波に備えて体力を温存してください。</span>
-    </div>
-
-    <div style="background:#2a2a2a; padding:12px; border-radius:8px; font-size:0.9rem; border:1px solid #444;">
-        🅿️ プール予測 (統計): <span style="color:#FFD700; font-weight:bold;">20-30分</span>
-    </div>
-
-    <h3 style="color:#FFD700; border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">✈️ 到着エビデンス (直近60分)</h3>
     <table class="flight-list">
-        <thead><tr><th>時刻</th><th>便名</th><th>出発地</th><th>予測</th></tr></thead>
-        <tbody><tr><td colspan='4' style='text-align:center;'>対象便なし</td></tr></tbody>
+        <thead><tr><th>時刻</th><th>便名</th><th>タイプ</th><th>推計</th></tr></thead>
+        <tbody><tr><td>14:11</td><td>130</td><td class='big-bird'>大型機</td><td>168名</td></tr></tbody>
     </table>
-
-    <button class="reload-btn" onclick="location.reload()">最新情報に更新</button>
-</div>
-<div class="footer">
-    【統計ハイブリッド型ロジック v2.0】<br>
-    ※推計人数：機材定数×搭乗率統計（-15/+45分ウィンドウ）<br>
-    DEBUG: OK | PASS: 7473
-</div>
+    
+    <button class="update-btn" onclick="location.reload()">最新情報に更新</button>
+    <div style="text-align:right; font-size:0.7rem; color:#555; margin-top:10px;">14:02 | DEBUG: OK</div>
 </div></body></html>
