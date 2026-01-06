@@ -4,24 +4,16 @@
     "P2": 0,
     "P3": 0,
     "P4": 0,
-    "P5": 458
+    "P5": 0
   },
-  "total_pax": 458,
-  "rows": [
-    {
-      "time": "19:17",
-      "flight": "102",
-      "origin": "不明",
-      "pax": 229,
-      "s_key": "P5"
-    },
-    {
-      "time": "19:26",
-      "flight": "124",
-      "origin": "--font",
-      "pax": 229,
-      "s_key": "P5"
-    }
-  ],
-  "update_time": "19:31"
+  "pool_preds": {
+    "P1": 100,
+    "P2": 100,
+    "P3": 120,
+    "P4": 80,
+    "P5": 150
+  },
+  "total_pax": 0,
+  "rows": [],
+  "update_time": "19:36"
 }
