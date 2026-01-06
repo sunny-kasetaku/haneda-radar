@@ -1,8 +1,8 @@
 name: Haneda Radar Auto Update
 
 on:
-#  schedule:
-#    - cron: '*/20 * * * *'  # 行の頭に # を付けるだけで自動実行が止まります
+  schedule:
+    - cron: '*/20 * * * *'  # #を外して自動実行を再開
   workflow_dispatch:
   repository_dispatch:
     types: [trigger-radar]
