@@ -2,12 +2,12 @@ name: Haneda Radar Auto Update
 
 on:
   schedule:
-    - cron: '*/20 * * * *'  # #を外して自動実行を再開
-  workflow_dispatch:
+    - cron: '*/20 * * * *'  # 20分おきに自動実行
+  workflow_dispatch:        # 手動実行も可能
   repository_dispatch:
     types: [trigger-radar]
 
-# 🌟 魔法の1行：新しい実行が始まったら、古い「くるくる」を自動キャンセル
+# 🌟 古い実行を自動キャンセル（サニーさんの採用した魔法の1行）
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -20,8 +20,7 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # 🌟 安全装置：5分以上かかったら異常とみなして強制終了させる
-    timeout-minutes: 5
+    timeout-minutes: 5      # 5分でタイムアウトさせる安全装置
     
     steps:
       - name: Checkout code
@@ -35,27 +34,28 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 "google-generativeai>=0.8.3"
+          pip install requests beautifulsoup4
 
       - name: Run Haneda Radar
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        # 不要なGeminiキーなどは削除し、シンプルに実行
         run: python haneda_radar.py
 
+      # 🌟 ここでファイルをリポジトリ（コードタブ）に書き戻します
       - name: Commit and Push changes
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git add index.html
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          # index.htmlに加えて、解析データ(json)も保存対象にする
+          git add index.html analysis_result.json
           if git diff --staged --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update Haneda stats"
+            git commit -m "Auto update Haneda stats: $(date +'%Y-%m-%d %H:%M:%S')"
             git pull --rebase origin main
             git push
           fi
 
+      # 🌟 Webサイト（GitHub Pages）として公開する工程
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
