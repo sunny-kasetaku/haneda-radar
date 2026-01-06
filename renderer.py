@@ -1,9 +1,9 @@
 import json
 from config import CONFIG
 
-# HTMLテンプレート（CSSと構造を一部足し算）
+# HTMLテンプレート（v4.0表記へ更新）
 HTML_TEMPLATE = """
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK 羽田レーダー v3.9</title>
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KASETACK 羽田レーダー v4.0</title>
 <style>
     body { background: #0a0a0a; color: #eee; font-family: sans-serif; padding: 10px; margin: 0; }
     .container { max-width: 600px; margin: 0 auto; }
@@ -15,7 +15,7 @@ HTML_TEMPLATE = """
     .stand-card { background: #222; padding: 12px; border-radius: 10px; border: 1px solid #444; text-align: center; }
     .stand-card.intl { grid-column: span 2; border-color: #FFD700; }
     .val { font-size: 1.6rem; font-weight: bold; color: #fff; display: block; }
-    .pool-val { font-size: 0.9rem; color: #FFD700; font-weight: bold; margin-top: 4px; display: block; } /* 足し算：プール台数用 */
+    .pool-val { font-size: 0.9rem; color: #FFD700; font-weight: bold; margin-top: 4px; display: block; } 
     .label { font-size: 0.75rem; color: #aaa; }
     .advice-box { background: #222; border-left: 6px solid #FFD700; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size: 0.9rem; }
     .flight-list { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #111; }
@@ -51,7 +51,7 @@ HTML_TEMPLATE = """
     <button class="update-btn" onclick="location.reload()">最新情報に更新</button>
     <div class="timer-info">画面の自動再読み込みまであと <span id="timer">60</span> 秒</div>
     <div style="text-align:center; font-size:0.7rem; color:#444; margin-top:20px;">
-        最終データ取得: [[TIME]] | v3.9 Live
+        最終データ取得: [[TIME]] | v4.0 Live
     </div>
 </div>
 <script>
@@ -73,14 +73,12 @@ def run_render():
         data = json.load(f)
     
     tp = data["total_pax"]
-    # ランク判定ロジックの修正（血の掟：凡例との同期）
     if tp > 800: rk, col, msg = ("🌈 S", "#FFD700", "【激熱】即出撃！")
     elif tp > 400: rk, col, msg = ("🔥 A", "#FF4500", "【推奨】安定需要")
     elif tp > 100: rk, col, msg = ("✨ B", "#00ff7f", "【注意】小規模")
-    elif tp > 0:   rk, col, msg = ("☁️ C", "#ccc", "【待機】微かな需要") # 足し算：C判定追加
+    elif tp > 0:   rk, col, msg = ("☁️ C", "#ccc", "【待機】微かな需要")
     else:          rk, col, msg = ("🌑 D", "#888", "【撤退】需要なし")
     
-    # ターミナルカード生成
     best_key = max(data["stands"], key=data["stands"].get) if tp > 0 else "P1"
     cards = ""
     labels = ["1号 (T1南)", "2号 (T1北)", "3号 (T2)", "4号 (T2)", "国際 (T3)"]
@@ -88,8 +86,10 @@ def run_render():
         key = f"P{i}"
         is_best = "border: 2px solid #FFD700;" if key == best_key and tp > 0 else ""
         is_intl = "intl" if key == "P5" else ""
-        # 足し算：プール台数欄（pool-val）を追加。データがない場合は「---」を表示。
-        pool_est = "---" 
+        
+        # 【修正箇所】analyzer.py v4.0からのプール予測値を反映
+        pool_est = data.get("pool_preds", {}).get(key, "---") 
+        
         cards += (
             f'<div class="stand-card {is_intl}" style="{is_best}">'
             f'<span class="label">{label}</span>'
@@ -98,7 +98,6 @@ def run_render():
             f'</div>'
         )
 
-    # 行生成
     rows = ""
     for r in data["rows"]:
         rows += f"<tr><td>{r['time']}</td><td>{r['flight']}</td><td>{r['origin']}</td><td>{r['pax']}名</td></tr>"
@@ -111,7 +110,7 @@ def run_render():
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("HTML Rendered with v3.9 specs.")
+    print("HTML Rendered with v4.0 specs.")
 
 if __name__ == "__main__":
     run_render()
