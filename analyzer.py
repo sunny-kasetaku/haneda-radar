@@ -1,6 +1,6 @@
 import os
 
-def run_analysis():
+def run_analyze(): # 👈 ここを run_analyze に直しました
     print("--- 🔍 生データの中身を調査中 ---")
     if not os.path.exists("haneda_raw.html"):
         print("❌ ファイルが見つかりません。")
@@ -9,20 +9,22 @@ def run_analysis():
     with open("haneda_raw.html", "r", encoding="utf-8") as f:
         content = f.read()
     
-    # データの冒頭2000文字と、特定のキーワード周辺を表示します
+    # データのサイズを表示
     print(f"データサイズ: {len(content)} bytes")
     print("-" * 30)
-    print("【冒頭部分】")
-    print(content[:1000]) # 最初の1000文字
-    print("-" * 30)
-    print("【フライト情報周辺】")
-    # "HND" や "JAL" "ANA" が出てくる場所を探してその周辺を表示
-    for keyword in ["HND", "JAL", "ANA", "Arrival"]:
-        pos = content.find(keyword)
+    
+    # Flightradar24 のデータ構造を探るためのキーワード
+    keywords = ["flight", "arrival", "HND", "JAL", "ANA", "scheduled"]
+    
+    print("【フライト情報周辺の抜粋】")
+    for keyword in keywords:
+        # 大文字小文字を区別せず検索
+        pos = content.lower().find(keyword.lower())
         if pos != -1:
             print(f"Keyword '{keyword}' found at {pos}:")
-            print(content[pos:pos+200]) # キーワード前後を表示
+            # その周辺150文字を表示
+            print(content[pos:pos+150].replace('\n', ' ')) 
             print("-" * 20)
 
 if __name__ == "__main__":
-    run_analysis()
+    run_analyze()
