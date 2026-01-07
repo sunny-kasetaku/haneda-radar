@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v4.5: 全方位レーダー・救済版 ---")
+    print("--- KASETACK Analyzer v4.6: 隠しデータ発掘版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -13,126 +13,108 @@ def run_analyze():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    # ファイル読み込み（エラー回避のため errors='ignore' を追加）
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         raw_content = f.read()
 
-    # --- 1. 洗浄前の「生」の状態でキーワードを徹底捜索 ---
-    raw_upper = raw_content.upper()
-    print("--- 🔍 内部構造デバッグ ---")
+    # --- 1. 生データ内の「真」のキーワード捜索（誤検知回避） ---
+    # 単なる ana ではなく、"ANA" や航空会社コードとして存在するものを探す
+    print("--- 🔍 構造解析：深層スキャン ---")
+    keys = [r'"ANA"', r'>ANA<', r'"JAL"', r'>JAL<', r'"JL"', r'"NH"']
     found_any = False
-    for key in ["JAL", "JL", "ANA", "NH", "777", "787"]:
-        pos = raw_upper.find(key)
-        if pos != -1:
-            # 見つけた場所の前後を表示（バックスラッシュ回避済み）
-            snippet = raw_content[max(0, pos-100):pos+200].replace('\n', ' ').replace('\r', ' ')
-            print(f"✅ 発見 [{key}]: ... {snippet} ...")
+    for k_pat in keys:
+        m = re.search(k_pat, raw_content)
+        if m:
+            snippet = raw_content[max(0, m.start()-50):m.end()+150].replace('\n',' ')
+            print(f"✅ 発見 [{k_pat}]: ...{snippet}...")
             found_any = True
             break
-    if not found_any:
-        print("⚠️ 警告: Analyzerにはキーワードが見えません（Fetcherとの乖離）")
-
-    # --- 2. 洗浄（最小限） ---
-    clean_content = re.sub(r'<style.*?>.*?</style>', '', raw_content, flags=re.DOTALL)
     
-    stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
+    # --- 2. 隠しデータ (Next.js JSON) の直接抽出試行 ---
+    next_data = re.search(r'<script id="__NEXT_DATA__".*?>(.*?)</script>', raw_content, re.DOTALL)
+    if next_data:
+        print("💡 隠しJSONデータを発見しました。ここから直接データを抜きます。")
+        # ここにJSON解析を入れる余地あり
+
+    # --- 3. 時刻検索の超・広域化 ---
+    # パターン1: 19:05 / 19時05分 / 1905 (4桁数字)
+    time_patterns = [
+        r'(\d{1,2})\s*[:：]\s*(\d{2})',           # 19:05
+        r'(\d{1,2})時\s*(\d{2})分',                # 19時05分
+        r'\"arrivalTime\"\s*:\s*\"(\d{2})(\d{2})\"' # JSON内の "1905"
+    ]
+    
     flight_rows = []
-    
-    # --- 3. 時刻検索（最も成功率の高いシンプルパターン） ---
-    # 数字2桁 : 数字2桁 をとにかく探す
-    time_matches = list(re.finditer(r'(\d{1,2})\s*[:：]\s*(\d{2})', clean_content))
-    print(f"1. 調査地点: {len(time_matches)}件 ヒット")
+    stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
 
-    if len(time_matches) == 0:
-        print("🚨 時刻パターンが全滅。データの時間表記が '1905' や '19時' の可能性があります。")
-        print("データ冒頭300文字:", clean_content[:300])
+    for pat in time_patterns:
+        time_matches = list(re.finditer(pat, raw_content))
+        if time_matches:
+            print(f"🎯 パターン [{pat}] で {len(time_matches)}件 ヒット")
+            for m in time_matches:
+                try:
+                    h_str, m_str = m.groups()
+                    f_h, f_m = int(h_str), int(m_str)
+                    
+                    f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
+                    diff = (f_t - now).total_seconds() / 60
+                    
+                    if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
+                        continue
 
-    for m in time_matches:
-        try:
-            h_str, m_str = m.groups()
-            f_h, f_m = int(h_str), int(m_str)
-            
-            # AM/PM判定
-            ampm_chunk = clean_content[m.end() : m.end() + 30].upper()
-            if "PM" in ampm_chunk and f_h < 12: f_h += 12
-            elif "AM" in ampm_chunk and f_h == 12: f_h = 0
-            
-            f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
-            diff = (f_t - now).total_seconds() / 60
-            
-            # 統計的なウィンドウ判定
-            if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
-                continue
+                    chunk = raw_content[max(0, m.start()-300) : m.end()+500].upper()
+                    
+                    # 便名と出身地を力ずくで探す
+                    carrier = "不明"
+                    for c in ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ"]:
+                        if c in chunk:
+                            carrier = c
+                            break
+                    
+                    origin = "不明"
+                    # 漢字・カタカナの塊を都市名として推測
+                    cities = re.findall(r'[ァ-ヶー一-龠]{2,6}', chunk)
+                    for c_candidate in cities:
+                        if any(c_candidate in city for city in CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]):
+                            origin = c_candidate
+                            break
 
-            # 探索範囲を拡大（出身地や便名が離れているケースに対応）
-            chunk = clean_content[max(0, m.start()-400) : m.end()+600]
-            chunk_upper = chunk.upper()
-            
-            # 便名検索（JSON形式 "flightNumber":"JL501" 等も考慮）
-            carrier = "不明"
-            fnum = "000"
-            flight_m = re.search(r'([A-Z]{2,3})\s*(?:<[^>]+>|[\"\s])*(\d{1,4})', chunk_upper)
-            if flight_m:
-                carrier, fnum = flight_m.groups()
+                    cap = CONFIG["CAPACITY"]["SMALL"]
+                    if any(x in chunk for x in ["777", "787", "350", "767", "A330"]): cap = CONFIG["CAPACITY"]["BIG"]
+                    
+                    pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"])
+                    
+                    s_key = "P5"
+                    if carrier in ["JAL", "JL"]:
+                        if any(c in origin for c in CONFIG["SOUTH_CITIES"]): s_key = "P1"
+                        elif any(c in origin for c in CONFIG["NORTH_CITIES"]): s_key = "P2"
+                        else: s_key = "P1"
+                    elif carrier in ["NH", "ANA"]: s_key = "P3"
+                    elif carrier in ["BC", "SKY"]: s_key = "P1"
+                    elif any(c in carrier for c in ["ADO", "SNA", "SFJ"]): s_key = "P4"
 
-                # 出身地の抽出
-                origin = "不明"
-                # 日本語（漢字・ひらがな）の塊を探す
-                origin_m = re.search(r'>\s*([ぁ-んァ-ヶー一-龠]{2,10})\s*<', chunk)
-                if not origin_m:
-                    origin_m = re.search(r'[\":]([ぁ-んァ-ヶー一-龠]{2,10})[\"]', chunk)
-                
-                if origin_m:
-                    origin = origin_m.group(1).strip()
-
-                # キャパ判定
-                cap = CONFIG["CAPACITY"]["SMALL"]
-                if any(x in chunk_upper for x in ["777", "787", "350", "767", "A330", "B7"]):
-                    cap = CONFIG["CAPACITY"]["BIG"]
-                if carrier not in ["JL", "NH", "BC", "7G", "6J", "ADO", "SNA", "SFJ"]:
-                    cap = CONFIG["CAPACITY"]["INTL"]
-
-                pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"]) 
-                
-                # 乗り場判定
-                s_key = "P5"
-                if "JL" in carrier:
-                    if any(c in origin for c in CONFIG["SOUTH_CITIES"]): s_key = "P1"
-                    elif any(c in origin for c in CONFIG["NORTH_CITIES"]): s_key = "P2"
-                    else: s_key = "P1"
-                elif "BC" in carrier: s_key = "P1"
-                elif "NH" in carrier: s_key = "P3"
-                elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G"]): s_key = "P4"
-                
-                flight_rows.append({
-                    "time": f"{f_h:02d}:{f_m:02d}", "flight": f"{carrier}{fnum}", 
-                    "origin": origin[:6], "pax": pax, "s_key": s_key
-                })
-
-        except Exception: continue
-
+                    flight_rows.append({"time": f"{f_h:02d}:{f_m:02d}", "flight": f"{carrier}", "origin": origin, "pax": pax, "s_key": s_key})
+                except: continue
+        
     # 重複削除
-    seen = set()
     unique_rows = []
+    seen = set()
     for r in flight_rows:
-        id_str = f"{r['time']}-{r['flight']}-{r['origin']}" 
+        id_str = f"{r['time']}-{r['flight']}-{r['origin']}"
         if id_str not in seen:
-            seen.add(id_str)
-            unique_rows.append(r)
+            seen.add(id_str); unique_rows.append(r)
 
     # 集計
-    for k in stands: stands[k] = 0
     for r in unique_rows: stands[r['s_key']] += r['pax']
-
-    # プール予測
-    pool_preds = {}
-    for k, p_pax in stands.items():
-        base = {"P1":100, "P2":100, "P3":120, "P4":80, "P5":150}.get(k, 100)
-        pool_preds[k] = max(0, base - int(p_pax / 10))
+    
+    # 最終デバッグ：何も見つからない場合はテキストだけ出す
+    if not unique_rows:
+        print("🚨 有効なデータが見つかりません。HTMLタグを剥がして文字を調査します:")
+        plain_text = re.sub(r'<[^>]+>', ' ', raw_content)
+        print(plain_text[1000:2000].replace('\n', ' '))
 
     result = {
-        "stands": stands, "pool_preds": pool_preds, "total_pax": sum(stands.values()), 
-        "rows": unique_rows, "update_time": now.strftime("%H:%M")
+        "stands": stands, "pool_preds": {k: max(0, 100 - int(v/10)) for k, v in stands.items()},
+        "total_pax": sum(stands.values()), "rows": unique_rows, "update_time": now.strftime("%H:%M")
     }
     
     with open(CONFIG["RESULT_JSON"], "w", encoding="utf-8") as f:
