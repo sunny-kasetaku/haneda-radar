@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v7.2: 鉄壁ガード版 ---")
+    print("--- KASETACK Analyzer v7.3: バイリンガル選別版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,8 +16,18 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         content = f.read()
 
-    # --- 1. 不要な空白を整理 ---
-    clean_text = re.sub(r'\s+', ' ', content)
+    # --- 1. 都市名の日英マッピング（翻訳機） ---
+    city_map = {
+        "SAPPORO": "札幌", "NEW CHITOSE": "札幌", "CHITOSE": "札幌",
+        "FUKUOKA": "福岡", "OKINAWA": "那覇", "NAHA": "那覇",
+        "OSAKA": "大阪", "ITAMI": "伊丹", "KANSAI": "関空",
+        "HIROSHIMA": "広島", "KAGOSHIMA": "鹿児島", "KUMAMOTO": "熊本",
+        "NAGASAKI": "長崎", "MATSUYAMA": "松山", "TAKAMATSU": "高松"
+    }
+    
+    # HTMLタグを除去して純粋なテキストの並びにする
+    clean_text = re.sub(r'<[^>]+>', ' ', content)
+    clean_text = re.sub(r'\s+', ' ', clean_text)
     
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
@@ -25,52 +35,50 @@ def run_analyze():
     # 時刻パターン: 22:50 または 10:50 PM
     time_pat = r'(\d{1,2})[:：](\d{2})\s*(AM|PM|am|pm)?'
     
-    all_cities = CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]
-    carrier_map = {
-        "JAL": "JAL", "JL": "JAL", "ANA": "ANA", "NH": "ANA", 
-        "SKY": "SKY", "BC": "SKY", "ADO": "ADO", "SNA": "SNA", "SFJ": "SFJ"
-    }
-
-    print("1. 5.7MBの金鉱からデータを抽出中...")
+    print("1. 5.7MBの英文データから翻訳・抽出中...")
     
     for m in re.finditer(time_pat, clean_text):
         try:
-            h = int(m.group(1))
-            m_val = int(m.group(2))
+            h, m_val = int(m.group(1)), int(m.group(2))
             ampm = m.group(3)
             
-            # --- 鉄壁ガード：無効な時刻（22:65など）をスキップ ---
-            if not (0 <= h <= 23 and 0 <= m_val <= 59):
-                continue
-            
-            # AM/PM 変換
+            if not (0 <= h <= 23 and 0 <= m_val <= 59): continue
             if ampm:
                 ampm = ampm.upper()
                 if ampm == "PM" and h < 12: h += 12
                 if ampm == "AM" and h == 12: h = 0
                 
-            # 解析ウィンドウ判定
             f_t = now.replace(hour=h % 24, minute=m_val, second=0, microsecond=0)
             diff = (f_t - now).total_seconds() / 60
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 周辺スキャン
-            chunk = clean_text[max(0, m.start()-150) : m.end()+250]
+            # 前後300文字を調査
+            chunk = clean_text[max(0, m.start()-150) : m.end()+300].upper()
             
+            # --- 都市の特定（日英両対応） ---
             origin = "不明"
-            for city in all_cities:
+            # 日本語で探す
+            for city in (CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]):
                 if city in chunk:
                     origin = city; break
+            # 見つからなければ英語で探して翻訳する
+            if origin == "不明":
+                for eng, jap in city_map.items():
+                    if eng in chunk:
+                        origin = jap; break
             
+            # --- キャリアの特定 ---
             carrier = "不明"
-            for code, name in carrier_map.items():
-                if code in chunk.upper():
-                    carrier = name; break
+            if "JAL" in chunk or "JL" in chunk: carrier = "JAL"
+            elif "ANA" in chunk or "NH" in chunk: carrier = "ANA"
+            elif "SKY" in chunk or "BC" in chunk: carrier = "SKY"
+            elif "ADO" in chunk: carrier = "ADO"
+            elif "SNA" in chunk: carrier = "SNA"
+            elif "SFJ" in chunk: carrier = "SFJ"
             
             if carrier != "不明" or origin != "不明":
                 pax = 180 if any(x in chunk for x in ["777", "787", "350", "767"]) else 120
-                
                 s_key = "P5"
                 if carrier == "JAL":
                     s_key = "P2" if origin in CONFIG["NORTH_CITIES"] else "P1"
@@ -80,11 +88,11 @@ def run_analyze():
                 
                 flight_rows.append({
                     "time": f"{h:02d}:{m_val:02d}", "flight": carrier, 
-                    "origin": origin[:6], "pax": pax, "s_key": s_key
+                    "origin": origin, "pax": pax, "s_key": s_key
                 })
-        except ValueError:
-            continue # 万が一の変換エラーも無視して次へ
+        except: continue
 
+    # 重複削除
     unique_rows = []
     seen = set()
     for r in flight_rows:
@@ -92,8 +100,7 @@ def run_analyze():
         if id_str not in seen:
             seen.add(id_str); unique_rows.append(r)
 
-    for r in unique_rows:
-        stands[r['s_key']] += r['pax']
+    for r in unique_rows: stands[r['s_key']] += r['pax']
     
     result = {
         "stands": stands, "pool_preds": {k: max(0, 100 - int(v/10)) for k, v in stands.items()},
