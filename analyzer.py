@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v4.3: 構造解析突破版 ---")
+    print("--- KASETACK Analyzer v4.3.1: 構文エラー修正版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,26 +16,28 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8") as f:
         raw_content = f.read()
 
-    # --- 洗浄ロジック（必要最小限に留める） ---
+    # --- 洗浄ロジック ---
     clean_content = re.sub(r'<style.*?>.*?</style>', '', raw_content, flags=re.DOTALL)
     clean_content = re.sub(r'<script.*?>.*?</script>', '', clean_content, flags=re.DOTALL)
     
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 【最重要修正】タグが挟まった時刻（12</span>:<span>34等）にも対応する正規表現
+    # 時刻検索正規表現（タグ考慮版）
     time_pattern = r'(\d{1,2})\s*(?:<[^>]+>)*\s*[:：]\s*(?:<[^>]+>)*\s*(\d{2})'
     time_matches = list(re.finditer(time_pattern, clean_content))
     
     print(f"1. 調査地点: {len(time_matches)}件 見つかりました")
 
-    # 調査地点0件時のディープ・デバッグ
+    # 調査地点0件時のディープ・デバッグ（エラー修正箇所）
     if len(time_matches) == 0:
         print("⚠️ 時刻未検知。JAL/ANA周辺の構造を解析します...")
         for key in ["JAL", "JL", "ANA", "NH"]:
             pos = clean_content.find(key)
             if pos != -1:
-                print(f"[{key}] 周辺データ: {clean_content[max(0,pos-100):pos+200].replace('\\n',' ')}")
+                # バックスラッシュ問題を回避するため、一度変数に入れてから出力
+                debug_text = clean_content[max(0,pos-100):pos+200].replace('\n',' ')
+                print(f"[{key}] 周辺データ: {debug_text}")
                 break
 
     for m in time_matches:
@@ -43,7 +45,6 @@ def run_analyze():
             h_str, m_str = m.groups()
             f_h, f_m = int(h_str), int(m_str)
             
-            # AM/PM判定のバッファを広げる
             ampm_chunk = clean_content[m.end() : m.end() + 30].upper()
             if "PM" in ampm_chunk and f_h < 12: f_h += 12
             elif "AM" in ampm_chunk and f_h == 12: f_h = 0
@@ -54,7 +55,6 @@ def run_analyze():
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲
             start = max(0, m.start() - 350) 
             chunk = clean_content[start : m.start() + 550]
             
@@ -82,7 +82,7 @@ def run_analyze():
                 if carrier not in ["JL", "NH", "BC", "7G", "6J", "ADO", "SNA", "SFJ"]:
                     cap = CONFIG["CAPACITY"]["INTL"]
 
-                pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"]) # 暫定
+                pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"]) 
                 
                 s_key = "P5"
                 if "JL" in carrier:
@@ -100,7 +100,6 @@ def run_analyze():
 
         except Exception: continue
 
-    # 重複削除
     seen = set()
     unique_rows = []
     for r in flight_rows:
@@ -109,11 +108,9 @@ def run_analyze():
             seen.add(id_str)
             unique_rows.append(r)
 
-    # 集計
     for k in stands: stands[k] = 0
     for r in unique_rows: stands[r['s_key']] += r['pax']
 
-    # プール台数予想
     pool_preds = {}
     base_cars = {"P1": 100, "P2": 100, "P3": 120, "P4": 80, "P5": 150}
     for k, p_pax in stands.items():
