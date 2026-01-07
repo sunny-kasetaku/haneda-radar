@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v5.5.1: 構文エラー修正版 ---")
+    print("--- KASETACK Analyzer v5.6: ノイズフィルタリング版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,50 +16,58 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         raw_content = f.read()
 
+    # --- 1. 【ノイズ除去】CSSを完全に焼き払う ---
+    # デバッグで判明した「CSS変数の誤検知」を根絶します
+    clean_content = re.sub(r'<style.*?>.*?</style>', ' ', raw_content, flags=re.DOTALL)
+    
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 時刻検索
-    time_pattern = r'(\d{1,2})\s*[:：]\s*(\d{2})'
-    time_matches = list(re.finditer(time_pattern, raw_content))
-    print(f"1. 調査地点: {len(time_matches)}件 ヒット")
-
+    # 2. 時刻検索（境界線を意識してノイズを回避）
+    # 引用符の中 "20:15" や タグの中 >20:15< などを狙い撃つ
+    time_pattern = r'[\">]?(\d{1,2})[:：](\d{2})[\" <]?'
+    time_matches = list(re.finditer(time_pattern, clean_content))
+    
+    valid_time_count = 0
     debug_done = False
 
     for m in time_matches:
         try:
             h_str, m_str = m.groups()
             f_h, f_m = int(h_str), int(m_str)
-            f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
+            
+            # 時間としての妥当性チェック
+            if not (0 <= f_h <= 23 and 0 <= f_m <= 59):
+                continue
+            
+            f_t = now.replace(hour=f_h, minute=f_m, second=0, microsecond=0)
             diff = (f_t - now).total_seconds() / 60
             
+            # 範囲外ならスキップ
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲 (±500文字)
-            chunk = raw_content[max(0, m.start()-500) : m.end()+500]
+            valid_time_count += 1
+            chunk = clean_content[max(0, m.start()-500) : m.end()+500]
             chunk_upper = chunk.upper()
             
-            # --- 強制デバッグ：最初の1件だけ中身を露出させる（修正済み） ---
             if not debug_done:
-                # バックスラッシュ問題を回避するためf-stringの外で置換
-                debug_chunk = chunk[:300].replace('\n', ' ').replace('\r', ' ')
-                print(f"🔍 DEBUG (1st match around {h_str}:{m_str}): {debug_chunk}")
+                # 本物のデータらしき場所のデバッグ
+                debug_chunk = chunk[:200].replace('\n', ' ').replace('\r', ' ')
+                print(f"🎯 有効候補発見 ({f_h:02d}:{f_m:02d}): {debug_chunk}")
                 debug_done = True
 
-            # --- 便名の抽出（緩やかなマッチング） ---
+            # --- 便名の抽出 ---
             carrier = "不明"
             fnum = ""
             carriers = ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ", "7G", "6J"]
             for c_code in carriers:
                 if c_code in chunk_upper:
                     carrier = c_code
-                    # 直後の数字を探す
                     fnum_m = re.search(carrier + r'[^0-9]{0,10}(\d{1,4})', chunk_upper)
                     fnum = fnum_m.group(1) if fnum_m else ""
                     break
 
-            # 便名すら見つからない場合はスキップ
             if carrier == "不明":
                 continue
 
@@ -75,18 +83,15 @@ def run_analyze():
                 org_m = re.search(r'[\">]([ぁ-んァ-ヶー一-龠]{2,10})[\"<]', chunk)
                 if org_m: origin = org_m.group(1).strip()
 
-            # --- 人数計算 ---
+            # --- 計算と集計 ---
             cap = CONFIG["CAPACITY"]["SMALL"]
             if any(x in chunk_upper for x in ["777", "787", "350", "767", "A330"]):
                 cap = CONFIG["CAPACITY"]["BIG"]
-            
             pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"])
             
-            # --- 乗り場判定 ---
             s_key = "P5" 
             if carrier in ["JAL", "JL"]:
-                if origin in CONFIG["NORTH_CITIES"]: s_key = "P2"
-                else: s_key = "P1"
+                s_key = "P2" if origin in CONFIG["NORTH_CITIES"] else "P1"
             elif carrier in ["NH", "ANA"]: s_key = "P3"
             elif carrier in ["BC", "SKY"]: s_key = "P1"
             elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G", "6J"]): s_key = "P4"
@@ -97,6 +102,8 @@ def run_analyze():
             })
 
         except: continue
+
+    print(f"1. 有効な時刻候補: {valid_time_count}件 (ノイズ除去後)")
 
     unique_rows = []
     seen = set()
