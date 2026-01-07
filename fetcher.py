@@ -5,24 +5,38 @@ from config import CONFIG
 
 async def fetch_stealth():
     url = CONFIG["TARGET_URL"]
-    print(f"--- KASETACK Fetcher v2.6: 確定待機版 ---")
+    print(f"--- KASETACK Fetcher v2.7: ステルス突破版 ---")
     
     async with async_playwright() as p:
+        # ステルス性を高めるため、ブラウザ起動オプションを調整
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
-            user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1"
+            user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+            viewport={'width': 390, 'height': 844},
+            is_mobile=True
         )
+        
+        # ボット検知回避用のスクリプト注入 (webdriver: false)
+        await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
         page = await context.new_page()
         
         try:
-            await page.goto(url, wait_until="load", timeout=60000)
+            print(f"🚀 ターゲットに潜入中: {url}")
+            # ページ読み込み完了まで待機
+            await page.goto(url, wait_until="networkidle", timeout=60000)
             
-            # 🌟 修正ポイント: Yahooの表（.listAirplane）が現れるまで最大15秒待つ
-            print("⏳ フライト表の出現を待機中...")
+            # 🌟 最重要: JavaScriptが動いて「フライト表」が現れるのを最大20秒待つ
+            # 以前のログにあった「JavaScriptを有効に〜」をこれで突破します
+            print("⏳ JavaScriptの展開を待機中...")
+            await page.wait_for_timeout(5000) # 強制的に5秒待機して安定させる
+            
+            # フライト情報のリスト（.listAirplane）が現れるか確認
             try:
                 await page.wait_for_selector(".listAirplane", timeout=15000)
+                print("✅ フライト表を確認。本物のデータを捕捉しました。")
             except:
-                print("⚠️ 表の特定に失敗しましたが、続行します。")
+                print("⚠️ フライト表が見当たりません。ページ構造が特殊な可能性があります。")
             
             content = await page.content()
             with open(CONFIG["DATA_FILE"], "w", encoding="utf-8") as f:
