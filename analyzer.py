@@ -29,7 +29,7 @@ def run_analyze():
     time_matches = list(re.finditer(time_pattern, scrap_content))
     print(f"1. 調査地点: {len(time_matches)}件 ヒット")
 
-    # 都市リストの統合（検索用）
+    # 都市リストの統合
     all_cities = CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]
 
     for m in time_matches:
@@ -42,35 +42,31 @@ def run_analyze():
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲（時刻の前後 500文字）
+            # 探索範囲（時刻の前後 400文字）
             chunk = scrap_content[max(0, m.start()-400) : m.end()+400]
             chunk_upper = chunk.upper()
             
             # --- 便名の抽出（偽物排除ロジック） ---
             carrier = "不明"
             fnum = ""
-            # 独立した単語、または引用符・タグに囲まれたコードを狙い撃ち
             carriers = ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ", "7G", "6J"]
             for c_code in carriers:
-                # 正規表現: 引用符、タグ、または単語の境界にあるキャリアコードを探す
+                # 引用符、タグ、または単語の境界にあるキャリアコードを探す
                 c_pat = r'[\"\'>\s](' + c_code + r')[\"\'<\s:]'
                 c_m = re.search(c_pat, chunk_upper)
                 if c_m:
                     carrier = c_m.group(1)
-                    # その直後の数字（便名）を探す
                     fnum_m = re.search(carrier + r'[\"\s>:]*(\d{1,4})', chunk_upper)
                     fnum = fnum_m.group(1) if fnum_m else ""
                     break
 
             # --- 出身地の抽出（都市リスト優先） ---
             origin = "不明"
-            # 1. 既知の都市リストから探す（最強の紐付け）
             for city in all_cities:
                 if city in chunk:
                     origin = city
                     break
             
-            # 2. 見つからない場合はタグや引用符から推測
             if origin == "不明":
                 org_m = re.search(r'[\">]([ぁ-んァ-ヶー一-龠]{2,10})[\"<]', chunk)
                 if org_m: origin = org_m.group(1).strip()
@@ -101,7 +97,6 @@ def run_analyze():
 
         except: continue
 
-    # 重複削除
     unique_rows = []
     seen = set()
     for r in flight_rows:
@@ -109,7 +104,6 @@ def run_analyze():
         if id_str not in seen:
             seen.add(id_str); unique_rows.append(r)
 
-    # 集計
     for r in unique_rows: stands[r['s_key']] += r['pax']
     
     result = {
