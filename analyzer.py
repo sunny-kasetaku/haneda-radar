@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v4.4: Next.jsデータ救済版 ---")
+    print("--- KASETACK Analyzer v4.5: 全方位レーダー・救済版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -13,30 +13,39 @@ def run_analyze():
     jst = datetime.timezone(datetime.timedelta(hours=9))
     now = datetime.datetime.now(jst)
     
-    with open(CONFIG["DATA_FILE"], "r", encoding="utf-8") as f:
+    # ファイル読み込み（エラー回避のため errors='ignore' を追加）
+    with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         raw_content = f.read()
 
-    # --- 重要：洗浄前にキーワードの生存確認（デバッグ） ---
-    for key in ["JAL", "JL", "ANA", "NH"]:
-        pos = raw_content.find(key)
+    # --- 1. 洗浄前の「生」の状態でキーワードを徹底捜索 ---
+    raw_upper = raw_content.upper()
+    print("--- 🔍 内部構造デバッグ ---")
+    found_any = False
+    for key in ["JAL", "JL", "ANA", "NH", "777", "787"]:
+        pos = raw_upper.find(key)
         if pos != -1:
-            debug_text = raw_content[max(0,pos-50):pos+150].replace('\n',' ')
-            print(f"✅ 生データ内に [{key}] を発見: ...{debug_text}...")
+            # 見つけた場所の前後を表示（バックスラッシュ回避済み）
+            snippet = raw_content[max(0, pos-100):pos+200].replace('\n', ' ').replace('\r', ' ')
+            print(f"✅ 発見 [{key}]: ... {snippet} ...")
+            found_any = True
             break
+    if not found_any:
+        print("⚠️ 警告: Analyzerにはキーワードが見えません（Fetcherとの乖離）")
 
-    # --- 洗浄ロジック（scriptタグは消さない！） ---
-    # styleタグだけはノイズが大きいので削除
+    # --- 2. 洗浄（最小限） ---
     clean_content = re.sub(r'<style.*?>.*?</style>', '', raw_content, flags=re.DOTALL)
     
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 時刻検索：HTMLタグ越し、およびJSON内の "12:34" 形式にも対応
-    # 前後に引用符 " やタグ > < があっても良いように拡張
-    time_pattern = r'[\">]?(\d{1,2})\s*(?:<[^>]+>)*\s*[:：]\s*(?:<[^>]+>)*\s*(\d{2})[\"<?]?'
-    time_matches = list(re.finditer(time_pattern, clean_content))
-    
-    print(f"1. 調査地点: {len(time_matches)}件 見つかりました")
+    # --- 3. 時刻検索（最も成功率の高いシンプルパターン） ---
+    # 数字2桁 : 数字2桁 をとにかく探す
+    time_matches = list(re.finditer(r'(\d{1,2})\s*[:：]\s*(\d{2})', clean_content))
+    print(f"1. 調査地点: {len(time_matches)}件 ヒット")
+
+    if len(time_matches) == 0:
+        print("🚨 時刻パターンが全滅。データの時間表記が '1905' や '19時' の可能性があります。")
+        print("データ冒頭300文字:", clean_content[:300])
 
     for m in time_matches:
         try:
@@ -51,45 +60,45 @@ def run_analyze():
             f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
             diff = (f_t - now).total_seconds() / 60
             
+            # 統計的なウィンドウ判定
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲（JSON形式は情報が密集しているため、少し狭めて精度重視）
-            start = max(0, m.start() - 200) 
-            chunk = clean_content[start : m.start() + 400]
+            # 探索範囲を拡大（出身地や便名が離れているケースに対応）
+            chunk = clean_content[max(0, m.start()-400) : m.end()+600]
+            chunk_upper = chunk.upper()
             
-            # 便名検索（JSON内の "flightNumber":"JL501" 等に対応）
-            flight_m = re.search(r'([A-Z]{2,3})\s?(?:<[^>]+>|[\"\s])*(\d{1,4})', chunk)
+            # 便名検索（JSON形式 "flightNumber":"JL501" 等も考慮）
+            carrier = "不明"
+            fnum = "000"
+            flight_m = re.search(r'([A-Z]{2,3})\s*(?:<[^>]+>|[\"\s])*(\d{1,4})', chunk_upper)
             if flight_m:
                 carrier, fnum = flight_m.groups()
-                carrier = carrier.upper()
 
-                # 出身地の抽出（JSON内の "originCity":"札幌" 等に対応）
+                # 出身地の抽出
                 origin = "不明"
-                # まずはタグ形式 <td> を探す
-                origin_m = re.search(r'<td>(.*?)</td>', chunk, re.DOTALL)
-                if origin_m:
-                    origin = re.sub(r'<.*?>', '', origin_m.group(1)).strip()
-                # なければ引用符で囲まれた日本語を探す（JSON用）
-                if origin == "不明" or not origin:
-                    alt_m = re.search(r'[\":]([ぁ-んァ-ヶー一-龠]{2,10})[\" <]', chunk)
-                    origin = alt_m.group(1) if alt_m else "不明"
-
-                # 機材判定
-                cap = CONFIG["CAPACITY"]["SMALL"]
-                is_big = any(x in chunk for x in ["777", "787", "350", "767", "A330"])
-                if is_big or (fnum.isdigit() and int(fnum) < 1000):
-                    cap = CONFIG["CAPACITY"]["BIG"]
+                # 日本語（漢字・ひらがな）の塊を探す
+                origin_m = re.search(r'>\s*([ぁ-んァ-ヶー一-龠]{2,10})\s*<', chunk)
+                if not origin_m:
+                    origin_m = re.search(r'[\":]([ぁ-んァ-ヶー一-龠]{2,10})[\"]', chunk)
                 
+                if origin_m:
+                    origin = origin_m.group(1).strip()
+
+                # キャパ判定
+                cap = CONFIG["CAPACITY"]["SMALL"]
+                if any(x in chunk_upper for x in ["777", "787", "350", "767", "A330", "B7"]):
+                    cap = CONFIG["CAPACITY"]["BIG"]
                 if carrier not in ["JL", "NH", "BC", "7G", "6J", "ADO", "SNA", "SFJ"]:
                     cap = CONFIG["CAPACITY"]["INTL"]
 
                 pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"]) 
                 
+                # 乗り場判定
                 s_key = "P5"
                 if "JL" in carrier:
-                    if any(city in origin for city in CONFIG["SOUTH_CITIES"]): s_key = "P1"
-                    elif any(city in origin for city in CONFIG["NORTH_CITIES"]): s_key = "P2"
+                    if any(c in origin for c in CONFIG["SOUTH_CITIES"]): s_key = "P1"
+                    elif any(c in origin for c in CONFIG["NORTH_CITIES"]): s_key = "P2"
                     else: s_key = "P1"
                 elif "BC" in carrier: s_key = "P1"
                 elif "NH" in carrier: s_key = "P3"
@@ -102,6 +111,7 @@ def run_analyze():
 
         except Exception: continue
 
+    # 重複削除
     seen = set()
     unique_rows = []
     for r in flight_rows:
@@ -110,22 +120,23 @@ def run_analyze():
             seen.add(id_str)
             unique_rows.append(r)
 
+    # 集計
     for k in stands: stands[k] = 0
     for r in unique_rows: stands[r['s_key']] += r['pax']
 
+    # プール予測
     pool_preds = {}
-    base_cars = {"P1": 100, "P2": 100, "P3": 120, "P4": 80, "P5": 150}
     for k, p_pax in stands.items():
-        pool_preds[k] = max(0, base_cars[k] - int(p_pax / 10))
+        base = {"P1":100, "P2":100, "P3":120, "P4":80, "P5":150}.get(k, 100)
+        pool_preds[k] = max(0, base - int(p_pax / 10))
 
-    total_pax = sum(r['pax'] for r in unique_rows)
     result = {
-        "stands": stands, "pool_preds": pool_preds, "total_pax": total_pax, 
+        "stands": stands, "pool_preds": pool_preds, "total_pax": sum(stands.values()), 
         "rows": unique_rows, "update_time": now.strftime("%H:%M")
     }
     
     with open(CONFIG["RESULT_JSON"], "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     
-    print(f"2. 解析完了。有効便数: {len(unique_rows)} / 総需要: {total_pax}人")
+    print(f"2. 解析完了。有効便数: {len(unique_rows)} / 総需要: {result['total_pax']}人")
     return result
