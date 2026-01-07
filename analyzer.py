@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v5.2: 精密外科手術版 ---")
+    print("--- KASETACK Analyzer v5.3: 原点回帰・スマートフィルター版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,34 +16,16 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         raw_content = f.read()
 
-    # --- 1. 【精密掃除】データ本体は残し、広告プログラムだけを消す ---
-    # サイトのデータが入っている __NEXT_DATA__ 以外のスクリプトを狙って掃除
-    scrap_content = raw_content
-    # 広告やアナリティクスに関係しそうなキーワードを含むスクリプトタグを特定して除去
-    for noise in ["googletagmanager", "google-analytics", "pub.network", "btloader"]:
-        scrap_content = re.sub(r'<script[^>]*' + noise + r'[^>]*>.*?</script>', ' ', scrap_content, flags=re.DOTALL)
+    # --- 1. 都市リストの読み込み（偽物判定の生命線） ---
+    all_cities = CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]
     
-    # styleはデータに関係ないので全削除
-    scrap_content = re.sub(r'<style.*?>.*?</style>', ' ', scrap_content, flags=re.DOTALL)
-    
-    # 掃除後の生存確認（デバッグ）
-    raw_upper = scrap_content.upper()
-    for key in ["JAL", "ANA", "JL", "NH"]:
-        pos = raw_upper.find(key)
-        if pos != -1:
-            snippet = scrap_content[max(0, pos-20):pos+100].replace('\n', ' ')
-            print(f"✅ 掃除後も [{key}] の生存を確認: ...{snippet}...")
-            break
-
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 2. 時刻検索
+    # --- 2. 時刻検索（v5.0で成功した生データ検索） ---
     time_pattern = r'(\d{1,2})\s*[:：]\s*(\d{2})'
-    time_matches = list(re.finditer(time_pattern, scrap_content))
-    print(f"1. 調査地点: {len(time_matches)}件 ヒット")
-
-    all_cities = CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]
+    time_matches = list(re.finditer(time_pattern, raw_content))
+    print(f"1. 調査地点: {len(time_matches)}件 ヒット（生データから抽出）")
 
     for m in time_matches:
         try:
@@ -52,37 +34,41 @@ def run_analyze():
             f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
             diff = (f_t - now).total_seconds() / 60
             
+            # タイムウィンドウ内か
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲
-            chunk = scrap_content[max(0, m.start()-500) : m.end()+500]
+            # 周辺 1000文字をスキャン（JSON構造を考慮して広めに）
+            chunk = raw_content[max(0, m.start()-500) : m.end()+500]
             chunk_upper = chunk.upper()
             
-            # --- 便名の抽出 ---
+            # --- 【スマートフィルター】都市名が周辺にあるか？ ---
+            # プログラムコードには都市名が入らないことを利用する
+            origin = "不明"
+            is_real_flight = False
+            for city in all_cities:
+                if city in chunk:
+                    origin = city
+                    is_real_flight = True
+                    break
+            
+            # 都市名が見つからない場合は、この地点は「コードのゴミ」とみなして捨てる
+            if not is_real_flight:
+                continue
+
+            # --- 便名の抽出（数字を伴うものを優先） ---
             carrier = "不明"
             fnum = ""
             carriers = ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ", "7G", "6J"]
             for c_code in carriers:
-                # 引用符、タグ、または単語の境界にあるキャリアコードを探す
-                c_pat = r'[\"\'>\s](' + c_code + r')[\"\'<\s:]'
-                c_m = re.search(c_pat, chunk_upper)
-                if c_m:
-                    carrier = c_m.group(1)
+                # airline": "ANA" 形式か、タグ内の >ANA< 形式、または単語境界を狙う
+                c_pat = r'[\"\' >](' + c_code + r')[\"\' <:]'
+                if re.search(c_pat, chunk_upper):
+                    carrier = c_code
+                    # 直後の数字（便名）を探す
                     fnum_m = re.search(carrier + r'[\"\s>:]*(\d{1,4})', chunk_upper)
                     fnum = fnum_m.group(1) if fnum_m else ""
                     break
-
-            # --- 出身地の抽出 ---
-            origin = "不明"
-            for city in all_cities:
-                if city in chunk:
-                    origin = city
-                    break
-            
-            if origin == "不明":
-                org_m = re.search(r'[\">]([ぁ-んァ-ヶー一-龠]{2,10})[\"<]', chunk)
-                if org_m: origin = org_m.group(1).strip()
 
             # --- 人数・乗り場判定 ---
             cap = CONFIG["CAPACITY"]["SMALL"]
@@ -107,6 +93,7 @@ def run_analyze():
 
         except: continue
 
+    # 重複削除
     unique_rows = []
     seen = set()
     for r in flight_rows:
