@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v5.9: JSONターゲット・ダイビング版 ---")
+    print("--- KASETACK Analyzer v5.9.1: 構文エラー修正・JSONターゲット版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -17,7 +17,6 @@ def run_analyze():
         raw_content = f.read()
 
     # --- 1. 【核心】Next.jsのJSONブロックを切り出す ---
-    # HTML内のCSS等のノイズを無視し、データ本体があるスクリプトタグだけを狙う
     json_match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', raw_content, re.DOTALL)
     
     target_content = ""
@@ -26,8 +25,7 @@ def run_analyze():
         target_content = json_match.group(1)
     else:
         print("⚠️ JSONタグが見つかりません。HTML全体からキャリアを起点に探します。")
-        # styleタグだけは誤検知防止のため消去
-        target_content = re.sub(r'<style.*?>.*?</style>', '', raw_content, flags=re.DOTALL)
+        target_content = re.sub(r'<style.*?>.*?</style>', ' ', raw_content, flags=re.DOTALL)
 
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
@@ -36,12 +34,10 @@ def run_analyze():
     carriers = ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ", "7G", "6J"]
     all_cities = CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]
 
-    # キャリア名を見つけたら、その前後300文字を「1便の候補」として切り出す
     for c_code in carriers:
-        # JSON内のキー形式 "airlineCode":"ANA" またはタグ形式 >ANA< を想定
         for m in re.finditer(r'[\"\' >](' + c_code + r')[\"\' <:]', target_content.upper()):
             pos = m.start()
-            chunk = target_content[max(0, pos-200) : pos+400]
+            chunk = target_content[max(0, pos-250) : pos+450]
             chunk_upper = chunk.upper()
 
             # 時刻を探す (HH:MM or HHMM)
@@ -85,7 +81,6 @@ def run_analyze():
                 "origin": origin[:6], "pax": pax, "s_key": s_key
             })
 
-    # 重複削除
     unique_rows = []
     seen = set()
     for r in flight_rows:
@@ -103,10 +98,10 @@ def run_analyze():
     with open(CONFIG["RESULT_JSON"], "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     
-    # もし0件なら後半をダンプ
     if not unique_rows:
         print("⚠️ 有効便がまだ0件です。データの後半（JSON領域）を調査します...")
-        print(f"🔍 [TAIL SAMPLE]: {raw_content[-1500:].replace('\\n',' ')}")
+        tail_sample = raw_content[-1500:].replace('\n', ' ').replace('\r', ' ')
+        print(f"🔍 [TAIL SAMPLE]: {tail_sample}")
 
     print(f"2. 解析完了。有効便数: {len(unique_rows)}")
     return result
