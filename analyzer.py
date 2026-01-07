@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v4.2: データ救済＆デバッグ版 ---")
+    print("--- KASETACK Analyzer v4.3: 構造解析突破版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,48 +16,50 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8") as f:
         raw_content = f.read()
 
-    # --- 洗浄ロジックの改善（誤爆防止） ---
-    # styleとscriptタグの中身は消すが、CSS変数の削除は「--」誤爆を防ぐため停止
+    # --- 洗浄ロジック（必要最小限に留める） ---
     clean_content = re.sub(r'<style.*?>.*?</style>', '', raw_content, flags=re.DOTALL)
     clean_content = re.sub(r'<script.*?>.*?</script>', '', clean_content, flags=re.DOTALL)
     
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 時間検索の強化：全角コロンやタグ越しの数字にも対応できるように拡張
-    # 1. 通常の 12:34 2. タグが挟まった 12</td><td>34 などのケースを広く拾う
-    time_matches = list(re.finditer(r'(\d{1,2})\s*[:：]\s*(\d{2})', clean_content))
+    # 【最重要修正】タグが挟まった時刻（12</span>:<span>34等）にも対応する正規表現
+    time_pattern = r'(\d{1,2})\s*(?:<[^>]+>)*\s*[:：]\s*(?:<[^>]+>)*\s*(\d{2})'
+    time_matches = list(re.finditer(time_pattern, clean_content))
     
     print(f"1. 調査地点: {len(time_matches)}件 見つかりました")
 
-    # もし0件だった場合の緊急デバッグ表示
+    # 調査地点0件時のディープ・デバッグ
     if len(time_matches) == 0:
-        print("⚠️ 警告: 時刻が1件もヒットしません。データ形式が変わった可能性があります。")
-        print("データ冒頭1000文字:", clean_content[:1000].replace('\\n', ' '))
+        print("⚠️ 時刻未検知。JAL/ANA周辺の構造を解析します...")
+        for key in ["JAL", "JL", "ANA", "NH"]:
+            pos = clean_content.find(key)
+            if pos != -1:
+                print(f"[{key}] 周辺データ: {clean_content[max(0,pos-100):pos+200].replace('\\n',' ')}")
+                break
 
     for m in time_matches:
         try:
             h_str, m_str = m.groups()
             f_h, f_m = int(h_str), int(m_str)
             
-            # AM/PMの判定（直後10文字以内にあれば拾う）
-            ampm_chunk = clean_content[m.end() : m.end() + 10].upper()
+            # AM/PM判定のバッファを広げる
+            ampm_chunk = clean_content[m.end() : m.end() + 30].upper()
             if "PM" in ampm_chunk and f_h < 12: f_h += 12
             elif "AM" in ampm_chunk and f_h == 12: f_h = 0
             
             f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
             diff = (f_t - now).total_seconds() / 60
             
-            # 時間ウィンドウ判定 (-30分 〜 +45分)
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲の確保（便名や都市名を周辺から探す）
-            start = max(0, m.start() - 300) 
-            chunk = clean_content[start : m.start() + 500]
+            # 探索範囲
+            start = max(0, m.start() - 350) 
+            chunk = clean_content[start : m.start() + 550]
             
-            # 便名検索（航空会社記号 2-3文字 + 数字）
-            flight_m = re.search(r'([A-Z]{2,3})\s?(\d{1,4})', chunk)
+            # 便名検索
+            flight_m = re.search(r'([A-Z]{2,3})\s?(?:<[^>]+>)*\s?(\d{1,4})', chunk)
             if flight_m:
                 carrier, fnum = flight_m.groups()
                 carrier = carrier.upper()
@@ -71,24 +73,17 @@ def run_analyze():
                         alt_m = re.search(r'>([ぁ-んァ-ヶー一-龠]{2,10})<', chunk)
                         origin = alt_m.group(1) if alt_m else "不明"
 
-                # 機材・キャパ判定
+                # 機材判定
                 cap = CONFIG["CAPACITY"]["SMALL"]
                 is_big = any(x in chunk for x in ["777", "787", "350", "767", "A330"])
                 if is_big or int(fnum) < 1000:
                     cap = CONFIG["CAPACITY"]["BIG"]
                 
-                # 国際線キャリア判定
                 if carrier not in ["JL", "NH", "BC", "7G", "6J", "ADO", "SNA", "SFJ"]:
                     cap = CONFIG["CAPACITY"]["INTL"]
 
-                # 搭乗率
-                rate = CONFIG["LOAD_FACTORS"]["NORMAL"]
-                if 22 <= now.hour or now.hour <= 2: rate = CONFIG["LOAD_FACTORS"]["MIDNIGHT"]
-                elif 7 <= now.hour <= 9 or 17 <= now.hour <= 20: rate = CONFIG["LOAD_FACTORS"]["RUSH"]
-
-                pax = int(cap * rate)
+                pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"]) # 暫定
                 
-                # 乗り場マッピング
                 s_key = "P5"
                 if "JL" in carrier:
                     if any(city in origin for city in CONFIG["SOUTH_CITIES"]): s_key = "P1"
@@ -99,11 +94,8 @@ def run_analyze():
                 elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G"]): s_key = "P4"
                 
                 flight_rows.append({
-                    "time": f"{f_h:02d}:{f_m:02d}", 
-                    "flight": f"{carrier}{fnum}", 
-                    "origin": origin[:6], 
-                    "pax": pax, 
-                    "s_key": s_key
+                    "time": f"{f_h:02d}:{f_m:02d}", "flight": f"{carrier}{fnum}", 
+                    "origin": origin[:6], "pax": pax, "s_key": s_key
                 })
 
         except Exception: continue
@@ -117,25 +109,20 @@ def run_analyze():
             seen.add(id_str)
             unique_rows.append(r)
 
-    # 最終集計
+    # 集計
     for k in stands: stands[k] = 0
-    for r in unique_rows:
-        stands[r['s_key']] += r['pax']
+    for r in unique_rows: stands[r['s_key']] += r['pax']
 
     # プール台数予想
     pool_preds = {}
     base_cars = {"P1": 100, "P2": 100, "P3": 120, "P4": 80, "P5": 150}
     for k, p_pax in stands.items():
-        est = base_cars[k] - int(p_pax / 10)
-        pool_preds[k] = max(0, est)
+        pool_preds[k] = max(0, base_cars[k] - int(p_pax / 10))
 
     total_pax = sum(r['pax'] for r in unique_rows)
     result = {
-        "stands": stands, 
-        "pool_preds": pool_preds, 
-        "total_pax": total_pax, 
-        "rows": unique_rows, 
-        "update_time": now.strftime("%H:%M")
+        "stands": stands, "pool_preds": pool_preds, "total_pax": total_pax, 
+        "rows": unique_rows, "update_time": now.strftime("%H:%M")
     }
     
     with open(CONFIG["RESULT_JSON"], "w", encoding="utf-8") as f:
