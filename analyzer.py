@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v4.1: 精度向上統合版 ---")
+    print("--- KASETACK Analyzer v4.2: データ救済＆デバッグ版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,41 +16,53 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8") as f:
         raw_content = f.read()
 
-    # --- HTMLノイズの徹底洗浄 (v4.0を継承) ---
+    # --- 洗浄ロジックの改善（誤爆防止） ---
+    # styleとscriptタグの中身は消すが、CSS変数の削除は「--」誤爆を防ぐため停止
     clean_content = re.sub(r'<style.*?>.*?</style>', '', raw_content, flags=re.DOTALL)
-    clean_content = re.sub(r'--[a-zA-Z0-9-]+:.*?;', '', clean_content)
+    clean_content = re.sub(r'<script.*?>.*?</script>', '', clean_content, flags=re.DOTALL)
     
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    time_matches = list(re.finditer(r'(\d{1,2}):(\d{2})\s?([AP]M)?', clean_content, re.IGNORECASE))
-    print(f"1. ウィンドウ({CONFIG['WINDOW_PAST']}/{CONFIG['WINDOW_FUTURE']})に基づき {len(time_matches)}地点を調査します")
+    # 時間検索の強化：全角コロンやタグ越しの数字にも対応できるように拡張
+    # 1. 通常の 12:34 2. タグが挟まった 12</td><td>34 などのケースを広く拾う
+    time_matches = list(re.finditer(r'(\d{1,2})\s*[:：]\s*(\d{2})', clean_content))
+    
+    print(f"1. 調査地点: {len(time_matches)}件 見つかりました")
+
+    # もし0件だった場合の緊急デバッグ表示
+    if len(time_matches) == 0:
+        print("⚠️ 警告: 時刻が1件もヒットしません。データ形式が変わった可能性があります。")
+        print("データ冒頭1000文字:", clean_content[:1000].replace('\\n', ' '))
 
     for m in time_matches:
         try:
-            h_str, m_str, ampm = m.groups()
+            h_str, m_str = m.groups()
             f_h, f_m = int(h_str), int(m_str)
-            if ampm and ampm.upper() == "PM" and f_h < 12: f_h += 12
-            elif ampm and ampm.upper() == "AM" and f_h == 12: f_h = 0
+            
+            # AM/PMの判定（直後10文字以内にあれば拾う）
+            ampm_chunk = clean_content[m.end() : m.end() + 10].upper()
+            if "PM" in ampm_chunk and f_h < 12: f_h += 12
+            elif "AM" in ampm_chunk and f_h == 12: f_h = 0
             
             f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
             diff = (f_t - now).total_seconds() / 60
             
-            # 時間ウィンドウ判定
+            # 時間ウィンドウ判定 (-30分 〜 +45分)
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲の確保
-            start = max(0, m.start() - 250) 
-            chunk = clean_content[start : m.start() + 400]
+            # 探索範囲の確保（便名や都市名を周辺から探す）
+            start = max(0, m.start() - 300) 
+            chunk = clean_content[start : m.start() + 500]
             
-            # 便名検索
+            # 便名検索（航空会社記号 2-3文字 + 数字）
             flight_m = re.search(r'([A-Z]{2,3})\s?(\d{1,4})', chunk)
             if flight_m:
                 carrier, fnum = flight_m.groups()
                 carrier = carrier.upper()
 
-                # 出身地の抽出 (v4.0の二段構えロジックを継承)
+                # 出身地の抽出
                 origin = "不明"
                 origin_m = re.search(r'<td>(.*?)</td>', chunk, re.DOTALL)
                 if origin_m:
@@ -59,7 +71,7 @@ def run_analyze():
                         alt_m = re.search(r'>([ぁ-んァ-ヶー一-龠]{2,10})<', chunk)
                         origin = alt_m.group(1) if alt_m else "不明"
 
-                # 機材・キャパ判定 (v4.0の判定基準を継承しつつ国際線を足し算)
+                # 機材・キャパ判定
                 cap = CONFIG["CAPACITY"]["SMALL"]
                 is_big = any(x in chunk for x in ["777", "787", "350", "767", "A330"])
                 if is_big or int(fnum) < 1000:
@@ -76,12 +88,12 @@ def run_analyze():
 
                 pax = int(cap * rate)
                 
-                # 乗り場マッピング (s_key)
+                # 乗り場マッピング
                 s_key = "P5"
                 if "JL" in carrier:
                     if any(city in origin for city in CONFIG["SOUTH_CITIES"]): s_key = "P1"
                     elif any(city in origin for city in CONFIG["NORTH_CITIES"]): s_key = "P2"
-                    else: s_key = "P1" # 判定不能時は暫定P1(1号)
+                    else: s_key = "P1"
                 elif "BC" in carrier: s_key = "P1"
                 elif "NH" in carrier: s_key = "P3"
                 elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G"]): s_key = "P4"
@@ -96,7 +108,7 @@ def run_analyze():
 
         except Exception: continue
 
-    # --- 重複削除 (v4.0のロジックに flight を足して精度向上) ---
+    # 重複削除
     seen = set()
     unique_rows = []
     for r in flight_rows:
@@ -110,7 +122,7 @@ def run_analyze():
     for r in unique_rows:
         stands[r['s_key']] += r['pax']
 
-    # --- プール台数予想 (v4.0の計算式を完全継承) ---
+    # プール台数予想
     pool_preds = {}
     base_cars = {"P1": 100, "P2": 100, "P3": 120, "P4": 80, "P5": 150}
     for k, p_pax in stands.items():
@@ -129,5 +141,5 @@ def run_analyze():
     with open(CONFIG["RESULT_JSON"], "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     
-    print(f"2. 解析完了。捕捉便数: {len(unique_rows)} / 総需要: {total_pax}人")
+    print(f"2. 解析完了。有効便数: {len(unique_rows)} / 総需要: {total_pax}人")
     return result
