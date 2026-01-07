@@ -1,29 +1,133 @@
+import re
 import datetime
+import json
+import os
+from config import CONFIG
 
-# KASETACK 究極詳細仕様書 (2026/01/06版) 準拠
-CONFIG = {
-    # 時間軸: T-30分(今出ている客) 〜 T+45分(これから着く便) までを捕捉
-    "WINDOW_PAST": -30,
-    "WINDOW_FUTURE": 45, 
+def run_analyze():
+    print("--- KASETACK Analyzer v4.1: 精度向上統合版 ---")
+    if not os.path.exists(CONFIG["DATA_FILE"]):
+        print("❌ エラー: raw_flight.txt がありません")
+        return None
+
+    jst = datetime.timezone(datetime.timedelta(hours=9))
+    now = datetime.datetime.now(jst)
     
-    # 搭乗人数予測定数 (国際線は仕様書に従い250名にコンサバ調整)
-    "CAPACITY": {"BIG": 350, "SMALL": 180, "INTL": 250},
+    with open(CONFIG["DATA_FILE"], "r", encoding="utf-8") as f:
+        raw_content = f.read()
+
+    # --- HTMLノイズの徹底洗浄 (v4.0を継承) ---
+    clean_content = re.sub(r'<style.*?>.*?</style>', '', raw_content, flags=re.DOTALL)
+    clean_content = re.sub(r'--[a-zA-Z0-9-]+:.*?;', '', clean_content)
     
-    # 搭乗率係数 (仕様書および現場統計に基づく)
-    "LOAD_FACTORS": {"MIDNIGHT": 0.85, "RUSH": 0.82, "NORMAL": 0.65},
+    stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
+    flight_rows = []
     
-    # JAL1号(南)判定用: 西日本・四国・九州・中国方面を網羅
-    "SOUTH_CITIES": [
-        "福岡", "那覇", "伊丹", "鹿児島", "長崎", "熊本", "宮崎", "小松", 
-        "岡山", "広島", "高松", "松山", "高知", "徳島", "南紀白浜", "北九州", "大分", "奄美", "関西"
-    ],
+    time_matches = list(re.finditer(r'(\d{1,2}):(\d{2})\s?([AP]M)?', clean_content, re.IGNORECASE))
+    print(f"1. ウィンドウ({CONFIG['WINDOW_PAST']}/{CONFIG['WINDOW_FUTURE']})に基づき {len(time_matches)}地点を調査します")
+
+    for m in time_matches:
+        try:
+            h_str, m_str, ampm = m.groups()
+            f_h, f_m = int(h_str), int(m_str)
+            if ampm and ampm.upper() == "PM" and f_h < 12: f_h += 12
+            elif ampm and ampm.upper() == "AM" and f_h == 12: f_h = 0
+            
+            f_t = now.replace(hour=f_h % 24, minute=f_m, second=0, microsecond=0)
+            diff = (f_t - now).total_seconds() / 60
+            
+            # 時間ウィンドウ判定
+            if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
+                continue
+
+            # 探索範囲の確保
+            start = max(0, m.start() - 250) 
+            chunk = clean_content[start : m.start() + 400]
+            
+            # 便名検索
+            flight_m = re.search(r'([A-Z]{2,3})\s?(\d{1,4})', chunk)
+            if flight_m:
+                carrier, fnum = flight_m.groups()
+                carrier = carrier.upper()
+
+                # 出身地の抽出 (v4.0の二段構えロジックを継承)
+                origin = "不明"
+                origin_m = re.search(r'<td>(.*?)</td>', chunk, re.DOTALL)
+                if origin_m:
+                    origin = re.sub(r'<.*?>', '', origin_m.group(1)).strip()
+                    if not origin or len(origin) < 2 or "--" in origin:
+                        alt_m = re.search(r'>([ぁ-んァ-ヶー一-龠]{2,10})<', chunk)
+                        origin = alt_m.group(1) if alt_m else "不明"
+
+                # 機材・キャパ判定 (v4.0の判定基準を継承しつつ国際線を足し算)
+                cap = CONFIG["CAPACITY"]["SMALL"]
+                is_big = any(x in chunk for x in ["777", "787", "350", "767", "A330"])
+                if is_big or int(fnum) < 1000:
+                    cap = CONFIG["CAPACITY"]["BIG"]
+                
+                # 国際線キャリア判定
+                if carrier not in ["JL", "NH", "BC", "7G", "6J", "ADO", "SNA", "SFJ"]:
+                    cap = CONFIG["CAPACITY"]["INTL"]
+
+                # 搭乗率
+                rate = CONFIG["LOAD_FACTORS"]["NORMAL"]
+                if 22 <= now.hour or now.hour <= 2: rate = CONFIG["LOAD_FACTORS"]["MIDNIGHT"]
+                elif 7 <= now.hour <= 9 or 17 <= now.hour <= 20: rate = CONFIG["LOAD_FACTORS"]["RUSH"]
+
+                pax = int(cap * rate)
+                
+                # 乗り場マッピング (s_key)
+                s_key = "P5"
+                if "JL" in carrier:
+                    if any(city in origin for city in CONFIG["SOUTH_CITIES"]): s_key = "P1"
+                    elif any(city in origin for city in CONFIG["NORTH_CITIES"]): s_key = "P2"
+                    else: s_key = "P1" # 判定不能時は暫定P1(1号)
+                elif "BC" in carrier: s_key = "P1"
+                elif "NH" in carrier: s_key = "P3"
+                elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G"]): s_key = "P4"
+                
+                flight_rows.append({
+                    "time": f"{f_h:02d}:{f_m:02d}", 
+                    "flight": f"{carrier}{fnum}", 
+                    "origin": origin[:6], 
+                    "pax": pax, 
+                    "s_key": s_key
+                })
+
+        except Exception: continue
+
+    # --- 重複削除 (v4.0のロジックに flight を足して精度向上) ---
+    seen = set()
+    unique_rows = []
+    for r in flight_rows:
+        id_str = f"{r['time']}-{r['flight']}-{r['origin']}" 
+        if id_str not in seen:
+            seen.add(id_str)
+            unique_rows.append(r)
+
+    # 最終集計
+    for k in stands: stands[k] = 0
+    for r in unique_rows:
+        stands[r['s_key']] += r['pax']
+
+    # --- プール台数予想 (v4.0の計算式を完全継承) ---
+    pool_preds = {}
+    base_cars = {"P1": 100, "P2": 100, "P3": 120, "P4": 80, "P5": 150}
+    for k, p_pax in stands.items():
+        est = base_cars[k] - int(p_pax / 10)
+        pool_preds[k] = max(0, est)
+
+    total_pax = sum(r['pax'] for r in unique_rows)
+    result = {
+        "stands": stands, 
+        "pool_preds": pool_preds, 
+        "total_pax": total_pax, 
+        "rows": unique_rows, 
+        "update_time": now.strftime("%H:%M")
+    }
     
-    # JAL2号(北)判定用: 北海道・東北・北信越方面を網羅
-    "NORTH_CITIES": [
-        "札幌", "千歳", "青森", "秋田", "山形", "三沢", "旭川", "女満別", 
-        "帯広", "釧路", "函館", "大館能代", "庄内", "新潟", "富山"
-    ],
+    with open(CONFIG["RESULT_JSON"], "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
     
-    "DATA_FILE": "raw_flight.txt",
-    "RESULT_JSON": "analysis_result.json"
-}
+    print(f"2. 解析完了。捕捉便数: {len(unique_rows)} / 総需要: {total_pax}人")
+    return result
