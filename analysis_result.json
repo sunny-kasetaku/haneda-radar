@@ -6,14 +6,8 @@
     "P4": 0,
     "P5": 0
   },
-  "pool_preds": {
-    "P1": 100,
-    "P2": 100,
-    "P3": 100,
-    "P4": 100,
-    "P5": 100
-  },
   "total_pax": 0,
   "rows": [],
-  "update_time": "00:47"
+  "total_flights_on_page": 0,
+  "update_time": "00:49"
 }
