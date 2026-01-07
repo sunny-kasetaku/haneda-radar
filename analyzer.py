@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v5.1: 偽物排除・一本釣り版 ---")
+    print("--- KASETACK Analyzer v5.2: 精密外科手術版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,20 +16,33 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         raw_content = f.read()
 
-    # --- 1. 【ノイズ除去】解析用にコードを掃除（生データは汚さずコピーを作成） ---
-    # スクリプトとスタイルシートを削除して、純粋なテキストとJSONデータだけを残す
-    scrap_content = re.sub(r'<script.*?>.*?</script>', ' ', raw_content, flags=re.DOTALL)
+    # --- 1. 【精密掃除】データ本体は残し、広告プログラムだけを消す ---
+    # サイトのデータが入っている __NEXT_DATA__ 以外のスクリプトを狙って掃除
+    scrap_content = raw_content
+    # 広告やアナリティクスに関係しそうなキーワードを含むスクリプトタグを特定して除去
+    for noise in ["googletagmanager", "google-analytics", "pub.network", "btloader"]:
+        scrap_content = re.sub(r'<script[^>]*' + noise + r'[^>]*>.*?</script>', ' ', scrap_content, flags=re.DOTALL)
+    
+    # styleはデータに関係ないので全削除
     scrap_content = re.sub(r'<style.*?>.*?</style>', ' ', scrap_content, flags=re.DOTALL)
     
+    # 掃除後の生存確認（デバッグ）
+    raw_upper = scrap_content.upper()
+    for key in ["JAL", "ANA", "JL", "NH"]:
+        pos = raw_upper.find(key)
+        if pos != -1:
+            snippet = scrap_content[max(0, pos-20):pos+100].replace('\n', ' ')
+            print(f"✅ 掃除後も [{key}] の生存を確認: ...{snippet}...")
+            break
+
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 時刻検索
+    # 2. 時刻検索
     time_pattern = r'(\d{1,2})\s*[:：]\s*(\d{2})'
     time_matches = list(re.finditer(time_pattern, scrap_content))
     print(f"1. 調査地点: {len(time_matches)}件 ヒット")
 
-    # 都市リストの統合
     all_cities = CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]
 
     for m in time_matches:
@@ -42,11 +55,11 @@ def run_analyze():
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲（時刻の前後 400文字）
-            chunk = scrap_content[max(0, m.start()-400) : m.end()+400]
+            # 探索範囲
+            chunk = scrap_content[max(0, m.start()-500) : m.end()+500]
             chunk_upper = chunk.upper()
             
-            # --- 便名の抽出（偽物排除ロジック） ---
+            # --- 便名の抽出 ---
             carrier = "不明"
             fnum = ""
             carriers = ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ", "7G", "6J"]
@@ -60,7 +73,7 @@ def run_analyze():
                     fnum = fnum_m.group(1) if fnum_m else ""
                     break
 
-            # --- 出身地の抽出（都市リスト優先） ---
+            # --- 出身地の抽出 ---
             origin = "不明"
             for city in all_cities:
                 if city in chunk:
@@ -76,9 +89,6 @@ def run_analyze():
             if any(x in chunk_upper for x in ["777", "787", "350", "767", "A330", "B7"]):
                 cap = CONFIG["CAPACITY"]["BIG"]
             
-            if carrier not in carriers and carrier != "不明":
-                cap = CONFIG["CAPACITY"]["INTL"]
-
             pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"])
             
             s_key = "P5"
