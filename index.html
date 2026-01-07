@@ -3,20 +3,44 @@
     <html lang="ja">
     <head>
         <meta charset="UTF-8">
-        <title>羽田到着レーダー</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>KASETACK 羽田レーダー</title>
         <style>
-            body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 20px; }
-            .card { background: #333; border-left: 5px solid #f39c12; margin: 10px 0; padding: 10px; border-radius: 4px; }
-            .flight-no { font-size: 1.2em; font-weight: bold; color: #f39c12; }
+            body { background-color: #0b0e14; color: #e0e6ed; font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 20px; }
+            .container { max-width: 800px; margin: auto; border: 1px solid #2d333b; border-radius: 8px; overflow: hidden; }
+            .header { background: linear-gradient(135deg, #f39c12 0%, #d35400 100%); color: #fff; padding: 20px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; letter-spacing: 2px; }
+            .stats-bar { background: #1c2128; padding: 10px; border-bottom: 1px solid #2d333b; display: flex; justify-content: space-between; font-size: 14px; color: #8b949e; }
+            .flight-grid { padding: 10px; background: #0b0e14; }
+            .card { background: #161b22; border: 1px solid #30363d; border-radius: 6px; margin-bottom: 10px; padding: 15px; display: flex; align-items: center; border-left: 4px solid #f39c12; }
+            .flight-info { flex-grow: 1; }
+            .flight-no { font-size: 20px; font-weight: bold; color: #f39c12; margin-right: 15px; }
+            .airline { font-size: 16px; color: #c9d1d9; }
+            .status-tag { background: #238636; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+            .empty-msg { text-align: center; padding: 40px; color: #484f58; }
+            .footer { text-align: center; padding: 20px; font-size: 12px; color: #484f58; }
         </style>
     </head>
     <body>
-        <h1>🚖 羽田到着便スクレイピング結果</h1>
-        <p>更新: 2026-01-07 19:21:55 | 捕捉数: 1件</p>
-        <hr>
-    
-            <div class="card">
-                <span class="flight-no">BC77</span><br>
-                スカイマーク | 状況: 本物抽出
+        <div class="container">
+            <div class="header">
+                <h1>🚖 KASETACK 羽田レーダー</h1>
             </div>
-            </body></html>
+            <div class="stats-bar">
+                <span>🕒 更新: 19:26:23</span>
+                <span>📡 捕捉数: 0件</span>
+            </div>
+            <div class="flight-grid">
+    
+                <div class="empty-msg">
+                    <p>📡 データを精査中...<br>生データから航空便を抽出しています</p>
+                </div>
+        
+            </div>
+            <div class="footer">
+                © 2026 KASETACK System v20.0 | Data source: Flightradar24
+            </div>
+        </div>
+    </body>
+    </html>
+    
