@@ -3,5 +3,6 @@ CONFIG = {
     "DATA_FILE": "haneda_raw.html",
     "RESULT_FILE": "analysis_result.json",
     "RESULT_JSON": "analysis_result.json",
-    "REPORT_FILE": "index.html"
+    "REPORT_FILE": "index.html",
+    "WAIT_SELECTOR": ".btn-flight-route"
 }
