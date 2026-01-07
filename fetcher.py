@@ -3,55 +3,64 @@ from playwright.async_api import async_playwright
 import os
 from config import CONFIG
 
-async def fetch_flight_data():
-    url = "https://www.flightview.com/traveltools/FlightStatusByAirport.asp?airport=HND&at=A"
-    print("--- KASETACK Fetcher v2.2: 柔軟待機・実利主義版 ---")
+async def fetch_with_retry(url, max_retries=3):
+    print(f"--- KASETACK Fetcher v2.3: 不屈の奪取版 ---")
     
     async with async_playwright() as p:
-        try:
-            # ブラウザ起動（少しだけ偽装を強化）
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            )
+        browser = await p.chromium.launch(headless=True)
+        # 人間に見せかけるためのコンテキスト設定
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            viewport={'width': 1280, 'height': 800}
+        )
+        
+        for attempt in range(max_retries):
             page = await context.new_page()
+            # タイムアウトを90秒に延長
+            page.set_default_timeout(90000)
             
-            print(f"1. ターゲットURLに潜入開始...")
+            try:
+                print(f"🚀 潜入試行 {attempt + 1}/{max_retries}...")
+                
+                # "domcontentloaded" は "load" より早めに切り上げます
+                await page.goto(url, wait_until="domcontentloaded")
+                
+                # 重要なデータ（JavaScript）が動くのを15秒じっくり待ちます
+                print("⏳ データの展開を待機中 (15s)...")
+                await asyncio.sleep(15)
+                
+                content = await page.content()
+                
+                if len(content) > 10000:
+                    with open(CONFIG["DATA_FILE"], "w", encoding="utf-8") as f:
+                        f.write(content)
+                    print(f"✅ 奪取成功！ サイズ: {len(content)} bytes")
+                    
+                    # 簡易調査
+                    if "JAL" in content.upper() or "ANA" in content.upper():
+                        print("✨ ログにJAL/ANAを確認。勝利は近いです。")
+                    
+                    await browser.close()
+                    return True
+                else:
+                    print("⚠️ データが薄すぎます。リトライします。")
+                    
+            except Exception as e:
+                print(f"❌ 試行 {attempt + 1} 失敗: {str(e)[:100]}")
             
-            # 待機条件を "load" (基本の読込完了) に変更し、タイムアウトを60秒に延長
-            await page.goto(url, wait_until="load", timeout=60000)
-            
-            # 画面が真っ白な時間を考慮し、5秒ではなく10秒じっくり待ちます
-            print("2. JavaScriptによる表の生成を待機中 (10s)...")
-            await asyncio.sleep(10)
-            
-            # 展開後のHTMLを取得
-            content = await page.content()
-            
-            # ファイル書き込み
-            with open(CONFIG["DATA_FILE"], "w", encoding="utf-8") as f:
-                f.write(content)
-            
-            print(f"3. ファイル保存完了。サイズ: {len(content)} bytes")
-
-            # --- 🔍 血の掟：簡易調査ログ ---
-            print("\n--- 🔍 データ中身の簡易調査（Playwright実測） ---")
-            content_upper = content.upper()
-            if any(x in content_upper for x in ["JAL", "ANA", "JL ", "NH "]):
-                print("✅ キャリア発見！ 本物のデータを掴んだ可能性大です。")
-            else:
-                print("⚠️ まだJAL/ANAが見えません。待機時間が足りないか、表示形式が違います。")
-            print("--------------------------------------------------\n")
-
-            await browser.close()
-            return True
-
-        except Exception as e:
-            print(f"❌ エラー: 潜入中にトラブル発生: {e}")
-            return False
+            finally:
+                await page.close()
+                
+            # リトライ前に少し休憩
+            if attempt < max_retries - 1:
+                await asyncio.sleep(5)
+                
+        await browser.close()
+        return False
 
 def run_fetch():
-    return asyncio.run(fetch_flight_data())
+    url = "https://www.flightview.com/traveltools/FlightStatusByAirport.asp?airport=HND&at=A"
+    return asyncio.run(fetch_with_retry(url))
 
 if __name__ == "__main__":
     run_fetch()
