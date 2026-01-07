@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v5.5: Next.js JSON 救済版 ---")
+    print("--- KASETACK Analyzer v5.5.1: 構文エラー修正版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -40,9 +40,11 @@ def run_analyze():
             chunk = raw_content[max(0, m.start()-500) : m.end()+500]
             chunk_upper = chunk.upper()
             
-            # --- 強制デバッグ：最初の1件だけ中身を露出させる ---
+            # --- 強制デバッグ：最初の1件だけ中身を露出させる（修正済み） ---
             if not debug_done:
-                print(f"🔍 DEBUG (1st match around {h_str}:{m_str}): {chunk[:300].replace('\\n',' ')}")
+                # バックスラッシュ問題を回避するためf-stringの外で置換
+                debug_chunk = chunk[:300].replace('\n', ' ').replace('\r', ' ')
+                print(f"🔍 DEBUG (1st match around {h_str}:{m_str}): {debug_chunk}")
                 debug_done = True
 
             # --- 便名の抽出（緩やかなマッチング） ---
@@ -70,7 +72,6 @@ def run_analyze():
                     break
             
             if origin == "不明":
-                # JSON形式やタグ形式から日本語を抜く
                 org_m = re.search(r'[\">]([ぁ-んァ-ヶー一-龠]{2,10})[\"<]', chunk)
                 if org_m: origin = org_m.group(1).strip()
 
