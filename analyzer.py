@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v5.6: ノイズフィルタリング版 ---")
+    print("--- KASETACK Analyzer v5.7: スマート・セパレーション版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,19 +16,17 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         raw_content = f.read()
 
-    # --- 1. 【ノイズ除去】CSSを完全に焼き払う ---
-    # デバッグで判明した「CSS変数の誤検知」を根絶します
+    # --- 1. スタイルタグの除去（ノイズの元を断つ） ---
     clean_content = re.sub(r'<style.*?>.*?</style>', ' ', raw_content, flags=re.DOTALL)
     
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 2. 時刻検索（境界線を意識してノイズを回避）
-    # 引用符の中 "20:15" や タグの中 >20:15< などを狙い撃つ
-    time_pattern = r'[\">]?(\d{1,2})[:：](\d{2})[\" <]?'
+    # 2. 時刻検索（シンプルに戻す）
+    time_pattern = r'(\d{1,2})[:：](\d{2})'
     time_matches = list(re.finditer(time_pattern, clean_content))
     
-    valid_time_count = 0
+    hit_count = 0
     debug_done = False
 
     for m in time_matches:
@@ -36,30 +34,28 @@ def run_analyze():
             h_str, m_str = m.groups()
             f_h, f_m = int(h_str), int(m_str)
             
-            # 時間としての妥当性チェック
-            if not (0 <= f_h <= 23 and 0 <= f_m <= 59):
-                continue
+            # 時間としての妥当性
+            if not (0 <= f_h <= 23 and 0 <= f_m <= 59): continue
             
+            # 周辺チェック (ノイズ判定)
+            context = clean_content[max(0, m.start()-50) : m.end()+50]
+            # スタイル変数特有の文字列が含まれていたらスキップ
+            if any(x in context for x in ["px", "em", "--t-", "zIndex", "radius", "space"]):
+                continue
+
             f_t = now.replace(hour=f_h, minute=f_m, second=0, microsecond=0)
             diff = (f_t - now).total_seconds() / 60
             
-            # 範囲外ならスキップ
+            # 解析ウィンドウ判定
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            valid_time_count += 1
-            chunk = clean_content[max(0, m.start()-500) : m.end()+500]
+            hit_count += 1
+            chunk = clean_content[max(0, m.start()-400) : m.end()+600]
             chunk_upper = chunk.upper()
-            
-            if not debug_done:
-                # 本物のデータらしき場所のデバッグ
-                debug_chunk = chunk[:200].replace('\n', ' ').replace('\r', ' ')
-                print(f"🎯 有効候補発見 ({f_h:02d}:{f_m:02d}): {debug_chunk}")
-                debug_done = True
 
             # --- 便名の抽出 ---
-            carrier = "不明"
-            fnum = ""
+            carrier, fnum = "不明", ""
             carriers = ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ", "7G", "6J"]
             for c_code in carriers:
                 if c_code in chunk_upper:
@@ -67,9 +63,6 @@ def run_analyze():
                     fnum_m = re.search(carrier + r'[^0-9]{0,10}(\d{1,4})', chunk_upper)
                     fnum = fnum_m.group(1) if fnum_m else ""
                     break
-
-            if carrier == "不明":
-                continue
 
             # --- 出身地の抽出 ---
             origin = "不明"
@@ -79,14 +72,11 @@ def run_analyze():
                     origin = city
                     break
             
-            if origin == "不明":
-                org_m = re.search(r'[\">]([ぁ-んァ-ヶー一-龠]{2,10})[\"<]', chunk)
-                if org_m: origin = org_m.group(1).strip()
+            if carrier == "不明" and origin == "不明": continue
 
-            # --- 計算と集計 ---
+            # --- 集計 ---
             cap = CONFIG["CAPACITY"]["SMALL"]
-            if any(x in chunk_upper for x in ["777", "787", "350", "767", "A330"]):
-                cap = CONFIG["CAPACITY"]["BIG"]
+            if any(x in chunk_upper for x in ["777", "787", "350", "767", "A330"]): cap = CONFIG["CAPACITY"]["BIG"]
             pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"])
             
             s_key = "P5" 
@@ -94,7 +84,7 @@ def run_analyze():
                 s_key = "P2" if origin in CONFIG["NORTH_CITIES"] else "P1"
             elif carrier in ["NH", "ANA"]: s_key = "P3"
             elif carrier in ["BC", "SKY"]: s_key = "P1"
-            elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G", "6J"]): s_key = "P4"
+            elif any(c in carrier for c in ["ADO", "SNA", "SFJ"]): s_key = "P4"
             
             flight_rows.append({
                 "time": f"{f_h:02d}:{f_m:02d}", "flight": f"{carrier}{fnum}", 
@@ -103,7 +93,15 @@ def run_analyze():
 
         except: continue
 
-    print(f"1. 有効な時刻候補: {valid_time_count}件 (ノイズ除去後)")
+    # 最終デバッグ：便数が0ならJALの周辺を強制出力
+    if not flight_rows:
+        print("⚠️ 有効便が0件のため、緊急データダンプを実行します。")
+        for key in ["JAL", "ANA", "JL", "NH"]:
+            pos = clean_content.find(key)
+            if pos != -1:
+                dump = clean_content[max(0, pos-200):pos+800].replace('\n', ' ')
+                print(f"DEBUG [{key}]周辺: {dump}")
+                break
 
     unique_rows = []
     seen = set()
@@ -122,5 +120,5 @@ def run_analyze():
     with open(CONFIG["RESULT_JSON"], "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     
-    print(f"2. 解析完了。有効便数: {len(unique_rows)} / 総需要: {result['total_pax']}人")
+    print(f"2. 解析完了。有効時刻候補: {hit_count} / 有効便数: {len(unique_rows)}")
     return result
