@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v7.0: 原点回帰・実測版 ---")
+    print("--- KASETACK Analyzer v7.1: 精密選別版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -16,48 +16,83 @@ def run_analyze():
     with open(CONFIG["DATA_FILE"], "r", encoding="utf-8", errors='ignore') as f:
         content = f.read()
 
-    # スタイルとスクリプトを消して、純粋なテキストにする
-    text_only = re.sub(r'<[^>]+>', ' ', content) # HTMLタグをスペースに置換
+    # --- 1. 不要な空白や特殊記号を整理 ---
+    # 改行やタブをスペース1つにまとめ、解析しやすくする
+    clean_text = re.sub(r'\s+', ' ', content)
     
     stands = {"P1": 0, "P2": 0, "P3": 0, "P4": 0, "P5": 0}
     flight_rows = []
     
-    # 都市名とキャリアのリスト
+    # --- 2. 検索パターンの定義 ---
+    # 時刻パターン: 22:50 または 10:50 PM (または AM)
+    time_pat = r'(\d{1,2})[:：](\d{2})\s*(AM|PM|am|pm)?'
+    
     all_cities = CONFIG["SOUTH_CITIES"] + CONFIG["NORTH_CITIES"]
-    carriers = ["JAL", "ANA", "SKY", "ADO", "SNA", "SFJ", "BC", "JL", "NH"]
+    # キャリア検索を強化
+    carrier_map = {
+        "JAL": "JAL", "JL": "JAL", "ANA": "ANA", "NH": "ANA", 
+        "SKY": "SKY", "BC": "SKY", "ADO": "ADO", "SNA": "SNA", "SFJ": "SFJ"
+    }
 
-    # 時刻を基準に周辺をスキャン
-    for m in re.finditer(r'(\d{1,2})[:：](\d{2})', text_only):
-        h, m_str = int(m.group(1)), int(m.group(2))
-        if not (0 <= h <= 23 and 0 <= m_str <= 59): continue
+    print("1. 抽出シミュレーション開始...")
+    
+    # 時刻を起点に周囲をスキャン
+    for m in re.finditer(time_pat, clean_text):
+        h = int(m.group(1))
+        m_val = int(m.group(2))
+        ampm = m.group(3)
         
-        # ウィンドウ判定
-        f_t = now.replace(hour=h, minute=m_str, second=0, microsecond=0)
+        # 12時間制を24時間制に変換
+        if ampm:
+            ampm = ampm.upper()
+            if ampm == "PM" and h < 12: h += 12
+            if ampm == "AM" and h == 12: h = 0
+            
+        # 解析ウィンドウ判定（現在時刻の周辺 75分）
+        f_t = now.replace(hour=h % 24, minute=m_val, second=0, microsecond=0)
         diff = (f_t - now).total_seconds() / 60
-        if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]): continue
+        if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
+            continue
 
-        # 周辺100文字にキャリアや都市があるか
-        chunk = text_only[max(0, m.start()-100) : m.end()+150]
+        # 周辺をスキャンして便名と都市を探す
+        chunk = clean_text[max(0, m.start()-150) : m.end()+250]
         
-        carrier = "不明"
-        for c in carriers:
-            if c in chunk.upper(): carrier = c; break
-        
+        # 都市の特定
         origin = "不明"
         for city in all_cities:
-            if city in chunk: origin = city; break
-
+            if city in chunk:
+                origin = city
+                break
+        
+        # キャリアの特定
+        carrier = "不明"
+        for code, name in carrier_map.items():
+            if code in chunk.upper():
+                carrier = name
+                break
+        
+        # もしキャリアか都市のどちらかが見つかれば、それはフライトデータ
         if carrier != "不明" or origin != "不明":
-            # 集計（簡易）
-            pax = 180 if "777" in chunk or "787" in chunk else 120
+            # 機材による人数判定
+            cap = CONFIG["CAPACITY"]["SMALL"]
+            if any(x in chunk for x in ["777", "787", "350", "767"]):
+                cap = CONFIG["CAPACITY"]["BIG"]
+            
+            pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"])
+            
+            # 乗り場判定
             s_key = "P5"
-            if "JAL" in carrier or "JL" in carrier:
+            if carrier == "JAL":
                 s_key = "P2" if origin in CONFIG["NORTH_CITIES"] else "P1"
-            elif "ANA" in carrier or "NH" in carrier:
+            elif carrier == "ANA":
                 s_key = "P3"
+            elif carrier == "SKY":
+                s_key = "P1"
+            elif carrier in ["ADO", "SNA", "SFJ"]:
+                s_key = "P4"
             
             flight_rows.append({
-                "time": f"{h:02d}:{m_str:02d}", "flight": carrier, 
+                "time": f"{h:02d}:{m_val:02d}", "flight": carrier, 
                 "origin": origin[:6], "pax": pax, "s_key": s_key
             })
 
@@ -69,7 +104,8 @@ def run_analyze():
         if id_str not in seen:
             seen.add(id_str); unique_rows.append(r)
 
-    for r in unique_rows: stands[r['s_key']] += r['pax']
+    for r in unique_rows:
+        stands[r['s_key']] += r['pax']
     
     result = {
         "stands": stands, "pool_preds": {k: max(0, 100 - int(v/10)) for k, v in stands.items()},
