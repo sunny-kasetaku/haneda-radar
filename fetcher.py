@@ -1,67 +1,74 @@
-import requests
+import asyncio
+from playwright.async_api import async_playwright
 import os
 import sys
 from config import CONFIG
 
-def run_fetch():
-    # 羽田到着便のURL
+async def fetch_flight_data():
+    # URLはご提示いただいたものをそのまま継承
     url = "https://www.flightview.com/traveltools/FlightStatusByAirport.asp?airport=HND&at=A"
     
-    print("--- Fetcher 開始 ---")
-    try:
-        print(f"1. ターゲットURLに接続試行中... (Timeout=15s)")
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-        
-        response = requests.get(url, headers=headers, timeout=15)
-        
-        print(f"2. 応答受信。ステータスコード: {response.status_code}")
-        response.raise_for_status()
+    print("--- KASETACK Fetcher v2.1: Playwright重装甲版 ---")
+    
+    async with async_playwright() as p:
+        try:
+            print(f"1. ターゲットURLに潜入中... (Browser: Chromium)")
+            # ブラウザ起動
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            
+            # ページに移動し、ネットワークが落ち着くまで待機
+            await page.goto(url, wait_until="networkidle")
+            
+            # 5秒待機（JavaScriptによるデータの書き換えを完全に待つ）
+            print("2. データの完全展開を待機中 (5s)...")
+            await asyncio.sleep(5)
+            
+            # 展開後のHTMLを取得
+            content = await page.content()
+            
+            if len(content) < 1000: # Playwrightなら通常もっと大きくなるはず
+                print("⚠️ 警告: 取得データが少なすぎます")
+                await browser.close()
+                return False
 
-        if len(response.text) < 100:
-            print("警告: 受信したデータが少なすぎます（ブロックの可能性あり）")
+            # ファイル書き込み
+            abs_path = os.path.abspath(CONFIG["DATA_FILE"])
+            with open(CONFIG["DATA_FILE"], "w", encoding="utf-8") as f:
+                f.write(content)
+            
+            print(f"3. ファイル書き込み完了: {abs_path}")
+
+            # --- 継承：血の掟（精度向上のための調査パッチ） ---
+            print("\n--- 🔍 データ中身の簡易調査（血の掟：Playwright実測版） ---")
+            content_upper = content.upper()
+            
+            # キャリア存在チェック
+            if any(x in content_upper for x in ["JAL", "JL ", "ANA", "NH "]):
+                print("✅ 国内キャリア（JAL/ANA等）の記述が見つかりました！")
+            else:
+                print("⚠️ 警告：JAL/ANAが見当たりません。")
+
+            # 機材名のヒントチェック
+            equipments = ["777", "787", "A350", "737", "767", "A320"]
+            found_eq = [eq for eq in equipments if eq in content_upper]
+            if found_eq:
+                print(f"✅ 機材のヒントを発見: {found_eq} (精度向上の鍵です)")
+            else:
+                print("ℹ️ 機材情報の記述は見つかりませんでした。")
+            print("--------------------------------------------------\n")
+
+            await browser.close()
+            print("--- Fetcher 成功完了 ---")
+            return True
+
+        except Exception as e:
+            print(f"❌ エラー: 潜入失敗: {e}")
             return False
 
-        print(f"3. ファイル書き込み中... ターゲット: {CONFIG['DATA_FILE']}")
-        
-        abs_path = os.path.abspath(CONFIG["DATA_FILE"])
-        print(f"保存先フルパス: {abs_path}")
-
-        # --- ここから足し算：調査パッチ ---
-        with open(CONFIG["DATA_FILE"], "w", encoding="utf-8") as f:
-            f.write(response.text)
-        
-        print("\n--- 🔍 データ中身の簡易調査（血の掟：精度向上のため） ---")
-        content_upper = response.text.upper()
-        
-        # JAL / ANA の存在チェック
-        if "JAL" in content_upper or "JL " in content_upper or "ANA" in content_upper or "NH " in content_upper:
-            print("✅ 国内キャリア（JAL/ANA等）の記述が見つかりました！")
-        else:
-            print("⚠️ 警告：JAL/ANAが見当たりません。国内便が漏れている可能性があります。")
-
-        # 機材名のヒントチェック
-        equipments = ["777", "787", "A350", "737", "767", "A320"]
-        found_eq = [eq for eq in equipments if eq in content_upper]
-        if found_eq:
-            print(f"✅ 機材のヒントを発見: {found_eq} (これを使えば精度が爆上がりします)")
-        else:
-            print("ℹ️ 機材情報の直接記述（787など）は見つかりませんでした。")
-        print("--------------------------------------------------\n")
-        # --- 調査パッチ終了 ---
-
-        print("--- Fetcher 成功完了 ---")
-        return True
-
-    except requests.exceptions.Timeout:
-        print("❌ エラー: タイムアウト（15秒応答なし）")
-    except requests.exceptions.RequestException as e:
-        print(f"❌ エラー: 通信トラブル: {e}")
-    except Exception as e:
-        print(f"❌ エラー: 予期せぬ不具合: {e}")
-    
-    return False
+def run_fetch():
+    # 非同期処理をキック
+    return asyncio.run(fetch_flight_data())
 
 if __name__ == "__main__":
     run_fetch()
