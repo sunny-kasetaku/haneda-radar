@@ -1,13 +1,15 @@
 {
-  "stands": {
-    "P1": 0,
-    "P2": 0,
-    "P3": 0,
-    "P4": 0,
-    "P5": 0
-  },
-  "total_pax": 0,
-  "rows": [],
-  "total_flights_on_page": 0,
-  "update_time": "03:33"
+    "update_time": "19:21:55",
+    "last_update": "2026-01-07 19:21:55",
+    "flights": [
+        {
+            "time": "捕捉",
+            "flight_no": "BC77",
+            "airline": "スカイマーク",
+            "status": "本物抽出"
+        }
+    ],
+    "total_pax": 0,
+    "total_flights": 1,
+    "count": 1
 }
