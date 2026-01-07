@@ -5,7 +5,7 @@ import os
 from config import CONFIG
 
 def run_analyze():
-    print("--- KASETACK Analyzer v5.4: 捕獲優先・判定柔軟版 ---")
+    print("--- KASETACK Analyzer v5.5: Next.js JSON 救済版 ---")
     if not os.path.exists(CONFIG["DATA_FILE"]):
         print("❌ エラー: raw_flight.txt がありません")
         return None
@@ -24,6 +24,8 @@ def run_analyze():
     time_matches = list(re.finditer(time_pattern, raw_content))
     print(f"1. 調査地点: {len(time_matches)}件 ヒット")
 
+    debug_done = False
+
     for m in time_matches:
         try:
             h_str, m_str = m.groups()
@@ -34,27 +36,28 @@ def run_analyze():
             if not (CONFIG["WINDOW_PAST"] <= diff <= CONFIG["WINDOW_FUTURE"]):
                 continue
 
-            # 探索範囲
+            # 探索範囲 (±500文字)
             chunk = raw_content[max(0, m.start()-500) : m.end()+500]
             chunk_upper = chunk.upper()
             
-            # --- 【偽物除け】プログラムコード特有の単語があればスキップ ---
-            if any(x in chunk for x in ["googletag", "script", "function", "analytics"]):
-                continue
+            # --- 強制デバッグ：最初の1件だけ中身を露出させる ---
+            if not debug_done:
+                print(f"🔍 DEBUG (1st match around {h_str}:{m_str}): {chunk[:300].replace('\\n',' ')}")
+                debug_done = True
 
-            # --- 便名の抽出 ---
+            # --- 便名の抽出（緩やかなマッチング） ---
             carrier = "不明"
             fnum = ""
             carriers = ["JAL", "JL", "ANA", "NH", "BC", "SKY", "ADO", "SNA", "SFJ", "7G", "6J"]
             for c_code in carriers:
-                c_pat = r'[\"\' >](' + c_code + r')[\"\' <:]'
-                if re.search(c_pat, chunk_upper):
+                if c_code in chunk_upper:
                     carrier = c_code
-                    fnum_m = re.search(carrier + r'[\"\s>:]*(\d{1,4})', chunk_upper)
+                    # 直後の数字を探す
+                    fnum_m = re.search(carrier + r'[^0-9]{0,10}(\d{1,4})', chunk_upper)
                     fnum = fnum_m.group(1) if fnum_m else ""
                     break
 
-            # 便名すら見つからない場合は、ただの「時間」なのでスキップ
+            # 便名すら見つからない場合はスキップ
             if carrier == "不明":
                 continue
 
@@ -67,6 +70,7 @@ def run_analyze():
                     break
             
             if origin == "不明":
+                # JSON形式やタグ形式から日本語を抜く
                 org_m = re.search(r'[\">]([ぁ-んァ-ヶー一-龠]{2,10})[\"<]', chunk)
                 if org_m: origin = org_m.group(1).strip()
 
@@ -77,18 +81,14 @@ def run_analyze():
             
             pax = int(cap * CONFIG["LOAD_FACTORS"]["NORMAL"])
             
-            # --- 乗り場判定（身元不明時の救済ロジック） ---
+            # --- 乗り場判定 ---
             s_key = "P5" 
             if carrier in ["JAL", "JL"]:
-                # 出身地が分かれば振り分け、分からなければ暫定P1
                 if origin in CONFIG["NORTH_CITIES"]: s_key = "P2"
                 else: s_key = "P1"
-            elif carrier in ["NH", "ANA"]:
-                s_key = "P3" # ANAは一律T2
-            elif carrier in ["BC", "SKY"]:
-                s_key = "P1" # スカイマークはT1
-            elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G", "6J"]):
-                s_key = "P4" # その他国内線はT2
+            elif carrier in ["NH", "ANA"]: s_key = "P3"
+            elif carrier in ["BC", "SKY"]: s_key = "P1"
+            elif any(c in carrier for c in ["ADO", "SNA", "SFJ", "7G", "6J"]): s_key = "P4"
             
             flight_rows.append({
                 "time": f"{f_h:02d}:{f_m:02d}", "flight": f"{carrier}{fnum}", 
