@@ -2,31 +2,28 @@ import os
 import time
 import json
 from config import CONFIG
-from api_handler_20260108_1534 import AviationStackHandler
+
+# --- [修正箇所: 累積加算（引かずに足す）] ---
+# --- [残存（コメントアウト）: 20260108_1534 エラー箇所] ---
+# from api_handler_20260108_1534 import AviationStackHandler
+# -------------------------------------------------------
+
+# 汎用的な名前に修正
+from api_handler import AviationStackHandler
 
 def run_fetch():
-    print(f"--- KASETACK Fetcher v4.1: キャッシュ優先モード ---")
+    print(f"--- KASETACK Fetcher v4.3: インポート固定版 ---")
     
-    # キャッシュチェック
     raw_file = CONFIG["DATA_FILE"]
     if os.path.exists(raw_file):
         file_age = time.time() - os.path.getmtime(raw_file)
         if file_age < CONFIG["CACHE_LIMIT_SEC"]:
-            print(f"♻️ キャッシュ有効 (経過: {int(file_age)}秒)。API通信をスキップします。")
+            print(f"♻️ キャッシュ有効 ({int(file_age)}秒経過)。")
             return True
 
-    # --- [残存（コメントアウト）: ZenRowsスクレイピング] ---
-    # api_key = os.getenv("ZENROWS_API_KEY")
-    # params = { ... }
-    # response = requests.get("https://api.zenrows.com/v1/", params=params)
-    # ---------------------------------------------------
-
-    # --- [修正箇所: APIキーを直接指定] ---
-    # 以下の "" の中に、取得したAviationstackのAPIキーを貼り付けてください
-    api_key = "76e04028a66e0e2d2b42d7d9c75462e7" 
-    
-    if not api_key or api_key == "76e04028a66e0e2d2b42d7d9c75462e7":
-        print("❌ APIキーが正しく設定されていません。キーを入力してください。")
+    api_key = os.getenv("AVIATIONSTACK_API_KEY")
+    if not api_key:
+        print("❌ APIキー未設定")
         return False
 
     handler = AviationStackHandler(api_key)
