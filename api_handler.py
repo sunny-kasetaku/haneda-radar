@@ -26,17 +26,23 @@ class AviationStackHandler:
             response.raise_for_status()
             raw_data = response.json()
             processed_flights = []
+            
             for flight in raw_data.get('data', []):
                 aircraft = flight.get('aircraft')
                 iata_code = aircraft.get('iata') if aircraft else "UNKNOWN"
                 seats = self.get_seat_capacity(iata_code)
                 
-                # EV (Expected Value) 計算ロジック
-                # $$EV = Seats \times 0.8$$
+                # 監査用データの抽出
+                arrival = flight.get('arrival', {})
+                departure = flight.get('departure', {})
+                
                 processed_flights.append({
-                    "time": flight.get('arrival', {}).get('estimated', "捕捉済"),
+                    "time": arrival.get('estimated', "捕捉済"),
                     "flight_no": flight.get('flight', {}).get('iata', "N/A"),
                     "airline": flight.get('airline', {}).get('name', "不明"),
+                    "origin": departure.get('iata', "不明"), # 出身地
+                    "delay": arrival.get('delay') if arrival.get('delay') else 0, # 遅延分
+                    "status": flight.get('flight_status', "unknown"), # 運行ステータス
                     "aircraft": iata_code,
                     "pax": int(seats * 0.8)
                 })
