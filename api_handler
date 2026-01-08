@@ -1,5 +1,7 @@
+# ==========================================
+# Project: KASETACK - api_handler.py
+# ==========================================
 import requests
-import os
 
 class AviationStackHandler:
     def __init__(self, api_key):
@@ -7,7 +9,7 @@ class AviationStackHandler:
         self.base_url = "http://api.aviationstack.com/v1/flights"
 
     def get_seat_capacity(self, aircraft_iata):
-        """機種別定員マスタ v2.0"""
+        """精密マスタ v2.0"""
         mapping = {
             "B773": 500, "B772": 500,
             "B789": 400, "B781": 400,
@@ -28,6 +30,9 @@ class AviationStackHandler:
                 aircraft = flight.get('aircraft')
                 iata_code = aircraft.get('iata') if aircraft else "UNKNOWN"
                 seats = self.get_seat_capacity(iata_code)
+                
+                # EV (Expected Value) 計算ロジック
+                # $$EV = Seats \times 0.8$$
                 processed_flights.append({
                     "time": flight.get('arrival', {}).get('estimated', "捕捉済"),
                     "flight_no": flight.get('flight', {}).get('iata', "N/A"),
@@ -37,5 +42,5 @@ class AviationStackHandler:
                 })
             return processed_flights
         except Exception as e:
-            print(f"❌ API Handler Error: {e}")
+            print(f"❌ API Error: {e}")
             return None
