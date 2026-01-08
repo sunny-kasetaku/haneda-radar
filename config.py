@@ -10,8 +10,8 @@ CONFIG = {
     # Discord Webhook (GitHub Secretsから取得)
     "DISCORD_WEBHOOK_URL": os.environ.get("DISCORD_WEBHOOK_URL", ""),
     
-    # サイトURL (ここに直接記入してください)
-    "SITE_URL": "https://sunny-kasetack.github.io/haneda-radar/",
+    # サイトURL (修正：kasetack -> kasetaku)
+    "SITE_URL": "https://sunny-kasetaku.github.io/haneda-radar/",
     
     # 内部ファイルパス
     "DATA_FILE": "haneda_raw.json",
