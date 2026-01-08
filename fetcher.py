@@ -23,9 +23,9 @@ def run_fetch():
 
     # --- [修正箇所: APIキーを直接指定] ---
     # 以下の "" の中に、取得したAviationstackのAPIキーを貼り付けてください
-    api_key = "ここに取得したキーを貼り付け" 
+    api_key = "76e04028a66e0e2d2b42d7d9c75462e7" 
     
-    if not api_key or api_key == "ここに取得したキーを貼り付け":
+    if not api_key or api_key == "76e04028a66e0e2d2b42d7d9c75462e7":
         print("❌ APIキーが正しく設定されていません。キーを入力してください。")
         return False
 
