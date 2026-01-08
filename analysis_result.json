@@ -1,25 +1,34 @@
 {
-    "update_time": "17:39",
+    "update_time": "17:48",
     "recommended_stand": "4号",
     "flights": [
         {
             "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "7G50",
             "airline": "StarFlyer",
-            "aircraft": null,
+            "origin": "FUK",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "A320",
             "pax": 120
         },
         {
             "time": "2026-01-08T18:16:00+00:00",
             "flight_no": "AA175",
             "airline": "American Airlines",
-            "aircraft": null,
-            "pax": 120
+            "origin": "DFW",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "B789",
+            "pax": 320
         },
         {
             "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "AA8453",
             "airline": "American Airlines",
+            "origin": "LAX",
+            "delay": 4,
+            "status": "active",
             "aircraft": null,
             "pax": 120
         },
@@ -27,6 +36,9 @@
             "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "AS7317",
             "airline": "AlphaSky",
+            "origin": "LAX",
+            "delay": 4,
+            "status": "active",
             "aircraft": null,
             "pax": 120
         },
@@ -34,13 +46,19 @@
             "time": "2026-01-08T18:08:00+00:00",
             "flight_no": "BC18",
             "airline": "Skymark Airlines",
-            "aircraft": null,
-            "pax": 120
+            "origin": "FUK",
+            "delay": 13,
+            "status": "active",
+            "aircraft": "B738",
+            "pax": 136
         },
         {
             "time": "2026-01-08T10:31:00+00:00",
             "flight_no": "BC4",
             "airline": "Skymark Airlines",
+            "origin": "FUK",
+            "delay": 6,
+            "status": "active",
             "aircraft": "B738",
             "pax": 136
         },
@@ -48,41 +66,59 @@
             "time": "2026-01-08T17:43:00+00:00",
             "flight_no": "DL275",
             "airline": "Delta Air Lines",
-            "aircraft": null,
-            "pax": 120
+            "origin": "DTW",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "A359",
+            "pax": 240
         },
         {
             "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "JL15",
             "airline": "Japan Airlines",
-            "aircraft": null,
+            "origin": "LAX",
+            "delay": 4,
+            "status": "active",
+            "aircraft": "A35K",
             "pax": 120
         },
         {
             "time": "2026-01-08T17:38:00+00:00",
             "flight_no": "JL262",
             "airline": "Japan Airlines",
-            "aircraft": null,
-            "pax": 120
+            "origin": "HIJ",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "B738",
+            "pax": 136
         },
         {
             "time": "2026-01-08T18:14:00+00:00",
             "flight_no": "JL556",
             "airline": "Japan Airlines",
-            "aircraft": null,
-            "pax": 120
+            "origin": "AKJ",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "B763",
+            "pax": 200
         },
         {
             "time": "2026-01-08T18:12:00+00:00",
             "flight_no": "KE2103",
             "airline": "Korean Air",
-            "aircraft": null,
+            "origin": "GMP",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "B78X",
             "pax": 120
         },
         {
             "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "LA7489",
             "airline": "LATAM Airlines",
+            "origin": "LAX",
+            "delay": 4,
+            "status": "active",
             "aircraft": null,
             "pax": 120
         },
@@ -90,6 +126,9 @@
             "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "MH9171",
             "airline": "Malaysia Airlines",
+            "origin": "LAX",
+            "delay": 4,
+            "status": "active",
             "aircraft": null,
             "pax": 120
         },
@@ -97,41 +136,59 @@
             "time": "2026-01-08T18:31:00+00:00",
             "flight_no": "NH115",
             "airline": "ANA",
-            "aircraft": null,
-            "pax": 120
+            "origin": "YVR",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "B789",
+            "pax": 320
         },
         {
             "time": "2026-01-08T17:30:00+00:00",
             "flight_no": "NH212",
             "airline": "ANA",
-            "aircraft": null,
+            "origin": "LHR",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "B77W",
             "pax": 120
         },
         {
             "time": "2026-01-08T18:01:00+00:00",
             "flight_no": "NH224",
             "airline": "ANA",
-            "aircraft": null,
-            "pax": 120
+            "origin": "FRA",
+            "delay": 6,
+            "status": "active",
+            "aircraft": "B789",
+            "pax": 320
         },
         {
             "time": "2026-01-08T17:57:00+00:00",
             "flight_no": "NH260",
             "airline": "ANA",
-            "aircraft": null,
-            "pax": 120
+            "origin": "FUK",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "B772",
+            "pax": 400
         },
         {
             "time": "2026-01-08T18:27:00+00:00",
             "flight_no": "NH682",
             "airline": "ANA",
-            "aircraft": null,
+            "origin": "HIJ",
+            "delay": 0,
+            "status": "active",
+            "aircraft": "A21N",
             "pax": 120
         },
         {
             "time": "2026-01-08T17:30:00+00:00",
             "flight_no": "NU934",
             "airline": "Japan Transocean Air",
+            "origin": "MMY",
+            "delay": 0,
+            "status": "active",
             "aircraft": null,
             "pax": 120
         },
@@ -139,9 +196,12 @@
             "time": "2026-01-08T17:54:00+00:00",
             "flight_no": "OZ1045",
             "airline": "Asiana Airlines",
-            "aircraft": null,
+            "origin": "GMP",
+            "delay": 4,
+            "status": "active",
+            "aircraft": "A333",
             "pax": 120
         }
     ],
-    "total_pax": 2416
+    "total_pax": 3528
 }
