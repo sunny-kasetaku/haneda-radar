@@ -21,20 +21,17 @@ def send_discord(message):
 
 def main():
     print("--- KASETACK 羽田レーダー 実行開始 ---")
-    
-    # 1. 取得
     if run_fetch():
-        # 2. 解析
         data = run_analyze()
         if data:
-            # 日本時間基準パスワード (HND+月日)
+            # --- [指示: パスワードを数字4桁(月日)に固定] ---
             jst = timezone(timedelta(hours=9))
-            pw = f"HND{datetime.now(jst).strftime('%m%d')}"
+            pw = datetime.now(jst).strftime('%m%d')  # 例: 0108
             
-            # 3. HTML生成
+            # rendererへの受け渡し
             run_render(password=pw)
             
-            # 4. Discord通知
+            # Discord通知メッセージ (pwを反映)
             msg = (
                 f"📡 **KASETACK レーダー稼働**\n"
                 f"━━━━━━━━━━━━━━━\n"
@@ -45,7 +42,7 @@ def main():
                 f"※更新: {data['update_time']} (JST)"
             )
             send_discord(msg)
-            print(f"--- 全工程正常完了 (更新: {data['update_time']}) ---")
+            print(f"--- 全工程正常完了 (Pass: {pw}) ---")
         else:
             print("❌ 解析エラー")
 
