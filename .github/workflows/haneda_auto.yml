@@ -3,11 +3,11 @@ name: Haneda Radar Auto Update
 on:
   workflow_dispatch:        # 手動実行ボタン
 
-# --- [絶対遵守：権限のトップレベル定義] ---
+# --- [指示(A): トップレベルに権限を追加] ---
 permissions:
-  contents: write           # Git Push用
-  pages: write              # GitHub Pages用
-  id-token: write           # デプロイ認証用
+  contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
-    # --- [絶対遵守：デプロイ環境の指定] ---
+    # デプロイ環境の指定
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -37,33 +37,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      # --- [維持：メインロジック実行] ---
+      # --- [指示(B): Run Haneda Radar (既存のenvを維持)] ---
       - name: Run Haneda Radar
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          # SITE_URLはconfig.py直書きを優先しますが、念のためenvも残します
+          SITE_URL: ${{ secrets.SITE_URL }}
         run: python haneda_radar.py
 
-      # --- [維持：リポジトリへの保存処理] ---
+      # --- [鉄則: 既存のgit push (保存) ステップを温存] ---
       - name: Commit and Push changes
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
           git add index.html analysis_result.json haneda_raw.json
           if git diff --staged --quiet; then
-            echo "No changes to commit"
+            echo "No changes"
           else
-            git commit -m "Auto update Haneda stats: $(date +'%Y-%m-%d %H:%M:%S')"
+            git commit -m "Auto backup: $(date +'%Y-%m-%d %H:%M:%S')"
             git pull --rebase origin main
             git push
           fi
 
-      # --- [足す：デプロイ用アーティファクトのアップロード] ---
+      # --- [指示(B): Upload artifact] ---
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'  # index.htmlが含まれるルートディレクトリを指定
+          path: '.'
 
-      # --- [足す：デプロイ実行] ---
+      # --- [指示(B): Deploy to GitHub Pages] ---
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
