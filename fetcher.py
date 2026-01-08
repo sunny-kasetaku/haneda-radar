@@ -1,41 +1,41 @@
-import requests
 import os
 from config import CONFIG
+# 新規APIハンドラーをインポート
+from api_handler_20260108_1455 import AviationStackHandler
 
 def run_fetch():
-    api_key = os.getenv("ZENROWS_API_KEY")
-    print(f"--- KASETACK Fetcher v3.8: 422回避・安定版 ---")
+    # --- [残存（コメントアウト）: ZenRowsスクレイピング 20260108_1028] ---
+    # api_key = os.getenv("ZENROWS_API_KEY")
+    # params = {
+    #     "apikey": api_key,
+    #     "url": CONFIG["TARGET_URL"],
+    #     "js_render": "true",
+    #     "antibot": "true",
+    #     "wait": "5000",
+    #     "premium_proxy": "true"
+    # }
+    # response = requests.get("https://api.zenrows.com/v1/", params=params)
+    # ...
+    # ---------------------------------------------------------------
+
+    print(f"--- KASETACK Fetcher v4.0: API実装版 ---")
+    
+    # Aviationstack APIキーを取得（環境変数またはconfigから）
+    api_key = os.getenv("AVIATIONSTACK_API_KEY")
     
     if not api_key:
-        print("❌ APIキー未設定")
+        print("❌ APIキー(AVIATIONSTACK_API_KEY)が設定されていません")
         return False
 
-    # wait_for を外し、単純な wait (ミリ秒) に変更することで422を回避
-    params = {
-        "apikey": api_key,
-        "url": CONFIG["TARGET_URL"],
-        "js_render": "true",
-        "antibot": "true",
-        "wait": "5000", # 5秒間、JavaScriptの描画を待機
-        "premium_proxy": "true"
-    }
+    handler = AviationStackHandler(api_key)
+    flights = handler.fetch_hnd_arrivals()
 
-    try:
-        print(f"🚀 Flightradar24へ潜入。描画を5秒間待ちます...")
-        response = requests.get("https://api.zenrows.com/v1/", params=params, timeout=180)
-        
-        if response.status_code == 200:
-            with open(CONFIG["DATA_FILE"], "w", encoding="utf-8") as f:
-                f.write(response.text)
-            print(f"✅ 取得成功: {len(response.text)} bytes")
-            return True
-        else:
-            print(f"❌ エラー発生 (Code: {response.status_code})")
-            print(f"💡 内容: {response.text[:100]}")
-            return False
-    except Exception as e:
-        print(f"❌ 通信失敗: {e}")
-        return False
-
-if __name__ == "__main__":
-    run_fetch()
+    if flights:
+        # 解析用に中間データをJSONで保存（analyzer.pyが読み取れる形式にする）
+        import json
+        with open(CONFIG["DATA_FILE"], "w", encoding="utf-8") as f:
+            json.dump(flights, f, ensure_ascii=False, indent=4)
+        print(f"✅ API取得成功: {len(flights)} 件のフライトデータを確保")
+        return True
+    
+    return False
