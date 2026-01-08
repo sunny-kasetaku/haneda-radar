@@ -6,17 +6,23 @@ from analyzer import run_analyze
 from renderer import run_render
 
 def main():
-    print("--- KASETACK 羽田レーダー: 固定名同期完了 ---")
+    print("--- KASETACK 羽田レーダー 実行開始 ---")
     
-    # 全工程実行
-    run_fetch()
-    data = run_analyze()
+    # 1. データ取得
+    fetch_success = run_fetch()
     
-    if data:
-        run_render()
-        print(f"--- 全工程完了 (更新: {data['update_time']}) ---")
+    # 2. 解析・計算
+    if fetch_success:
+        data = run_analyze()
+        
+        # 3. HTML出力
+        if data:
+            run_render()
+            print(f"--- 全工程正常完了 (更新: {data['update_time']}) ---")
+        else:
+            print("❌ 解析エラーが発生しました。")
     else:
-        print("❌ 解析プロセス失敗")
+        print("❌ データ取得に失敗したため、工程を中断します。")
 
 if __name__ == "__main__":
     main()
