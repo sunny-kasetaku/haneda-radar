@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - haneda_radar.py (Discord Integration)
+# Project: KASETACK - haneda_radar.py
 # ==========================================
 import requests
 from datetime import datetime, timezone, timedelta
@@ -9,12 +9,9 @@ from analyzer import run_analyze
 from renderer import run_render
 
 def send_discord(message):
-    """
-    Discord Webhookを使用して通知を送信します
-    """
     webhook_url = CONFIG.get("DISCORD_WEBHOOK_URL")
     if not webhook_url:
-        print("⚠️ Webhook URLが未設定です。Discord通知をスキップします。")
+        print("⚠️ Discord Webhook URL未設定")
         return
     try:
         requests.post(webhook_url, json={"content": message}, timeout=10)
@@ -25,20 +22,19 @@ def send_discord(message):
 def main():
     print("--- KASETACK 羽田レーダー 実行開始 ---")
     
-    # 1. データ取得
+    # 1. 取得
     if run_fetch():
-        # 2. 解析・計算
+        # 2. 解析
         data = run_analyze()
-        
         if data:
-            # 日本時間基準でパスワード生成 (例: HND0108)
+            # 日本時間基準パスワード (HND+月日)
             jst = timezone(timedelta(hours=9))
             pw = f"HND{datetime.now(jst).strftime('%m%d')}"
             
-            # 3. HTML生成 (パスワード引数を追加)
+            # 3. HTML生成
             run_render(password=pw)
             
-            # 4. Discord用メッセージ構築
+            # 4. Discord通知
             msg = (
                 f"📡 **KASETACK レーダー稼働**\n"
                 f"━━━━━━━━━━━━━━━\n"
@@ -48,14 +44,10 @@ def main():
                 f"━━━━━━━━━━━━━━━\n"
                 f"※更新: {data['update_time']} (JST)"
             )
-            
-            # 5. 通知送信
             send_discord(msg)
             print(f"--- 全工程正常完了 (更新: {data['update_time']}) ---")
         else:
-            print("❌ 解析エラーのため、以降の工程を中断します。")
-    else:
-        print("❌ データ取得に失敗しました。")
+            print("❌ 解析エラー")
 
 if __name__ == "__main__":
     main()
