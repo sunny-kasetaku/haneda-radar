@@ -1,25 +1,39 @@
 {
-    "update_time": "08:27",
-    "recommended_stand": "3号",
+    "update_time": "17:39",
+    "recommended_stand": "4号",
     "flights": [
         {
-            "time": "2026-01-08T17:38:00+00:00",
+            "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "7G50",
             "airline": "StarFlyer",
-            "aircraft": "A320",
+            "aircraft": null,
             "pax": 120
         },
         {
-            "time": "2026-01-08T17:04:00+00:00",
-            "flight_no": "AA8400",
+            "time": "2026-01-08T18:16:00+00:00",
+            "flight_no": "AA175",
             "airline": "American Airlines",
             "aircraft": null,
             "pax": 120
         },
         {
-            "time": "2026-01-08T17:04:00+00:00",
-            "flight_no": "AS7321",
+            "time": "2026-01-08T17:39:00+00:00",
+            "flight_no": "AA8453",
+            "airline": "American Airlines",
+            "aircraft": null,
+            "pax": 120
+        },
+        {
+            "time": "2026-01-08T17:39:00+00:00",
+            "flight_no": "AS7317",
             "airline": "AlphaSky",
+            "aircraft": null,
+            "pax": 120
+        },
+        {
+            "time": "2026-01-08T18:08:00+00:00",
+            "flight_no": "BC18",
+            "airline": "Skymark Airlines",
             "aircraft": null,
             "pax": 120
         },
@@ -31,103 +45,103 @@
             "pax": 136
         },
         {
-            "time": "2026-01-08T17:38:00+00:00",
+            "time": "2026-01-08T17:43:00+00:00",
             "flight_no": "DL275",
             "airline": "Delta Air Lines",
-            "aircraft": "A359",
-            "pax": 240
+            "aircraft": null,
+            "pax": 120
         },
         {
-            "time": "2026-01-08T17:04:00+00:00",
-            "flight_no": "JL1",
-            "airline": "Japan Airlines",
-            "aircraft": "B788",
-            "pax": 240
-        },
-        {
-            "time": "2026-01-08T17:34:00+00:00",
+            "time": "2026-01-08T17:39:00+00:00",
             "flight_no": "JL15",
             "airline": "Japan Airlines",
-            "aircraft": "A35K",
+            "aircraft": null,
             "pax": 120
         },
         {
             "time": "2026-01-08T17:38:00+00:00",
             "flight_no": "JL262",
             "airline": "Japan Airlines",
-            "aircraft": "B738",
-            "pax": 136
+            "aircraft": null,
+            "pax": 120
         },
         {
-            "time": "2026-01-08T17:15:00+00:00",
-            "flight_no": "JL32",
-            "airline": "Japan Airlines",
-            "aircraft": "B789",
-            "pax": 320
-        },
-        {
-            "time": "2026-01-08T18:16:00+00:00",
+            "time": "2026-01-08T18:14:00+00:00",
             "flight_no": "JL556",
             "airline": "Japan Airlines",
-            "aircraft": "B763",
-            "pax": 200
+            "aircraft": null,
+            "pax": 120
         },
         {
-            "time": "2026-01-08T17:04:00+00:00",
-            "flight_no": "MH9101",
+            "time": "2026-01-08T18:12:00+00:00",
+            "flight_no": "KE2103",
+            "airline": "Korean Air",
+            "aircraft": null,
+            "pax": 120
+        },
+        {
+            "time": "2026-01-08T17:39:00+00:00",
+            "flight_no": "LA7489",
+            "airline": "LATAM Airlines",
+            "aircraft": null,
+            "pax": 120
+        },
+        {
+            "time": "2026-01-08T17:39:00+00:00",
+            "flight_no": "MH9171",
             "airline": "Malaysia Airlines",
             "aircraft": null,
             "pax": 120
         },
         {
-            "time": "2026-01-08T17:08:00+00:00",
-            "flight_no": "NH109",
+            "time": "2026-01-08T18:31:00+00:00",
+            "flight_no": "NH115",
             "airline": "ANA",
-            "aircraft": "B77W",
+            "aircraft": null,
             "pax": 120
         },
         {
             "time": "2026-01-08T17:30:00+00:00",
             "flight_no": "NH212",
             "airline": "ANA",
-            "aircraft": "B77W",
+            "aircraft": null,
             "pax": 120
         },
         {
-            "time": "2026-01-08T18:06:00+00:00",
+            "time": "2026-01-08T18:01:00+00:00",
             "flight_no": "NH224",
             "airline": "ANA",
-            "aircraft": "B789",
-            "pax": 320
+            "aircraft": null,
+            "pax": 120
         },
         {
-            "time": "2026-01-08T18:04:00+00:00",
+            "time": "2026-01-08T17:57:00+00:00",
             "flight_no": "NH260",
             "airline": "ANA",
-            "aircraft": "B772",
-            "pax": 400
+            "aircraft": null,
+            "pax": 120
         },
         {
-            "time": "2026-01-08T17:27:00+00:00",
+            "time": "2026-01-08T18:27:00+00:00",
+            "flight_no": "NH682",
+            "airline": "ANA",
+            "aircraft": null,
+            "pax": 120
+        },
+        {
+            "time": "2026-01-08T17:30:00+00:00",
             "flight_no": "NU934",
             "airline": "Japan Transocean Air",
             "aircraft": null,
             "pax": 120
         },
         {
-            "time": "2026-01-08T17:46:00+00:00",
+            "time": "2026-01-08T17:54:00+00:00",
             "flight_no": "OZ1045",
             "airline": "Asiana Airlines",
-            "aircraft": "A333",
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:18:00+00:00",
-            "flight_no": "UA881",
-            "airline": "United Airlines",
-            "aircraft": "B78X",
+            "aircraft": null,
             "pax": 120
         }
     ],
-    "total_pax": 3192
+    "total_pax": 2416
 }
