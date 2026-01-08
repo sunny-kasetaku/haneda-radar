@@ -21,9 +21,12 @@ def run_fetch():
     # response = requests.get("https://api.zenrows.com/v1/", params=params)
     # ---------------------------------------------------
 
-    api_key = os.getenv("AVIATIONSTACK_API_KEY")
-    if not api_key:
-        print("❌ APIキー未設定")
+    # --- [修正箇所: APIキーを直接指定] ---
+    # 以下の "" の中に、取得したAviationstackのAPIキーを貼り付けてください
+    api_key = "ここに取得したキーを貼り付け" 
+    
+    if not api_key or api_key == "ここに取得したキーを貼り付け":
+        print("❌ APIキーが正しく設定されていません。キーを入力してください。")
         return False
 
     handler = AviationStackHandler(api_key)
