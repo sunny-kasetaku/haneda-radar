@@ -1,3 +1,6 @@
+# ==========================================
+# Project: KASETACK - renderer.py (v4.1 Gold)
+# ==========================================
 import json
 import os
 from config import CONFIG
@@ -14,19 +17,12 @@ def run_render(password="----"):
     update_time = data.get("update_time", "--:--")
     flights = data.get("flights", [])
 
-    # --- [累積加算：旧ランク判定メッセージ] ---
-    # rank_msg = "S:最高, A:期待, B:普通, C:注意"
-    # --------------------------------------
-
+    # ランク別カラー（S:黄金, A:赤, B:緑, C:白, D:灰色）
     rank = "D"; r_color = "#555"
     if total_pax >= 800: rank, r_color = "S", "#ffcc00"
     elif total_pax >= 400: rank, r_color = "A", "#ff4444"
     elif total_pax >= 100: rank, r_color = "B", "#00ff00"
     elif total_pax > 0: rank, r_color = "C", "#ffffff"
-
-    # --- [累積加算：旧デザインレイアウト（20260108_1525）] ---
-    # old_html = "<div>推奨乗り場: " + stand + "</div>"
-    # -----------------------------------------------------
 
     html_content = f"""
     <!DOCTYPE html>
@@ -46,7 +42,7 @@ def run_render(password="----"):
     </head>
     <body>
         <div class="container">
-            <div style="color:#ffcc00; font-size:11px; margin-bottom:10px;">⚠️ 15分自動更新 (JST)</div>
+            <div style="color:#ffcc00; font-size:11px; margin-bottom:10px;">⚠️ KASETACK 羽田レーダー v4.1</div>
             <div class="main-card">
                 <div class="rank-logo">{rank}</div>
                 <div style="text-align:left;"><b style="font-size:20px;">【{stand}】</b><br>需要期待値 {total_pax}名</div>
@@ -59,7 +55,7 @@ def run_render(password="----"):
             </div>
             <div class="footer">
                 取得: {update_time} | <b>Pass: {password}</b><br>
-                v4.1 Gold Live
+                SITE: {CONFIG['SITE_URL']}
             </div>
         </div>
     </body>
@@ -67,3 +63,4 @@ def run_render(password="----"):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
+    print(f"✅ 黄金デザイン適用(Pass:{password})")
