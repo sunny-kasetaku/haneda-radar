@@ -4,43 +4,32 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK v4.0 Live</title>
         <style>
-            body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 15px; text-align: center; }
-            .card { background: #1a1a1a; border-radius: 20px; padding: 25px; border: 1px solid #333; margin-bottom: 15px; }
-            .label { color: #888; font-size: 16px; margin-bottom: 5px; }
-            .huge-text { font-size: 80px; font-weight: bold; color: #ffcc00; line-height: 1.1; margin: 10px 0; }
-            .pax-text { font-size: 45px; font-weight: bold; color: #fff; }
-            .rank-badge { display: inline-block; padding: 10px 20px; border-radius: 10px; font-size: 24px; font-weight: bold; background: #333; color: #ffcc00; }
-            .stand-box { border: 3px solid #ffcc00; padding: 20px; border-radius: 15px; background: rgba(255, 204, 0, 0.1); }
-            
-            /* フッターパスワードエリア */
-            .pw-card { background: #111; border-top: 1px solid #ffcc00; margin: 20px -15px -15px -15px; padding: 30px 15px; }
-            .pw-label { color: #ffcc00; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-            .pw-value { font-size: 40px; font-family: monospace; color: #fff; letter-spacing: 5px; background: #222; padding: 10px; border-radius: 10px; }
-            .footer-info { color: #555; font-size: 13px; margin-top: 20px; }
+            body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:10px; display:flex; justify-content:center; }
+            .container { width:100%; max-width:400px; text-align:center; }
+            .main-card { background:#1c1c1c; border-radius:15px; padding:20px; margin-bottom:10px; border:1px solid #333; display:flex; align-items:center; justify-content:center; gap:20px; }
+            .rank-logo { font-size:100px; font-weight:bold; color:#ffcc00; line-height:1; }
+            .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+            .t-card { background:#111; border:1px solid #222; border-radius:10px; padding:15px 5px; }
+            .footer { text-align:center; color:#444; font-size:11px; margin-top:15px; border-top:1px solid #222; padding-top:15px; }
         </style>
     </head>
     <body>
-        <div class="card">
-            <div class="label">推奨乗り場（T氏セオリー）</div>
-            <div class="stand-box">
-                <div class="huge-text">3号</div>
+        <div class="container">
+            <div style="color:#ffcc00; font-size:11px; margin-bottom:10px;">⚠️ 15分自動更新 (JST)</div>
+            <div class="main-card">
+                <div class="rank-logo">S</div>
+                <div style="text-align:left;"><b style="font-size:20px;">【3号】</b><br>需要期待値 2824名</div>
             </div>
-            <div class="rank-badge">Sランク：【最高】爆益確定</div>
-        </div>
-
-        <div class="card">
-            <div class="label">羽田到着 期待値合計</div>
-            <div class="pax-text">4816 <span style="font-size:20px">名</span></div>
-        </div>
-
-        <div class="pw-card">
-            <div class="pw-label">本日のパスワード</div>
-            <div class="pw-value">HND0108</div>
-            <div class="footer-info">
-                最終更新: 18:15 (JST) | v4.1 API Live<br>
-                SITE URL: https://your-site-url.com
+            <div class="grid">
+                <div class="t-card">1号 (T1南)<br><b>0</b></div>
+                <div class="t-card">2号 (T1北)<br><b>0</b></div>
+                <div class="t-card">3号 (T2)<br><b>0</b></div>
+                <div class="t-card">4号 (T2)<br><b>0</b></div>
+            </div>
+            <div class="footer">
+                取得: 18:48 | <b>Pass: HND0108</b><br>
+                v4.1 Gold Live
             </div>
         </div>
     </body>

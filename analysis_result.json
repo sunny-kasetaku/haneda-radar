@@ -1,76 +1,24 @@
 {
-    "update_time": "18:15",
+    "update_time": "18:48",
     "recommended_stand": "3号",
     "flights": [
         {
-            "time": "2026-01-08T18:13:00+00:00",
-            "flight_no": "6J62",
-            "airline": "Solaseed Air",
-            "origin": "KMI",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:03:00+00:00",
-            "flight_no": "6J96",
-            "airline": "Solaseed Air",
-            "origin": "OIT",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:43:00+00:00",
-            "flight_no": "7G50",
-            "airline": "StarFlyer",
-            "origin": "FUK",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:44:00+00:00",
-            "flight_no": "7G86",
-            "airline": "StarFlyer",
-            "origin": "KKJ",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:16:00+00:00",
+            "time": "2026-01-08T18:29:00+00:00",
             "flight_no": "AA175",
             "airline": "American Airlines",
             "origin": "DFW",
             "delay": 0,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 320
         },
         {
-            "time": "2026-01-08T17:47:00+00:00",
-            "flight_no": "AA8453",
-            "airline": "American Airlines",
-            "origin": "LAX",
-            "delay": 12,
+            "time": "2026-01-08T19:12:00+00:00",
+            "flight_no": "BC20",
+            "airline": "Skymark Airlines",
+            "origin": "FUK",
+            "delay": 0,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:47:00+00:00",
-            "flight_no": "AS7317",
-            "airline": "AlphaSky",
-            "origin": "LAX",
-            "delay": 12,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 136
         },
         {
             "time": "2026-01-08T10:31:00+00:00",
@@ -79,329 +27,107 @@
             "origin": "FUK",
             "delay": 6,
             "status": "active",
-            "aircraft": "B738",
             "pax": 136
         },
         {
-            "time": "2026-01-08T17:50:00+00:00",
-            "flight_no": "DL181",
-            "airline": "Delta Air Lines",
+            "time": "2026-01-08T18:33:00+00:00",
+            "flight_no": "HA831",
+            "airline": "Hawaiian Airlines",
             "origin": "HNL",
             "delay": 0,
             "status": "active",
-            "aircraft": null,
             "pax": 120
         },
         {
-            "time": "2026-01-08T17:51:00+00:00",
-            "flight_no": "DL275",
-            "airline": "Delta Air Lines",
-            "origin": "DTW",
-            "delay": 6,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:55:00+00:00",
-            "flight_no": "JL128",
+            "time": "2026-01-08T19:20:00+00:00",
+            "flight_no": "JL438",
             "airline": "Japan Airlines",
-            "origin": "ITM",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:47:00+00:00",
-            "flight_no": "JL15",
-            "airline": "Japan Airlines",
-            "origin": "LAX",
-            "delay": 12,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:08:00+00:00",
-            "flight_no": "JL166",
-            "airline": "Japan Airlines",
-            "origin": "AXT",
-            "delay": 8,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:40:00+00:00",
-            "flight_no": "JL284",
-            "airline": "Japan Airlines",
-            "origin": "IZO",
-            "delay": 5,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:25:00+00:00",
-            "flight_no": "JL484",
-            "airline": "Japan Airlines",
-            "origin": "TAK",
+            "origin": "MYJ",
             "delay": 10,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 136
         },
         {
-            "time": "2026-01-08T18:14:00+00:00",
-            "flight_no": "JL556",
+            "time": "2026-01-08T19:01:00+00:00",
+            "flight_no": "JL88",
             "airline": "Japan Airlines",
-            "origin": "AKJ",
+            "origin": "CAN",
             "delay": 0,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 240
         },
         {
-            "time": "2026-01-08T17:52:00+00:00",
-            "flight_no": "JL574",
-            "airline": "Japan Airlines",
-            "origin": "OBO",
+            "time": "2026-01-08T18:50:00+00:00",
+            "flight_no": "NH1078",
+            "airline": "ANA",
+            "origin": "FUK",
             "delay": 0,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 200
         },
         {
-            "time": "2026-01-08T18:21:00+00:00",
-            "flight_no": "JL614",
-            "airline": "Japan Airlines",
-            "origin": "NGS",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:33:00+00:00",
-            "flight_no": "JL650",
-            "airline": "Japan Airlines",
-            "origin": "KOJ",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:29:00+00:00",
-            "flight_no": "JL672",
-            "airline": "Japan Airlines",
-            "origin": "OIT",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:08:00+00:00",
-            "flight_no": "JL696",
-            "airline": "Japan Airlines",
-            "origin": "KMI",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:08:00+00:00",
-            "flight_no": "KE2103",
-            "airline": "Korean Air",
-            "origin": "GMP",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:47:00+00:00",
-            "flight_no": "LA7489",
-            "airline": "LATAM Airlines",
-            "origin": "LAX",
-            "delay": 12,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:47:00+00:00",
-            "flight_no": "MH9171",
-            "airline": "Malaysia Airlines",
-            "origin": "LAX",
-            "delay": 12,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:12:00+00:00",
-            "flight_no": "MU539",
-            "airline": "China Eastern Airlines",
-            "origin": "PVG",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:31:00+00:00",
+            "time": "2026-01-08T18:37:00+00:00",
             "flight_no": "NH115",
             "airline": "ANA",
             "origin": "YVR",
             "delay": 0,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 320
         },
         {
-            "time": "2026-01-08T18:09:00+00:00",
-            "flight_no": "NH224",
+            "time": "2026-01-08T18:57:00+00:00",
+            "flight_no": "NH117",
             "airline": "ANA",
-            "origin": "FRA",
-            "delay": 14,
+            "origin": "SEA",
+            "delay": 0,
             "status": "active",
-            "aircraft": null,
+            "pax": 320
+        },
+        {
+            "time": "2026-01-08T18:38:00+00:00",
+            "flight_no": "NH1896",
+            "airline": "ANA",
+            "origin": "HAC",
+            "delay": 8,
+            "status": "active",
             "pax": 120
         },
         {
-            "time": "2026-01-08T17:56:00+00:00",
-            "flight_no": "NH260",
+            "time": "2026-01-08T18:55:00+00:00",
+            "flight_no": "NH262",
             "airline": "ANA",
             "origin": "FUK",
-            "delay": 0,
+            "delay": 10,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 200
         },
         {
-            "time": "2026-01-08T17:45:00+00:00",
-            "flight_no": "NH34",
+            "time": "2026-01-08T19:22:00+00:00",
+            "flight_no": "NH638",
             "airline": "ANA",
-            "origin": "ITM",
-            "delay": 0,
+            "origin": "IWK",
+            "delay": 2,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 136
         },
         {
-            "time": "2026-01-08T17:44:00+00:00",
-            "flight_no": "NH470",
-            "airline": "ANA",
-            "origin": "OKA",
-            "delay": 14,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:48:00+00:00",
-            "flight_no": "NH596",
-            "airline": "ANA",
-            "origin": "MYJ",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:16:00+00:00",
-            "flight_no": "NH628",
-            "airline": "ANA",
-            "origin": "KOJ",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:25:00+00:00",
+            "time": "2026-01-08T18:30:00+00:00",
             "flight_no": "NH682",
             "airline": "ANA",
             "origin": "HIJ",
             "delay": 0,
             "status": "active",
-            "aircraft": null,
             "pax": 120
         },
         {
-            "time": "2026-01-08T18:10:00+00:00",
-            "flight_no": "NH750",
+            "time": "2026-01-08T18:52:00+00:00",
+            "flight_no": "NH860",
             "airline": "ANA",
-            "origin": "NTQ",
-            "delay": 10,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:57:00+00:00",
-            "flight_no": "NH842",
-            "airline": "ANA",
-            "origin": "SIN",
+            "origin": "HKG",
             "delay": 0,
             "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:18:00+00:00",
-            "flight_no": "NH88",
-            "airline": "ANA",
-            "origin": "MMY",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T18:46:00+00:00",
-            "flight_no": "NH92",
-            "airline": "ANA",
-            "origin": "ISG",
-            "delay": 11,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:46:00+00:00",
-            "flight_no": "OZ1045",
-            "airline": "Asiana Airlines",
-            "origin": "GMP",
-            "delay": 0,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:44:00+00:00",
-            "flight_no": "UA7900",
-            "airline": "United Airlines",
-            "origin": "OKA",
-            "delay": 14,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
-        },
-        {
-            "time": "2026-01-08T17:51:00+00:00",
-            "flight_no": "VN3031",
-            "airline": "Vietnam Airlines",
-            "origin": "DTW",
-            "delay": 6,
-            "status": "active",
-            "aircraft": null,
-            "pax": 120
+            "pax": 320
         }
     ],
-    "total_pax": 4816
+    "total_pax": 2824
 }
