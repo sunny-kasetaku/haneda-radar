@@ -1,7 +1,7 @@
 name: Haneda Radar Auto Update
 
 on:
-  workflow_dispatch:        # 手動実行ボタンを有効化
+  workflow_dispatch:        # 手動実行ボタン
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,6 +16,12 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    
+    # --- [修正箇所: GitHub Pages デプロイ用の環境定義を足す] ---
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # ---------------------------------------------------
 
     steps:
       - name: Checkout code
@@ -33,7 +39,6 @@ jobs:
 
       - name: Run Haneda Radar
         env:
-          # DiscordのWebhook URLをシークレットからPythonへ渡す
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python haneda_radar.py
 
@@ -41,7 +46,6 @@ jobs:
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
-          # 生成されたHTMLと解析結果をリポジトリに保存
           git add index.html analysis_result.json haneda_raw.json
           if git diff --staged --quiet; then
             echo "No changes"
