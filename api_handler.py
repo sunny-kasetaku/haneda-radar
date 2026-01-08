@@ -1,6 +1,3 @@
-# ==========================================
-# Project: KASETACK - api_handler.py
-# ==========================================
 import requests
 
 class AviationStackHandler:
@@ -9,9 +6,24 @@ class AviationStackHandler:
         self.base_url = "http://api.aviationstack.com/v1/flights"
 
     def get_seat_capacity(self, aircraft_iata):
+        """
+        [機種別定員マスタ v2.0]
+        """
+        # --- [累積加算：旧暫定マスタ（20260108_1455）] ---
+        # mapping = {
+        #     "B773": 500, "B772": 500,
+        #     "B789": 300, "B788": 300,
+        #     "B763": 270, "B738": 170
+        # }
+        # return mapping.get(aircraft_iata, 200)
+        # ----------------------------------------------
+
+        # 精密マスタ（2026/01/08 最新実装）
         mapping = {
-            "B773": 500, "B772": 500, "B789": 400, "B781": 400,
-            "B788": 300, "A359": 300, "B763": 250, "A321": 250,
+            "B773": 500, "B772": 500,
+            "B789": 400, "B781": 400,
+            "B788": 300, "A359": 300,
+            "B763": 250, "A321": 250,
             "B738": 170, "B73L": 170
         }
         return mapping.get(aircraft_iata, 150)
