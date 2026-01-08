@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - analyzer.py (Audit Table Version)
+# Project: KASETACK - analyzer.py (Audit Table RESTORED)
 # ==========================================
 import os
 import json
@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 from config import CONFIG
 
 def get_recommended_stand():
-    """T氏セオリー判定"""
+    """T氏セオリー判定 (JST同期)"""
     jst = timezone(timedelta(hours=9))
     hour = datetime.now(jst).hour
     if 6 <= hour < 16: return "3号"
@@ -26,15 +26,17 @@ def run_analyze():
         results = json.load(f)
 
     jst = timezone(timedelta(hours=9))
-    update_time = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
+    # 監査レポート用の詳細時刻
+    audit_time = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
+    update_time_short = datetime.now(jst).strftime("%H:%M")
     recommended = get_recommended_stand()
     total_pax = sum(f['pax'] for f in results)
 
     # ==========================================
-    # 🕵️ 監査用ターミナル出力（テーブル形式）
+    # 🕵️ 監査用ターミナル出力（引かずに足す：復旧箇所）
     # ==========================================
     print(f"\n{'='*85}")
-    print(f"【KASETACK 監査レポート】 実行時刻(JST): {update_time}")
+    print(f"【KASETACK 監査レポート】 実行時刻(JST): {audit_time}")
     print(f"{'='*85}")
     
     # ヘッダー
@@ -44,11 +46,11 @@ def run_analyze():
 
     for f in results:
         # 時刻文字列の整形 (T15:30:00+00:00 -> 15:30)
-        time_str = f['time']
+        time_str = f.get('time', '---')
         if "T" in time_str:
             time_str = time_str.split("T")[1][:5]
         
-        row = f"{f['flight_no']:<8} | {f['origin']:<5} | {time_str:<20} | {f['delay']:>3}分 | {f['status']:<10} | {f['pax']:>3}名"
+        row = f"{f.get('flight_no', 'N/A'):<8} | {f.get('origin', 'UNK'):<5} | {time_str:<20} | {f.get('delay', 0):>3}分 | {f.get('status', 'unknown'):<10} | {f.get('pax', 0):>3}名"
         print(row)
 
     print(f"{'-'*85}")
@@ -57,7 +59,7 @@ def run_analyze():
     print(f"{'='*85}\n")
 
     output = {
-        "update_time": datetime.now(jst).strftime("%H:%M"),
+        "update_time": update_time_short,
         "recommended_stand": recommended,
         "flights": sorted(results, key=lambda x: x['flight_no']),
         "total_pax": total_pax
