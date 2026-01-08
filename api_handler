@@ -1,9 +1,3 @@
-# ==========================================
-# Project: KASETACK - 羽田レーダー
-# Module: API Handler (Logic Refined)
-# File: api_handler_20260108_1525.py
-# ==========================================
-
 import requests
 import os
 
@@ -13,21 +7,7 @@ class AviationStackHandler:
         self.base_url = "http://api.aviationstack.com/v1/flights"
 
     def get_seat_capacity(self, aircraft_iata):
-        """
-        [機種別定員マスタ v2.0]
-        指示に基づき精密化した定員データ
-        """
-        # --- [残存（コメントアウト）: 暫定マスタ 20260108_1455] ---
-        # mapping = {
-        #     "B773": 500, "B772": 500,
-        #     "B789": 300, "B788": 300,
-        #     "B763": 270,
-        #     "B738": 170, "B73L": 170
-        # }
-        # return mapping.get(aircraft_iata, 200)
-        # -------------------------------------------------------
-
-        # 精密マスタ（2026/01/08 実装）
+        """機種別定員マスタ v2.0"""
         mapping = {
             "B773": 500, "B772": 500,
             "B789": 400, "B781": 400,
@@ -35,43 +15,27 @@ class AviationStackHandler:
             "B763": 250, "A321": 250,
             "B738": 170, "B73L": 170
         }
-        
-        # リストにない場合は Default 150名
         return mapping.get(aircraft_iata, 150)
 
     def fetch_hnd_arrivals(self):
-        """
-        APIから羽田到着便を取得し、精密化した期待値(EV)を付与
-        """
-        params = {
-            'access_key': self.api_key,
-            'arr_iata': 'HND',
-            'flight_status': 'active'
-        }
-
+        params = {'access_key': self.api_key, 'arr_iata': 'HND', 'flight_status': 'active'}
         try:
             response = requests.get(self.base_url, params=params, timeout=30)
             response.raise_for_status()
             raw_data = response.json()
-            
             processed_flights = []
             for flight in raw_data.get('data', []):
                 aircraft = flight.get('aircraft')
                 iata_code = aircraft.get('iata') if aircraft else "UNKNOWN"
-                
-                # 精密化した座席数から期待値を算出
                 seats = self.get_seat_capacity(iata_code)
-                ev_pax = int(seats * 0.8) # 期待値（定員 × 0.8）
-
                 processed_flights.append({
                     "time": flight.get('arrival', {}).get('estimated', "捕捉済"),
                     "flight_no": flight.get('flight', {}).get('iata', "N/A"),
                     "airline": flight.get('airline', {}).get('name', "不明"),
                     "aircraft": iata_code,
-                    "pax": ev_pax
+                    "pax": int(seats * 0.8)
                 })
             return processed_flights
-
         except Exception as e:
             print(f"❌ API Handler Error: {e}")
             return None
