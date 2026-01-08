@@ -1,15 +1,8 @@
 name: Haneda Radar Auto Update
 
 on:
-#  schedule:                # GitHub標準タイマー（停止中）
-#    - cron: '*/20 * * * *'
+  workflow_dispatch:        # 手動実行ボタンを有効化
 
-  workflow_dispatch:        # 手動実行ボタン（これだけを生かします）
-
-#  repository_dispatch:      # GASからの外部信号を遮断（停止中）
-#    types: [trigger-radar]
-
-# 古い実行を自動キャンセル（ボタンを連打しても安全なように）
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -22,7 +15,7 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 5      # APIを使うので非常に早く終わるようになります
+    timeout-minutes: 5
 
     steps:
       - name: Checkout code
@@ -36,27 +29,24 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests  # Playwrightはもう不要です
+          pip install requests
 
       - name: Run Haneda Radar
         env:
-          # --- 既存のAPIキー ---
-          ZENROWS_API_KEY: ${{ secrets.ZENROWS_API_KEY }}
-          # --- Discord連携・サイトURLの追加 ---
+          # DiscordのWebhook URLをシークレットからPythonへ渡す
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          SITE_URL: ${{ secrets.SITE_URL }}
         run: python haneda_radar.py
 
       - name: Commit and Push changes
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
-          # 分析結果のファイルを保存対象にします
-          git add index.html analysis_result.json
+          # 生成されたHTMLと解析結果をリポジトリに保存
+          git add index.html analysis_result.json haneda_raw.json
           if git diff --staged --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update Haneda stats via ZenRows: $(date +'%Y-%m-%d %H:%M:%S')"
+            git commit -m "Auto update Haneda stats: $(date +'%Y-%m-%d %H:%M:%S')"
             git pull --rebase origin main
             git push
           fi
