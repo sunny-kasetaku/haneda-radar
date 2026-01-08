@@ -1,29 +1,32 @@
+# ==========================================
+# Project: KASETACK - fetcher.py
+# ==========================================
 import os
 import time
 import json
 from config import CONFIG
-
-# --- [修正箇所: 累積加算（引かずに足す）] ---
-# --- [残存（コメントアウト）: 20260108_1534 エラー箇所] ---
-# from api_handler_20260108_1534 import AviationStackHandler
-# -------------------------------------------------------
-
-# 汎用的な名前に修正
 from api_handler import AviationStackHandler
 
 def run_fetch():
-    print(f"--- KASETACK Fetcher v4.3: インポート固定版 ---")
+    print(f"--- KASETACK Fetcher ---")
     
     raw_file = CONFIG["DATA_FILE"]
+    
+    # 1. キャッシュチェック
     if os.path.exists(raw_file):
         file_age = time.time() - os.path.getmtime(raw_file)
         if file_age < CONFIG["CACHE_LIMIT_SEC"]:
-            print(f"♻️ キャッシュ有効 ({int(file_age)}秒経過)。")
+            print(f"♻️ キャッシュ有効 ({int(file_age)}秒)")
             return True
 
-    api_key = os.getenv("AVIATIONSTACK_API_KEY")
-    if not api_key:
-        print("❌ APIキー未設定")
+    # 2. APIキー取得 (OS環境変数から CONFIG 参照へ変更)
+    # --- [残存（コメントアウト）: 旧取得法] ---
+    # api_key = os.getenv("AVIATIONSTACK_API_KEY")
+    # ---------------------------------------
+    api_key = CONFIG.get("API_KEY")
+    
+    if not api_key or api_key == "YOUR_AVIATIONSTACK_API_KEY_HERE":
+        print("❌ APIキーが config.py に設定されていません")
         return False
 
     handler = AviationStackHandler(api_key)
@@ -32,7 +35,6 @@ def run_fetch():
     if flights:
         with open(raw_file, "w", encoding="utf-8") as f:
             json.dump(flights, f, ensure_ascii=False, indent=4)
-        print(f"✅ API新規取得成功: {len(flights)} 件")
+        print(f"✅ データ新規取得完了")
         return True
-    
     return False
