@@ -13,28 +13,35 @@
             .pax-text { font-size: 45px; font-weight: bold; color: #fff; }
             .rank-badge { display: inline-block; padding: 10px 20px; border-radius: 10px; font-size: 24px; font-weight: bold; background: #333; color: #ffcc00; }
             .stand-box { border: 3px solid #ffcc00; padding: 20px; border-radius: 15px; background: rgba(255, 204, 0, 0.1); }
-            .footer { color: #555; font-size: 14px; margin-top: 20px; }
-            .flight-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-            .flight-table td { padding: 10px; border-bottom: 1px solid #222; }
+            
+            /* フッターパスワードエリア */
+            .pw-card { background: #111; border-top: 1px solid #ffcc00; margin: 20px -15px -15px -15px; padding: 30px 15px; }
+            .pw-label { color: #ffcc00; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+            .pw-value { font-size: 40px; font-family: monospace; color: #fff; letter-spacing: 5px; background: #222; padding: 10px; border-radius: 10px; }
+            .footer-info { color: #555; font-size: 13px; margin-top: 20px; }
         </style>
     </head>
     <body>
         <div class="card">
             <div class="label">推奨乗り場（T氏セオリー）</div>
             <div class="stand-box">
-                <div class="huge-text">4号</div>
+                <div class="huge-text">3号</div>
             </div>
             <div class="rank-badge">Sランク：【最高】爆益確定</div>
         </div>
 
         <div class="card">
             <div class="label">羽田到着 期待値合計</div>
-            <div class="pax-text">3528 <span style="font-size:20px">名</span></div>
+            <div class="pax-text">4816 <span style="font-size:20px">名</span></div>
         </div>
 
-        <div class="footer">
-            最終更新: 17:48 (JST) | v4.0 API Live<br>
-            ⚠️ データは15分ごとに自動更新されます
+        <div class="pw-card">
+            <div class="pw-label">本日のパスワード</div>
+            <div class="pw-value">HND0108</div>
+            <div class="footer-info">
+                最終更新: 18:15 (JST) | v4.1 API Live<br>
+                SITE URL: https://your-site-url.com
+            </div>
         </div>
     </body>
     </html>
