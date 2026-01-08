@@ -40,8 +40,11 @@ jobs:
 
       - name: Run Haneda Radar
         env:
-          # GitHubのSecret「ZENROWS_API_KEY」をプログラムに渡します
+          # --- 既存のAPIキー ---
           ZENROWS_API_KEY: ${{ secrets.ZENROWS_API_KEY }}
+          # --- Discord連携・サイトURLの追加 ---
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
         run: python haneda_radar.py
 
       - name: Commit and Push changes
