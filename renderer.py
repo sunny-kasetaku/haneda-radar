@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v6.5 All-Access)
+# Project: KASETACK - renderer.py (v6.6 Professional List)
 # ==========================================
 import json
 import os
@@ -19,17 +19,22 @@ def run_render(password):
     update_time = data.get("update_time", "--:--")
     flights = data.get("flights", [])
 
-    # 空港名変換辞書（適宜追加可能）
+    # --- 1. 空港名変換辞書をさらに強化 ---
     AIRPORT_MAP = {
         "HND": "羽田", "NRT": "成田", "CTS": "新千歳", "OKA": "那覇", 
         "FUK": "福岡", "ITM": "伊丹", "KIX": "関空", "NGO": "中部", 
         "HKG": "香港", "TPE": "台北", "ICN": "仁川", "BKK": "バンコク", 
         "SIN": "シンガポール", "LHR": "ロンドン", "CDG": "パリ", 
-        "FRA": "フランクフルト", "JFK": "NY/JFK", "LAX": "ロス", 
-        "SFO": "S.フラシスコ", "ORD": "シカゴ", "DFW": "ダラス", 
+        "FRA": "フランクフルト", "JFK": "ニューヨーク", "LAX": "ロス", 
+        "SFO": "サンフランシスコ", "ORD": "シカゴ", "DFW": "ダラス", 
         "MSP": "ミネアポリス", "HNL": "ホノルル", "SYD": "シドニー", 
-        "YGJ": "米子", "OKJ": "岡山", "MYJ": "松山", "TAK": "高松"
+        "YGJ": "米子", "IAD": "ワシントン", "SGN": "ホーチミン",
+        "SEA": "シアトル", "SJC": "サンノゼ", "PEK": "北京", "PVG": "上海"
     }
+
+    # --- 2. 時刻順にソート (重要：ここが突っ込みどころの正体) ---
+    # 時刻文字列（18:21など）で昇順に並び替えます
+    flights.sort(key=lambda x: x.get("time", "99:99"))
 
     try:
         current_hour = int(update_time.split(":")[0])
@@ -49,15 +54,9 @@ def run_render(password):
     w = WEIGHT_MASTER.get(current_hour, [1, 1, 1, 1, 1])
     w_sum = sum(w) if sum(w) > 0 else 5
 
-    # 期待値計算
-    pax_counts = [
-        int(total_pax * (w[0] / w_sum)), int(total_pax * (w[1] / w_sum)),
-        int(total_pax * (w[2] / w_sum)), int(total_pax * (w[3] / w_sum)),
-        int(total_pax * (w[4] / w_sum))
-    ]
+    pax_counts = [int(total_pax * (val / w_sum)) for val in w]
     t1_s, t1_n, t2_3, t2_4, t3_i = pax_counts
 
-    # 最高期待値の判定
     max_val = max(pax_counts)
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
     stand_names = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
@@ -79,7 +78,7 @@ def run_render(password):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v6.5</title>
+        <title>KASETACK Radar v6.6</title>
         <style>
             @keyframes flash {{ 0% {{ opacity: 0.5; background:#fff; }} 100% {{ opacity: 1; background:#000; }} }}
             body.loading {{ animation: flash 0.4s ease-out; }}
@@ -88,30 +87,30 @@ def run_render(password):
             .info-banner {{ border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-size: 14px; font-weight: bold; margin-bottom: 15px; }}
             .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 30px 20px; text-align: center; margin-bottom: 15px; }}
             .rank-display {{ font-size: 150px; font-weight: bold; color: {r_color}; line-height: 1; }}
-            .rank-thresholds {{ display: flex; justify-content: space-around; font-size: 12px; color: #999; margin-bottom: 20px; background: #111; padding: 8px; border-radius: 10px; }}
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
             .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
             .best-choice {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }}
             .best-badge {{ position: absolute; top: -8px; right: -5px; background: #FFD700; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }}
             .t-title {{ color: #999; font-size: 13px; }}
             .t-num {{ font-size: 38px; font-weight: bold; color: #FFF; }}
-            .table-header {{ display: flex; justify-content: space-between; color: #FFD700; font-weight: bold; padding: 10px 5px; border-bottom: 1px solid #333; }}
+            .table-header {{ display: flex; justify-content: space-between; color: #FFD700; font-weight: bold; padding: 10px 5px; border-bottom: 1px solid #333; font-size: 14px; }}
             .row {{ display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #222; font-size: 14px; }}
             .col-time, .col-name, .col-origin, .col-pax {{ width: 25%; text-align: center; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; margin: 20px 0; border: none; cursor: pointer; }}
-            .footer-timer {{ text-align: center; color: #888; font-size: 14px; margin-top: 10px; line-height: 1.6; }}
+            .footer-timer {{ text-align: center; color: #888; font-size: 12px; margin-top: 10px; }}
             #timer {{ color: #FFD700; font-weight: bold; }}
         </style>
         <script>
             function checkPass() {{
                 const storageKey = "kasetack_auth_pass_v1";
-                if (localStorage.getItem(storageKey) === "{password}") {{
+                const correctPass = "{password}";
+                if (localStorage.getItem(storageKey) === correctPass) {{
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                     return;
                 }}
                 const input = prompt("パスワードを入力");
-                if (input === "{password}") {{
+                if (input === correctPass) {{
                     localStorage.setItem(storageKey, input);
                     location.reload();
                 }} else {{ window.location.reload(); }}
@@ -126,9 +125,6 @@ def run_render(password):
                 <div style="font-size:60px;">{symbol} <span style="font-size:150px; color:{r_color};">{rank}</span></div>
                 <div style="font-size:32px; font-weight:bold;">{status_text}</div>
             </div>
-            <div class="rank-thresholds">
-                <span>🌈<b>S</b>:800~</span><span>🔥<b>A</b>:400~</span><span>✅<b>B</b>:100~</span><span>⚠️<b>C</b>:1~</span><span>🌑<b>D</b>:0</span>
-            </div>
             <div class="grid">
                 <div class="t-card {'best-choice' if best_idx==0 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==0 else '' }<div class="t-title">1号(T1南)</div><div class="t-num">{t1_s}人</div></div>
                 <div class="t-card {'best-choice' if best_idx==1 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==1 else '' }<div class="t-title">2号(T1北)</div><div class="t-num">{t1_n}人</div></div>
@@ -137,14 +133,15 @@ def run_render(password):
                 <div class="t-card {'best-choice' if best_idx==4 else ''}" style="grid-column: 1/3;">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==4 else '' }<div class="t-title">国際(T3)</div><div class="t-num">{t3_i}人</div></div>
             </div>
             
-            <div class="table-header"><div class="col-time">時刻</div><div class="col-name">便名</div><div class="col-origin">出身</div><div class="col-pax">推計</div></div>
-            
-            {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else "---"}</div><div class="col-name" style="color:#FFD700;">{f["flight_no"]}</div><div class="col-origin">{AIRPORT_MAP.get(f.get("origin",""), f.get("origin","---"))}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights]) if flights else '<div style="padding:20px;text-align:center;color:#666;">対象なし</div>'}
+            <div class="table-header">
+                <div class="col-time">到着時刻</div><div class="col-name">便名</div><div class="col-origin">出発地</div><div class="col-pax">旅客数</div>
+            </div>
+            {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else f["time"][:5]}</div><div class="col-name" style="color:#FFD700;">{f["flight_no"]}</div><div class="col-origin">{AIRPORT_MAP.get(f.get("origin",""), f.get("origin","---"))}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights]) if flights else '<div style="padding:20px;text-align:center;color:#666;">対象なし</div>'}
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer-timer">
                 画面の自動再読み込みまであと <span id="timer">60</span> 秒<br>
-                最終データ取得: {update_time} | v6.5 Final
+                最終データ取得: {update_time} | v6.6 Professional
             </div>
         </div>
         <script>
@@ -161,4 +158,4 @@ def run_render(password):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ v6.5：全到着便を網羅（制限解除）しました")
+    print(f"✅ v6.6：リストを到着時間順に整列、空港名マスターを更新しました")
