@@ -1,13 +1,16 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# 日本時間(JST)の定義
+JST = timezone(timedelta(hours=9))
 
 def analyze_demand(processed_flights):
     """
     精査されたフライトリストから、5つの乗り場別の1時間後需要を計算する
     """
-    now = datetime.now()
+    # 💡 修正ポイント：現在時刻に「日本時間」のラベルを貼る
+    now = datetime.now(JST)
     one_hour_later = now + timedelta(hours=1)
     
-    # 5つの乗り場（バケツ）を準備
     stands = {
         "1号 (T1/JAL系)": 0,
         "2号 (T2/ANA系)": 0,
@@ -17,60 +20,37 @@ def analyze_demand(processed_flights):
     }
 
     for flight in processed_flights:
-        # 1. 到着時刻の解析
         try:
-            arrival_time = datetime.fromisoformat(flight['arrival_time'].replace('Z', '+00:00'))
-        except:
+            # 💡 修正ポイント：APIの時刻を読み込む際、タイムゾーンを正しく処理する
+            # ISO形式を解析し、もしUTCならJSTに変換する
+            dt_str = flight['arrival_time'].replace('Z', '+00:00')
+            arrival_time = datetime.fromisoformat(dt_str).astimezone(JST)
+        except Exception as e:
             continue
 
-        # 2. 需要発生時間の計算（着陸30分後〜60分後）
         demand_start = arrival_time + timedelta(minutes=30)
         demand_end = arrival_time + timedelta(minutes=60)
 
-        # 💡 ロジック：需要発生時間が「今から1時間以内」に重なっているか判定
-        # (今〜1時間後) と (需要開始〜終了) が重なればカウント
+        # これで「ラベル付き」同士の比較になるのでエラーが出ません
         if not (demand_end < now or demand_start > one_hour_later):
-            
-            # 3. 乗り場の判定（便名とターミナルから仕分け）
             stand_key = determine_stand(flight)
-            
-            # 4. 人数の加算（一旦、1便あたり定員の10%＝約20人と仮定）
-            # ※後に機体サイズに応じた計算にアップグレード可能
             if stand_key:
                 stands[stand_key] += 20
-                # 3号と「国際」は連動することが多いため両方に加算（現場の運用に合わせる）
                 if stand_key == "3号 (T3/国際)":
                     stands["国際 (T3/全体)"] += 20
 
     return stands
 
 def determine_stand(flight):
-    """
-    便名(IATA)とターミナル情報から、5つの乗り場のどこに行く客かを判定する
-    """
-    iata = flight.get('flight_iata', "")
-    terminal = flight.get('terminal')
+    # (ここは変更なしでOKです)
+    iata = flight.get('flight_iata', "") or ""
+    terminal = str(flight.get('terminal', ""))
     
-    # --- 救済ロジック：ターミナルがnullでも便名で判定 ---
-    
-    # 1号乗り場：JAL(JL), 日本トランスオーシャン(NU), スカイマーク(BC), スターフライヤー(7G)
     if any(iata.startswith(prefix) for prefix in ["JL", "NU", "BC", "7G"]):
         return "1号 (T1/JAL系)"
-        
-    # 2号乗り場：ANA(NH), エアドゥ(ADO/HD), ソラシド(6J) ※国内線
     if any(iata.startswith(prefix) for prefix in ["NH", "HD", "ADO", "6J"]):
-        # ANA(NH)でターミナルが2以外（T3やT2国際）の場合は別途判定
-        if terminal == "3":
-            return "3号 (T3/国際)"
+        if terminal == "3": return "3号 (T3/国際)"
         return "2号 (T2/ANA系)"
-    
-    # 3号・国際：海外航空会社
-    if terminal == "3":
-        return "3号 (T3/国際)"
-        
-    # 4号：第2ターミナルの国際線（特定のANA国際便など）
-    if terminal == "2" and not any(iata.startswith(prefix) for prefix in ["NH", "HD", "6J"]):
-        return "4号 (T2/国際)"
-        
-    # 判定不能な場合は一旦「国際」へ
+    if terminal == "3": return "3号 (T3/国際)"
+    if terminal == "2": return "4号 (T2/国際)"
     return "国際 (T3/全体)"
