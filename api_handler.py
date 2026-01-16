@@ -1,14 +1,18 @@
 import requests
 from datetime import datetime, timedelta
 
+# --- 💡 config.py の CONFIG 辞書から確実に読み込む ---
 try:
     from config import CONFIG
-    ACCESS_KEY = CONFIG.get("AVIATIONSTACK_KEY")
-except ImportError:
+    # CONFIG辞書の中から、考えられるキー名をすべて試す
+    ACCESS_KEY = CONFIG.get("AVIATIONSTACK_KEY") or CONFIG.get("API_KEY")
+except Exception as e:
     ACCESS_KEY = None
 
 def get_refined_arrival_time(arrival_data):
-    # 到着時間の優先順位：実着 > 推定 > 定刻
+    """
+    最も正確な到着時刻を割り出す
+    """
     if arrival_data.get('actual'):
         return arrival_data['actual']
     if arrival_data.get('estimated'):
@@ -16,13 +20,17 @@ def get_refined_arrival_time(arrival_data):
     return arrival_data.get('scheduled')
 
 def fetch_flights(target_airport="HND"):
+    """
+    APIから羽田の最新フライト情報を取得
+    """
+    # 💡 キーが読み込めていない場合の最終警告
     if not ACCESS_KEY:
-        print("⚠️ エラー: APIキーが設定されていません。")
+        print("⚠️ エラー: config.py の CONFIG 内に 'AVIATIONSTACK_KEY' が見つかりません。")
         return []
 
     url = "http://api.aviationstack.com/v1/flights"
     
-    # 💡 修正ポイント：特定のステータスに絞らず、羽田着の最新100件を丸ごと取る
+    # 💡 パラメータ：特定のステータスに絞らず、とにかく最新の100件を取る
     params = {
         'access_key': ACCESS_KEY,
         'arr_iata': target_airport,
@@ -31,7 +39,14 @@ def fetch_flights(target_airport="HND"):
 
     try:
         response = requests.get(url, params=params, timeout=15)
+        
+        # 401エラー（キーの間違い）が出た場合に詳細を表示
+        if response.status_code == 401:
+            print("⚠️ APIキーが無効、または設定ミスです(401)。")
+            return []
+            
         if response.status_code != 200:
+            print(f"⚠️ APIエラー(Status: {response.status_code})")
             return []
             
         raw_data = response.json()
@@ -40,7 +55,7 @@ def fetch_flights(target_airport="HND"):
 
         processed_flights = []
         for flight in raw_data['data']:
-            # 欠航以外はすべて受け入れる
+            # 欠航便はスキップ
             if flight.get('flight_status') == 'cancelled':
                 continue
 
