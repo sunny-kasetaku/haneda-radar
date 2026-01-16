@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v5.7</title>
+        <title>KASETACK Radar v6.1 Final</title>
         <style>
             @keyframes flash { 0% { opacity: 0.5; background:#fff; } 100% { opacity: 1; background:#000; } }
             body.loading { animation: flash 0.4s ease-out; }
@@ -33,18 +33,16 @@
         <script>
             function checkPass() {
                 const storageKey = "kasetack_auth_pass_v1";
-                const savedPass = localStorage.getItem(storageKey);
-                const correctPass = "0116";
-                if (savedPass === correctPass) {
+                if (localStorage.getItem(storageKey) === "0116") {
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                     return;
                 }
                 const input = prompt("パスワードを入力してください");
-                if (input === correctPass) {
+                if (input === "0116") {
                     localStorage.setItem(storageKey, input);
-                    document.getElementById('main-content').style.display = 'block';
-                } else { alert("無効なパスワードです"); window.location.reload(); }
+                    location.reload();
+                } else { window.location.reload(); }
             }
             window.onload = checkPass;
             function manualUpdate() { document.body.classList.add('loading'); setTimeout(() => location.reload(true), 100); }
@@ -52,7 +50,7 @@
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 案内：本データは15分ごとに自動更新されます。<br>解析範囲：現在時刻の前後 60分 (±30分)</div>
+            <div class="info-banner">⚠️ 案内：本データは15分ごとに自動更新されます。</div>
             <div class="rank-card">
                 <div class="rank-display-wrap">
                     <span class="rank-symbol">🌈</span>
@@ -61,31 +59,26 @@
                 <div class="status-label">【最高】 需要爆発</div>
             </div>
             <div class="rank-thresholds">
-                <span>🌈<b style="color:#FFD700">S</b>:800~</span>
-                <span>🔥<b style="color:#FF6B00">A</b>:400~</span>
-                <span>✅<b style="color:#00FF00">B</b>:100~</span>
-                <span>⚠️<b style="color:#FFFFFF">C</b>:1~</span>
-                <span>🌑<b style="color:#888">D</b>:0</span>
+                <span>🌈<b style="color:#FFD700">S</b>:800~</span><span>🔥<b style="color:#FF6B00">A</b>:400~</span><span>✅<b style="color:#00FF00">B</b>:100~</span><span>⚠️<b style="color:#FFFFFF">C</b>:1~</span><span>🌑<b style="color:#888">D</b>:0</span>
             </div>
             <div class="grid">
-                <div class="t-card"><div class="t-title">1号(T1南)</div><div class="t-num">0人</div></div>
-                <div class="t-card"><div class="t-title">2号(T1北)</div><div class="t-num">0人</div></div>
-                <div class="t-card"><div class="t-title">3号(T2)</div><div class="t-num">0人</div></div>
-                <div class="t-card"><div class="t-title">4号(T2)</div><div class="t-num">0人</div></div>
-                <div class="t-card" style="grid-column: 1/3;"><div class="t-title">国際(T3)</div><div class="t-num">0人</div></div>
+                <div class="t-card"><div class="t-title">1号(T1南)</div><div class="t-num">1271人</div></div>
+                <div class="t-card"><div class="t-title">2号(T1北)</div><div class="t-num">1017人</div></div>
+                <div class="t-card"><div class="t-title">3号(T2)</div><div class="t-num">1398人</div></div>
+                <div class="t-card"><div class="t-title">4号(T2)</div><div class="t-num">1144人</div></div>
+                <div class="t-card" style="grid-column: 1/3;"><div class="t-title">国際(T3)</div><div class="t-num">127人</div></div>
             </div>
-            <div class="advice-box">羽田全体で約4960名の需要。</div>
+            <div class="advice-box">⚡ 参謀：18時台は統計データに基づき最適な期待値を算出。</div>
             <div class="table-header"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
             <div class="row"><div class="col-time">17:55</div><div class="col-name">AA175</div><div class="col-origin">DFW</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">15:10</div><div class="col-name">DL121</div><div class="col-origin">MSP</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:12</div><div class="col-name">DL7</div><div class="col-origin">LAX</div><div class="col-pax">240名</div></div><div class="row"><div class="col-time">16:36</div><div class="col-name">HA863</div><div class="col-origin">HNL</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">16:21</div><div class="col-name">JL1</div><div class="col-origin">SFO</div><div class="col-pax">240名</div></div><div class="row"><div class="col-time">17:17</div><div class="col-name">JL15</div><div class="col-origin">LAX</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">17:34</div><div class="col-name">JL44</div><div class="col-origin">LHR</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">17:12</div><div class="col-name">JL5</div><div class="col-origin">JFK</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">16:42</div><div class="col-name">JL52</div><div class="col-origin">SYD</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:47</div><div class="col-name">JL73</div><div class="col-origin">HNL</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">15:12</div><div class="col-name">LA6700</div><div class="col-origin">LAX</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:12</div><div class="col-name">NH101</div><div class="col-origin">IAD</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:41</div><div class="col-name">NH1088</div><div class="col-origin">YGJ</div><div class="col-pax">200名</div></div><div class="row"><div class="col-time">17:08</div><div class="col-name">NH109</div><div class="col-origin">JFK</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">21:11</div><div class="col-name">NH111</div><div class="col-origin">ORD</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">20:29</div><div class="col-name">NH125</div><div class="col-origin">LAX</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">16:45</div><div class="col-name">NH185</div><div class="col-origin">HNL</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">17:32</div><div class="col-name">NH212</div><div class="col-origin">LHR</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:09</div><div class="col-name">NH216</div><div class="col-origin">CDG</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">17:29</div><div class="col-name">NH224</div><div class="col-origin">FRA</div><div class="col-pax">320名</div></div>
             <button class="update-btn" onclick="manualUpdate()">最新情報に更新</button>
-            <div class="footer-timer">画面の自動再読み込みまであと <span id="timer">60</span> 秒</div>
+            <div class="footer-timer">画面の自動更新まであと <span id="timer">60</span> 秒 | 18:05取得</div>
         </div>
         <script>
             let sec = 60;
-            const timerElement = document.getElementById('timer');
             setInterval(() => {
                 sec--;
-                if(sec >= 0) timerElement.innerText = sec;
+                if(sec >= 0) document.getElementById('timer').innerText = sec;
                 if(sec <= 0) manualUpdate();
             }, 1000);
         </script>
