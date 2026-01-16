@@ -1,56 +1,85 @@
 import requests
+from datetime import datetime, timedelta
 
-class AviationStackHandler:
-    def __init__(self, api_key):
-        self.api_key = api_key
-        self.base_url = "http://api.aviationstack.com/v1/flights"
+# もし config.py を作っているならここが活きます
+try:
+    from config import AVIATIONSTACK_KEY as ACCESS_KEY
+except ImportError:
+    # config.py がない場合は、ここに直接キーを貼り付けてください
+    ACCESS_KEY = "あなたのAPIキーをここに"
 
-    def get_seat_capacity(self, aircraft_iata):
-        """
-        [機種別定員マスタ v2.0]
-        """
-        # --- [累積加算：旧暫定マスタ（20260108_1455）] ---
-        # mapping = {
-        #     "B773": 500, "B772": 500,
-        #     "B789": 300, "B788": 300,
-        #     "B763": 270, "B738": 170
-        # }
-        # return mapping.get(aircraft_iata, 200)
-        # ----------------------------------------------
-
-        # 精密マスタ（2026/01/08 最新実装）
-        mapping = {
-            "B773": 500, "B772": 500,
-            "B789": 400, "B781": 400,
-            "B788": 300, "A359": 300,
-            "B763": 250, "A321": 250,
-            "B738": 170, "B73L": 170
-        }
-        return mapping.get(aircraft_iata, 150)
-
-    def fetch_hnd_arrivals(self):
-        params = {'access_key': self.api_key, 'arr_iata': 'HND', 'flight_status': 'active'}
+def get_refined_arrival_time(arrival_data):
+    """
+    APIの到着データから、最も信頼できる到着時刻を一つ選出する
+    優先順位: 1.実着(actual) 2.推定(estimated) 3.遅延込(scheduled+delay) 4.定刻(scheduled)
+    """
+    # 1. 実際に着陸した時刻（これがあれば確定）
+    if arrival_data.get('actual'):
+        return arrival_data['actual']
+    
+    # 2. 最新の推定時刻（管制の予報）
+    if arrival_data.get('estimated'):
+        return arrival_data['estimated']
+    
+    # 3. 遅延情報に基づく計算（定刻 + 遅延分）
+    scheduled_str = arrival_data.get('scheduled')
+    delay = arrival_data.get('delay')
+    
+    if scheduled_str and delay:
         try:
-            response = requests.get(self.base_url, params=params, timeout=30)
-            response.raise_for_status()
-            raw_data = response.json()
-            processed = []
-            for flight in raw_data.get('data', []):
-                aircraft = flight.get('aircraft')
-                iata = aircraft.get('iata') if aircraft else "UNKNOWN"
-                seats = self.get_seat_capacity(iata)
-                arrival = flight.get('arrival', {})
-                departure = flight.get('departure', {})
-                processed.append({
-                    "time": arrival.get('estimated', "捕捉済"),
-                    "flight_no": flight.get('flight', {}).get('iata', "N/A"),
-                    "airline": flight.get('airline', {}).get('name', "不明"),
-                    "origin": departure.get('iata', "不明"),
-                    "delay": arrival.get('delay') if arrival.get('delay') else 0,
-                    "status": flight.get('flight_status', "unknown"),
-                    "pax": int(seats * 0.8)
-                })
-            return processed
-        except Exception as e:
-            print(f"❌ API Error: {e}")
-            return None
+            # ISO形式(2026-01-17T09:55:00+00:00)を解析
+            base_time = datetime.fromisoformat(scheduled_str.replace('Z', '+00:00'))
+            refined_time = base_time + timedelta(minutes=int(delay))
+            return refined_time.isoformat()
+        except Exception:
+            return scheduled_str # 計算失敗時は定刻へ
+            
+    # 4. 何もなければ定刻をそのまま返す
+    return scheduled_str
+
+def fetch_flights(target_airport="HND"):
+    """
+    APIから羽田のフライト情報を取得し、精査して返す
+    """
+    url = "http://api.aviationstack.com/v1/flights"
+    params = {
+        'access_key': ACCESS_KEY,
+        'arr_iata': target_airport,
+        'limit': 100
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status() # 通信エラーがあればここで例外を出す
+        raw_data = response.json()
+
+        if 'data' not in raw_data:
+            return []
+
+        processed_flights = []
+        for flight in raw_data['data']:
+            # ステータス判定: 欠航(cancelled)以外はすべて拾う
+            if flight.get('flight_status') == 'cancelled':
+                continue
+
+            arrival = flight.get('arrival', {})
+            
+            # 💡 最も正確な到着時間を算出
+            arrival_time = get_refined_arrival_time(arrival)
+            
+            if not arrival_time:
+                continue
+
+            processed_flights.append({
+                'flight_iata': flight.get('flight', {}).get('iata'),
+                'airline': flight.get('airline', {}).get('name'),
+                'arrival_time': arrival_time,  # 精査された時間
+                'terminal': arrival.get('terminal'), # nullの場合もあるがAnalyzerで補完
+                'status': flight.get('flight_status')
+            })
+
+        return processed_flights
+
+    except Exception as e:
+        print(f"⚠️ API取得エラー: {e}")
+        return []

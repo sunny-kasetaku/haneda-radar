@@ -1,0 +1,5247 @@
+{
+    "pagination": {
+        "limit": 100,
+        "offset": 0,
+        "count": 100,
+        "total": 3637
+    },
+    "data": [
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Singapore Changi",
+                "timezone": "Asia/Singapore",
+                "iata": "SIN",
+                "icao": "WSSS",
+                "terminal": "1",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-17T02:20:00+00:00",
+                "estimated": "2026-01-17T02:20:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T09:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "38",
+                "iata": "JL38",
+                "icao": "JAL38",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Shanghai Pudong International",
+                "timezone": "Asia/Shanghai",
+                "iata": "PVG",
+                "icao": "ZSPD",
+                "terminal": "2",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-17T02:35:00+00:00",
+                "estimated": "2026-01-17T02:35:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:15:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "968",
+                "iata": "NH968",
+                "icao": "ANA968",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Shanghai Pudong International",
+                "timezone": "Asia/Shanghai",
+                "iata": "PVG",
+                "icao": "ZSPD",
+                "terminal": "2",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-17T01:10:00+00:00",
+                "estimated": "2026-01-17T01:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:40:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Peach Aviation",
+                "iata": "MM",
+                "icao": "APJ"
+            },
+            "flight": {
+                "number": "876",
+                "iata": "MM876",
+                "icao": "APJ876",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Kita Kyushu",
+                "timezone": "Asia/Tokyo",
+                "iata": "KKJ",
+                "icao": "RJFR",
+                "terminal": null,
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-17T01:35:00+00:00",
+                "estimated": "2026-01-17T01:35:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": null,
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T03:10:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Spring Airlines Japan",
+                "iata": "IJ",
+                "icao": "SJO"
+            },
+            "flight": {
+                "number": "444",
+                "iata": "IJ444",
+                "icao": "SJO444",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Chitose",
+                "timezone": "Asia/Tokyo",
+                "iata": "CTS",
+                "icao": "RJCC",
+                "terminal": null,
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-17T01:10:00+00:00",
+                "estimated": "2026-01-17T01:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": null,
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T03:10:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Spring Airlines Japan",
+                "iata": "IJ",
+                "icao": "SJO"
+            },
+            "flight": {
+                "number": "410",
+                "iata": "IJ410",
+                "icao": "SJO410",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Taiwan Taoyuan International (Chiang Kai Shek International)",
+                "timezone": "Asia/Taipei",
+                "iata": "TPE",
+                "icao": "RCTP",
+                "terminal": "1",
+                "gate": "7",
+                "delay": null,
+                "scheduled": "2026-01-17T00:10:00+00:00",
+                "estimated": "2026-01-17T00:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:00:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Tigerair Taiwan",
+                "iata": "IT",
+                "icao": "TTW"
+            },
+            "flight": {
+                "number": "216",
+                "iata": "IT216",
+                "icao": "TTW216",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "899025"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Hong Kong International",
+                "timezone": "Asia/Hong_Kong",
+                "iata": "HKG",
+                "icao": "VHHH",
+                "terminal": "1",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-17T00:05:00+00:00",
+                "estimated": "2026-01-17T00:05:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "7932",
+                "iata": "UA7932",
+                "icao": "UAL7932",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "814",
+                    "flight_iata": "nh814",
+                    "flight_icao": "ana814"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86D98E"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-17",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Hong Kong International",
+                "timezone": "Asia/Hong_Kong",
+                "iata": "HKG",
+                "icao": "VHHH",
+                "terminal": "1",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-17T00:05:00+00:00",
+                "estimated": "2026-01-17T00:05:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "814",
+                "iata": "NH814",
+                "icao": "ANA814",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86D98E"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Detroit Metropolitan Wayne County",
+                "timezone": "America/Detroit",
+                "iata": "DTW",
+                "icao": "KDTW",
+                "terminal": "M",
+                "gate": "A38",
+                "delay": null,
+                "scheduled": "2026-01-16T14:10:00+00:00",
+                "estimated": "2026-01-16T14:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "144",
+                "baggage": null,
+                "scheduled": "2026-01-17T17:45:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Delta Air Lines",
+                "iata": "DL",
+                "icao": "DAL"
+            },
+            "flight": {
+                "number": "275",
+                "iata": "DL275",
+                "icao": "DAL275",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A6456D"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Dallas/Fort Worth International",
+                "timezone": "America/Chicago",
+                "iata": "DFW",
+                "icao": "KDFW",
+                "terminal": "D",
+                "gate": "D18A",
+                "delay": null,
+                "scheduled": "2026-01-16T13:50:00+00:00",
+                "estimated": "2026-01-16T13:50:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T18:30:00+00:00",
+                "delay": 17,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "American Airlines",
+                "iata": "AA",
+                "icao": "AAL"
+            },
+            "flight": {
+                "number": "175",
+                "iata": "AA175",
+                "icao": "AAL175",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AB5C12"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Chicago O'hare International",
+                "timezone": "America/Chicago",
+                "iata": "ORD",
+                "icao": "KORD",
+                "terminal": "1",
+                "gate": "C16",
+                "delay": null,
+                "scheduled": "2026-01-16T13:10:00+00:00",
+                "estimated": "2026-01-16T13:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T17:45:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "881",
+                "iata": "UA881",
+                "icao": "UAL881",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A05626"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Los Angeles International",
+                "timezone": "America/Los_Angeles",
+                "iata": "LAX",
+                "icao": "KLAX",
+                "terminal": "7",
+                "gate": "74",
+                "delay": null,
+                "scheduled": "2026-01-16T11:30:00+00:00",
+                "estimated": "2026-01-16T11:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T16:30:00+00:00",
+                "delay": 22,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "39",
+                "iata": "UA39",
+                "icao": "UAL39",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A05669"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Washington Dulles International",
+                "timezone": "America/New_York",
+                "iata": "IAD",
+                "icao": "KIAD",
+                "terminal": null,
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T11:10:00+00:00",
+                "estimated": "2026-01-16T11:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T15:30:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Thai Airways International",
+                "iata": "TG",
+                "icao": "THA"
+            },
+            "flight": {
+                "number": "6085",
+                "iata": "TG6085",
+                "icao": "THA6085",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "101",
+                    "flight_iata": "nh101",
+                    "flight_icao": "ana101"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Washington Dulles International",
+                "timezone": "America/New_York",
+                "iata": "IAD",
+                "icao": "KIAD",
+                "terminal": null,
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T11:10:00+00:00",
+                "estimated": "2026-01-16T11:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T15:30:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Singapore Airlines",
+                "iata": "SQ",
+                "icao": "SIA"
+            },
+            "flight": {
+                "number": "5921",
+                "iata": "SQ5921",
+                "icao": "SIA5921",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "101",
+                    "flight_iata": "nh101",
+                    "flight_icao": "ana101"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Washington Dulles International",
+                "timezone": "America/New_York",
+                "iata": "IAD",
+                "icao": "KIAD",
+                "terminal": null,
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T11:10:00+00:00",
+                "estimated": "2026-01-16T11:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T15:30:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "7941",
+                "iata": "UA7941",
+                "icao": "UAL7941",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "101",
+                    "flight_iata": "nh101",
+                    "flight_icao": "ana101"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "San Francisco International",
+                "timezone": "America/Los_Angeles",
+                "iata": "SFO",
+                "icao": "KSFO",
+                "terminal": "I",
+                "gate": "G6",
+                "delay": null,
+                "scheduled": "2026-01-16T10:15:00+00:00",
+                "estimated": "2026-01-16T10:15:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T14:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "875",
+                "iata": "UA875",
+                "icao": "UAL875",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A2A915"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Seattle-Tacoma International",
+                "timezone": "America/Los_Angeles",
+                "iata": "SEA",
+                "icao": "KSEA",
+                "terminal": null,
+                "gate": "A12",
+                "delay": null,
+                "scheduled": "2026-01-16T10:40:00+00:00",
+                "estimated": "2026-01-16T10:40:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "145",
+                "baggage": null,
+                "scheduled": "2026-01-17T14:05:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Delta Air Lines",
+                "iata": "DL",
+                "icao": "DAL"
+            },
+            "flight": {
+                "number": "167",
+                "iata": "DL167",
+                "icao": "DAL167",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A65449"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Los Angeles International",
+                "timezone": "America/Los_Angeles",
+                "iata": "LAX",
+                "icao": "KLAX",
+                "terminal": "B",
+                "gate": "155",
+                "delay": null,
+                "scheduled": "2026-01-16T10:15:00+00:00",
+                "estimated": "2026-01-16T10:15:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "148",
+                "baggage": null,
+                "scheduled": "2026-01-17T15:05:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "American Airlines",
+                "iata": "AA",
+                "icao": "AAL"
+            },
+            "flight": {
+                "number": "27",
+                "iata": "AA27",
+                "icao": "AAL27",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AB3C0D"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Los Angeles International",
+                "timezone": "America/Los_Angeles",
+                "iata": "LAX",
+                "icao": "KLAX",
+                "terminal": "3",
+                "gate": "37A",
+                "delay": null,
+                "scheduled": "2026-01-16T10:10:00+00:00",
+                "estimated": "2026-01-16T10:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "141",
+                "baggage": null,
+                "scheduled": "2026-01-17T15:05:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Delta Air Lines",
+                "iata": "DL",
+                "icao": "DAL"
+            },
+            "flight": {
+                "number": "7",
+                "iata": "DL7",
+                "icao": "DAL7",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A76516"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Heathrow",
+                "timezone": "Europe/London",
+                "iata": "LHR",
+                "icao": "EGLL",
+                "terminal": "2",
+                "gate": "A",
+                "delay": null,
+                "scheduled": "2026-01-16T19:00:00+00:00",
+                "estimated": "2026-01-16T19:00:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T17:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "212",
+                "iata": "NH212",
+                "icao": "ANA212",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Heathrow",
+                "timezone": "Europe/London",
+                "iata": "LHR",
+                "icao": "EGLL",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T18:30:00+00:00",
+                "estimated": "2026-01-16T18:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T17:20:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "44",
+                "iata": "JL44",
+                "icao": "JAL44",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Franz Josef Strauss",
+                "timezone": "Europe/Berlin",
+                "iata": "MUC",
+                "icao": "EDDM",
+                "terminal": "2",
+                "gate": "H44",
+                "delay": null,
+                "scheduled": "2026-01-16T12:55:00+00:00",
+                "estimated": "2026-01-16T12:55:00+00:00",
+                "actual": "2026-01-16T13:18:00+00:00",
+                "estimated_runway": "2026-01-16T13:18:00+00:00",
+                "actual_runway": "2026-01-16T13:18:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T09:15:00+00:00",
+                "delay": 23,
+                "estimated": "2026-01-17T09:00:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "5852",
+                "iata": "NH5852",
+                "icao": "ANA5852",
+                "codeshared": {
+                    "airline_name": "lufthansa",
+                    "airline_iata": "lh",
+                    "airline_icao": "dlh",
+                    "flight_number": "714",
+                    "flight_iata": "lh714",
+                    "flight_icao": "dlh714"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "3C6718"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Komatsu",
+                "timezone": "Asia/Tokyo",
+                "iata": "KMQ",
+                "icao": "RJNK",
+                "terminal": null,
+                "gate": "1",
+                "delay": null,
+                "scheduled": "2026-01-16T20:25:00+00:00",
+                "estimated": "2026-01-16T20:25:00+00:00",
+                "actual": "2026-01-16T20:35:00+00:00",
+                "estimated_runway": "2026-01-16T20:35:00+00:00",
+                "actual_runway": "2026-01-16T20:35:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "1",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T21:35:00+00:00",
+                "delay": 11,
+                "estimated": "2026-01-16T21:22:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Transocean Air",
+                "iata": "NU",
+                "icao": "JTA"
+            },
+            "flight": {
+                "number": "192",
+                "iata": "NU192",
+                "icao": "JTA192",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "8409ED"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "landed",
+            "departure": {
+                "airport": null,
+                "timezone": null,
+                "iata": "IWK",
+                "icao": "RJOI",
+                "terminal": null,
+                "gate": "1",
+                "delay": null,
+                "scheduled": "2026-01-16T19:35:00+00:00",
+                "estimated": "2026-01-16T19:35:00+00:00",
+                "actual": "2026-01-16T19:57:00+00:00",
+                "estimated_runway": "2026-01-16T19:57:00+00:00",
+                "actual_runway": "2026-01-16T19:57:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T21:00:00+00:00",
+                "delay": null,
+                "estimated": "2026-01-16T20:53:00+00:00",
+                "actual": "2026-01-16T20:54:00+00:00",
+                "estimated_runway": "2026-01-16T20:54:00+00:00",
+                "actual_runway": "2026-01-16T20:54:00+00:00"
+            },
+            "airline": {
+                "name": "Singapore Airlines",
+                "iata": "SQ",
+                "icao": "SIA"
+            },
+            "flight": {
+                "number": "5964",
+                "iata": "SQ5964",
+                "icao": "SIA5964",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "640",
+                    "flight_iata": "nh640",
+                    "flight_icao": "ana640"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "868094"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "landed",
+            "departure": {
+                "airport": null,
+                "timezone": null,
+                "iata": "IWK",
+                "icao": "RJOI",
+                "terminal": null,
+                "gate": "1",
+                "delay": null,
+                "scheduled": "2026-01-16T19:35:00+00:00",
+                "estimated": "2026-01-16T19:35:00+00:00",
+                "actual": "2026-01-16T19:57:00+00:00",
+                "estimated_runway": "2026-01-16T19:57:00+00:00",
+                "actual_runway": "2026-01-16T19:57:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T21:00:00+00:00",
+                "delay": null,
+                "estimated": "2026-01-16T20:53:00+00:00",
+                "actual": "2026-01-16T20:54:00+00:00",
+                "estimated_runway": "2026-01-16T20:54:00+00:00",
+                "actual_runway": "2026-01-16T20:54:00+00:00"
+            },
+            "airline": {
+                "name": "Philippine Airlines",
+                "iata": "PR",
+                "icao": "PAL"
+            },
+            "flight": {
+                "number": "3181",
+                "iata": "PR3181",
+                "icao": "PAL3181",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "640",
+                    "flight_iata": "nh640",
+                    "flight_icao": "ana640"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "868094"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Frankfurt International Airport",
+                "timezone": "Europe/Berlin",
+                "iata": "FRA",
+                "icao": "EDDF",
+                "terminal": "1",
+                "gate": "B58",
+                "delay": null,
+                "scheduled": "2026-01-16T11:35:00+00:00",
+                "estimated": "2026-01-16T11:35:00+00:00",
+                "actual": "2026-01-16T11:58:00+00:00",
+                "estimated_runway": "2026-01-16T11:58:00+00:00",
+                "actual_runway": "2026-01-16T11:58:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T08:45:00+00:00",
+                "delay": 24,
+                "estimated": "2026-01-17T08:13:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Lufthansa",
+                "iata": "LH",
+                "icao": "DLH"
+            },
+            "flight": {
+                "number": "4948",
+                "iata": "LH4948",
+                "icao": "DLH4948",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "204",
+                    "flight_iata": "nh204",
+                    "flight_icao": "ana204"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86E800"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Soekarno-Hatta International",
+                "timezone": "Asia/Jakarta",
+                "iata": "CGK",
+                "icao": "WIII",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T21:45:00+00:00",
+                "estimated": "2026-01-16T21:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "7899",
+                "iata": "UA7899",
+                "icao": "UAL7899",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "856",
+                    "flight_iata": "nh856",
+                    "flight_icao": "ana856"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Minneapolis - St. Paul International",
+                "timezone": "America/Chicago",
+                "iata": "MSP",
+                "icao": "KMSP",
+                "terminal": "1",
+                "gate": "G6",
+                "delay": null,
+                "scheduled": "2026-01-16T11:30:00+00:00",
+                "estimated": "2026-01-16T11:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "149",
+                "baggage": null,
+                "scheduled": "2026-01-17T15:20:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Delta Air Lines",
+                "iata": "DL",
+                "icao": "DAL"
+            },
+            "flight": {
+                "number": "121",
+                "iata": "DL121",
+                "icao": "DAL121",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A7563A"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Minneapolis - St. Paul International",
+                "timezone": "America/Chicago",
+                "iata": "MSP",
+                "icao": "KMSP",
+                "terminal": "1",
+                "gate": "G6",
+                "delay": null,
+                "scheduled": "2026-01-16T11:30:00+00:00",
+                "estimated": "2026-01-16T11:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "149",
+                "baggage": null,
+                "scheduled": "2026-01-17T15:20:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Vietnam Airlines",
+                "iata": "VN",
+                "icao": "HVN"
+            },
+            "flight": {
+                "number": "3027",
+                "iata": "VN3027",
+                "icao": "HVN3027",
+                "codeshared": {
+                    "airline_name": "delta air lines",
+                    "airline_iata": "dl",
+                    "airline_icao": "dal",
+                    "flight_number": "121",
+                    "flight_iata": "dl121",
+                    "flight_icao": "dal121"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A7563A"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "John F Kennedy International",
+                "timezone": "America/New_York",
+                "iata": "JFK",
+                "icao": "KJFK",
+                "terminal": "7",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T13:05:00+00:00",
+                "estimated": "2026-01-16T13:05:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T17:40:00+00:00",
+                "delay": 12,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "109",
+                "iata": "NH109",
+                "icao": "ANA109",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "John F Kennedy International",
+                "timezone": "America/New_York",
+                "iata": "JFK",
+                "icao": "KJFK",
+                "terminal": "8",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T12:50:00+00:00",
+                "estimated": "2026-01-16T12:50:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T17:15:00+00:00",
+                "delay": 18,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "5",
+                "iata": "JL5",
+                "icao": "JAL5",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Charles De Gaulle",
+                "timezone": "Europe/Paris",
+                "iata": "CDG",
+                "icao": "LFPG",
+                "terminal": "1",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T18:30:00+00:00",
+                "estimated": "2026-01-16T18:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T16:10:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "216",
+                "iata": "NH216",
+                "icao": "ANA216",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Seoul (Incheon)",
+                "timezone": "Asia/Seoul",
+                "iata": "ICN",
+                "icao": "RKSI",
+                "terminal": "2",
+                "gate": "276",
+                "delay": null,
+                "scheduled": "2026-01-16T21:30:00+00:00",
+                "estimated": "2026-01-16T21:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T23:25:00+00:00",
+                "delay": 6,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "6896",
+                "iata": "NH6896",
+                "icao": "ANA6896",
+                "codeshared": {
+                    "airline_name": "asiana airlines",
+                    "airline_iata": "oz",
+                    "airline_icao": "aar",
+                    "flight_number": "178",
+                    "flight_iata": "oz178",
+                    "flight_icao": "aar178"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "71BF54"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Seoul (Incheon)",
+                "timezone": "Asia/Seoul",
+                "iata": "ICN",
+                "icao": "RKSI",
+                "terminal": "2",
+                "gate": "246",
+                "delay": null,
+                "scheduled": "2026-01-16T20:40:00+00:00",
+                "estimated": "2026-01-16T20:40:00+00:00",
+                "actual": "2026-01-16T21:08:00+00:00",
+                "estimated_runway": "2026-01-16T21:08:00+00:00",
+                "actual_runway": "2026-01-16T21:08:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:50:00+00:00",
+                "delay": 28,
+                "estimated": "2026-01-16T22:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Virgin Atlantic",
+                "iata": "VS",
+                "icao": "VIR"
+            },
+            "flight": {
+                "number": "5529",
+                "iata": "VS5529",
+                "icao": "VIR5529",
+                "codeshared": {
+                    "airline_name": "korean air",
+                    "airline_iata": "ke",
+                    "airline_icao": "kal",
+                    "flight_number": "751",
+                    "flight_iata": "ke751",
+                    "flight_icao": "kal751"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "71C221"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Seoul (Incheon)",
+                "timezone": "Asia/Seoul",
+                "iata": "ICN",
+                "icao": "RKSI",
+                "terminal": "2",
+                "gate": "246",
+                "delay": null,
+                "scheduled": "2026-01-16T20:40:00+00:00",
+                "estimated": "2026-01-16T20:40:00+00:00",
+                "actual": "2026-01-16T21:08:00+00:00",
+                "estimated_runway": "2026-01-16T21:08:00+00:00",
+                "actual_runway": "2026-01-16T21:08:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:50:00+00:00",
+                "delay": 28,
+                "estimated": "2026-01-16T22:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JTL"
+            },
+            "flight": {
+                "number": "5256",
+                "iata": "JL5256",
+                "icao": "JTL5256",
+                "codeshared": {
+                    "airline_name": "korean air",
+                    "airline_iata": "ke",
+                    "airline_icao": "kal",
+                    "flight_number": "751",
+                    "flight_iata": "ke751",
+                    "flight_icao": "kal751"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "71C221"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Lester B. Pearson International",
+                "timezone": "America/Toronto",
+                "iata": "YYZ",
+                "icao": "CYYZ",
+                "terminal": "1",
+                "gate": "E77",
+                "delay": null,
+                "scheduled": "2026-01-16T12:30:00+00:00",
+                "estimated": "2026-01-16T12:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "149",
+                "baggage": null,
+                "scheduled": "2026-01-17T16:40:00+00:00",
+                "delay": 10,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Air Canada",
+                "iata": "AC",
+                "icao": "ACA"
+            },
+            "flight": {
+                "number": "1",
+                "iata": "AC1",
+                "icao": "ACA1",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "C0173F"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Lester B. Pearson International",
+                "timezone": "America/Toronto",
+                "iata": "YYZ",
+                "icao": "CYYZ",
+                "terminal": "1",
+                "gate": "E77",
+                "delay": null,
+                "scheduled": "2026-01-16T12:30:00+00:00",
+                "estimated": "2026-01-16T12:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "149",
+                "baggage": null,
+                "scheduled": "2026-01-17T16:40:00+00:00",
+                "delay": 10,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "6821",
+                "iata": "NH6821",
+                "icao": "ANA6821",
+                "codeshared": {
+                    "airline_name": "air canada",
+                    "airline_iata": "ac",
+                    "airline_icao": "aca",
+                    "flight_number": "1",
+                    "flight_iata": "ac1",
+                    "flight_icao": "aca1"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "C0173F"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Washington Dulles International",
+                "timezone": "America/New_York",
+                "iata": "IAD",
+                "icao": "KIAD",
+                "terminal": null,
+                "gate": "D5",
+                "delay": null,
+                "scheduled": "2026-01-16T12:20:00+00:00",
+                "estimated": "2026-01-16T12:20:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T16:50:00+00:00",
+                "delay": 20,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "803",
+                "iata": "UA803",
+                "icao": "UAL803",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AA6B9D"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "landed",
+            "departure": {
+                "airport": "Ishigaki",
+                "timezone": "Asia/Tokyo",
+                "iata": "ISG",
+                "icao": "ROIG",
+                "terminal": null,
+                "gate": "8",
+                "delay": null,
+                "scheduled": "2026-01-16T19:25:00+00:00",
+                "estimated": "2026-01-16T19:25:00+00:00",
+                "actual": "2026-01-16T19:33:00+00:00",
+                "estimated_runway": "2026-01-16T19:33:00+00:00",
+                "actual_runway": "2026-01-16T19:33:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "1",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:00:00+00:00",
+                "delay": null,
+                "estimated": "2026-01-16T21:49:00+00:00",
+                "actual": "2026-01-16T21:51:00+00:00",
+                "estimated_runway": "2026-01-16T21:51:00+00:00",
+                "actual_runway": "2026-01-16T21:51:00+00:00"
+            },
+            "airline": {
+                "name": "Japan Transocean Air",
+                "iata": "NU",
+                "icao": "JTA"
+            },
+            "flight": {
+                "number": "974",
+                "iata": "NU974",
+                "icao": "JTA974",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "846021"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Seoul (Incheon)",
+                "timezone": "Asia/Seoul",
+                "iata": "ICN",
+                "icao": "RKSI",
+                "terminal": "2",
+                "gate": "246",
+                "delay": null,
+                "scheduled": "2026-01-16T20:40:00+00:00",
+                "estimated": "2026-01-16T20:40:00+00:00",
+                "actual": "2026-01-16T21:08:00+00:00",
+                "estimated_runway": "2026-01-16T21:08:00+00:00",
+                "actual_runway": "2026-01-16T21:08:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:50:00+00:00",
+                "delay": 28,
+                "estimated": "2026-01-16T22:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Air France",
+                "iata": "AF",
+                "icao": "AFR"
+            },
+            "flight": {
+                "number": "5366",
+                "iata": "AF5366",
+                "icao": "AFR5366",
+                "codeshared": {
+                    "airline_name": "korean air",
+                    "airline_iata": "ke",
+                    "airline_icao": "kal",
+                    "flight_number": "751",
+                    "flight_iata": "ke751",
+                    "flight_icao": "kal751"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "71C221"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Dallas/Fort Worth International",
+                "timezone": "America/Chicago",
+                "iata": "DFW",
+                "icao": "KDFW",
+                "terminal": "E",
+                "gate": "D14",
+                "delay": null,
+                "scheduled": "2026-01-16T10:45:00+00:00",
+                "estimated": "2026-01-16T10:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T15:25:00+00:00",
+                "delay": 30,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "11",
+                "iata": "JL11",
+                "icao": "JAL11",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Shanghai Pudong International",
+                "timezone": "Asia/Shanghai",
+                "iata": "PVG",
+                "icao": "ZSPD",
+                "terminal": "1",
+                "gate": "22",
+                "delay": null,
+                "scheduled": "2026-01-16T18:40:00+00:00",
+                "estimated": "2026-01-16T18:40:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:30:00+00:00",
+                "delay": 62,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "China Eastern Airlines",
+                "iata": "MU",
+                "icao": "CES"
+            },
+            "flight": {
+                "number": "4184",
+                "iata": "MU4184",
+                "icao": "CES4184",
+                "codeshared": {
+                    "airline_name": "japan airlines",
+                    "airline_iata": "jl",
+                    "airline_icao": "jal",
+                    "flight_number": "86",
+                    "flight_iata": "jl86",
+                    "flight_icao": "jal86"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Shanghai Pudong International",
+                "timezone": "Asia/Shanghai",
+                "iata": "PVG",
+                "icao": "ZSPD",
+                "terminal": "1",
+                "gate": "22",
+                "delay": null,
+                "scheduled": "2026-01-16T18:40:00+00:00",
+                "estimated": "2026-01-16T18:40:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:30:00+00:00",
+                "delay": 62,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Shanghai Airlines",
+                "iata": "FM",
+                "icao": "CSH"
+            },
+            "flight": {
+                "number": "1003",
+                "iata": "FM1003",
+                "icao": "CSH1003",
+                "codeshared": {
+                    "airline_name": "japan airlines",
+                    "airline_iata": "jl",
+                    "airline_icao": "jal",
+                    "flight_number": "86",
+                    "flight_iata": "jl86",
+                    "flight_icao": "jal86"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Suvarnabhumi International",
+                "timezone": "Asia/Bangkok",
+                "iata": "BKK",
+                "icao": "VTBS",
+                "terminal": null,
+                "gate": "E8",
+                "delay": null,
+                "scheduled": "2026-01-16T23:15:00+00:00",
+                "estimated": "2026-01-16T23:15:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Thai Airways International",
+                "iata": "TG",
+                "icao": "THA"
+            },
+            "flight": {
+                "number": "682",
+                "iata": "TG682",
+                "icao": "THA682",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Washington Dulles International",
+                "timezone": "America/New_York",
+                "iata": "IAD",
+                "icao": "KIAD",
+                "terminal": null,
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T11:10:00+00:00",
+                "estimated": "2026-01-16T11:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T15:30:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "101",
+                "iata": "NH101",
+                "icao": "ANA101",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Sydney Kingsford Smith Airport",
+                "timezone": "Australia/Sydney",
+                "iata": "SYD",
+                "icao": "YSSY",
+                "terminal": "1",
+                "gate": null,
+                "delay": 2,
+                "scheduled": "2026-01-16T21:45:00+00:00",
+                "estimated": "2026-01-16T21:45:00+00:00",
+                "actual": "2026-01-16T22:21:00+00:00",
+                "estimated_runway": "2026-01-16T22:21:00+00:00",
+                "actual_runway": "2026-01-16T22:21:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:20:00+00:00",
+                "delay": 37,
+                "estimated": "2026-01-17T05:22:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Turkish Airlines",
+                "iata": "TK",
+                "icao": "THY"
+            },
+            "flight": {
+                "number": "8337",
+                "iata": "TK8337",
+                "icao": "THY8337",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "880",
+                    "flight_iata": "nh880",
+                    "flight_icao": "ana880"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86EBD8"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Sydney Kingsford Smith Airport",
+                "timezone": "Australia/Sydney",
+                "iata": "SYD",
+                "icao": "YSSY",
+                "terminal": "1",
+                "gate": null,
+                "delay": 2,
+                "scheduled": "2026-01-16T21:45:00+00:00",
+                "estimated": "2026-01-16T21:45:00+00:00",
+                "actual": "2026-01-16T22:21:00+00:00",
+                "estimated_runway": "2026-01-16T22:21:00+00:00",
+                "actual_runway": "2026-01-16T22:21:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:20:00+00:00",
+                "delay": 37,
+                "estimated": "2026-01-17T05:22:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Air New Zealand",
+                "iata": "NZ",
+                "icao": "ANZ"
+            },
+            "flight": {
+                "number": "4158",
+                "iata": "NZ4158",
+                "icao": "ANZ4158",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "880",
+                    "flight_iata": "nh880",
+                    "flight_icao": "ana880"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86EBD8"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Sydney Kingsford Smith Airport",
+                "timezone": "Australia/Sydney",
+                "iata": "SYD",
+                "icao": "YSSY",
+                "terminal": "1",
+                "gate": null,
+                "delay": 2,
+                "scheduled": "2026-01-16T21:45:00+00:00",
+                "estimated": "2026-01-16T21:45:00+00:00",
+                "actual": "2026-01-16T22:21:00+00:00",
+                "estimated_runway": "2026-01-16T22:21:00+00:00",
+                "actual_runway": "2026-01-16T22:21:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:20:00+00:00",
+                "delay": 37,
+                "estimated": "2026-01-17T05:22:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Virgin Australia",
+                "iata": "VA",
+                "icao": "VOZ"
+            },
+            "flight": {
+                "number": "7400",
+                "iata": "VA7400",
+                "icao": "VOZ7400",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "880",
+                    "flight_iata": "nh880",
+                    "flight_icao": "ana880"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86EBD8"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Soekarno-Hatta International",
+                "timezone": "Asia/Jakarta",
+                "iata": "CGK",
+                "icao": "WIII",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T23:45:00+00:00",
+                "estimated": "2026-01-16T23:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T08:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Garuda Indonesia",
+                "iata": "GA",
+                "icao": "GIA"
+            },
+            "flight": {
+                "number": "874",
+                "iata": "GA874",
+                "icao": "GIA874",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Soekarno-Hatta International",
+                "timezone": "Asia/Jakarta",
+                "iata": "CGK",
+                "icao": "WIII",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T23:45:00+00:00",
+                "estimated": "2026-01-16T23:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T08:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Saudia",
+                "iata": "SV",
+                "icao": "SVA"
+            },
+            "flight": {
+                "number": "6206",
+                "iata": "SV6206",
+                "icao": "SVA6206",
+                "codeshared": {
+                    "airline_name": "garuda indonesia",
+                    "airline_iata": "ga",
+                    "airline_icao": "gia",
+                    "flight_number": "874",
+                    "flight_iata": "ga874",
+                    "flight_icao": "gia874"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Soekarno-Hatta International",
+                "timezone": "Asia/Jakarta",
+                "iata": "CGK",
+                "icao": "WIII",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T23:45:00+00:00",
+                "estimated": "2026-01-16T23:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T08:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JTL"
+            },
+            "flight": {
+                "number": "5012",
+                "iata": "JL5012",
+                "icao": "JTL5012",
+                "codeshared": {
+                    "airline_name": "garuda indonesia",
+                    "airline_iata": "ga",
+                    "airline_icao": "gia",
+                    "flight_number": "874",
+                    "flight_iata": "ga874",
+                    "flight_icao": "gia874"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "George Bush Intercontinental",
+                "timezone": "America/Chicago",
+                "iata": "IAH",
+                "icao": "KIAH",
+                "terminal": "D",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T10:20:00+00:00",
+                "estimated": "2026-01-16T10:20:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T15:25:00+00:00",
+                "delay": 28,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "113",
+                "iata": "NH113",
+                "icao": "ANA113",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Tan Son Nhat International",
+                "timezone": "Asia/Ho_Chi_Minh",
+                "iata": "SGN",
+                "icao": "VVTS",
+                "terminal": "2",
+                "gate": "27",
+                "delay": null,
+                "scheduled": "2026-01-16T23:45:00+00:00",
+                "estimated": "2026-01-16T23:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "70",
+                "iata": "JL70",
+                "icao": "JAL70",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Hong Kong International",
+                "timezone": "Asia/Hong_Kong",
+                "iata": "HKG",
+                "icao": "VHHH",
+                "terminal": "1",
+                "gate": "211",
+                "delay": null,
+                "scheduled": "2026-01-16T23:55:00+00:00",
+                "estimated": "2026-01-16T23:55:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:45:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Cathay Pacific",
+                "iata": "CX",
+                "icao": "CPA"
+            },
+            "flight": {
+                "number": "5624",
+                "iata": "CX5624",
+                "icao": "CPA5624",
+                "codeshared": {
+                    "airline_name": "hong kong express",
+                    "airline_iata": "uo",
+                    "airline_icao": "hke",
+                    "flight_number": "624",
+                    "flight_iata": "uo624",
+                    "flight_icao": "hke624"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "789284"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Hong Kong International",
+                "timezone": "Asia/Hong_Kong",
+                "iata": "HKG",
+                "icao": "VHHH",
+                "terminal": "1",
+                "gate": "203",
+                "delay": 2,
+                "scheduled": "2026-01-16T19:55:00+00:00",
+                "estimated": "2026-01-16T19:55:00+00:00",
+                "actual": "2026-01-16T20:32:00+00:00",
+                "estimated_runway": "2026-01-16T20:32:00+00:00",
+                "actual_runway": "2026-01-16T20:32:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T00:45:00+00:00",
+                "delay": 38,
+                "estimated": "2026-01-17T00:47:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Cathay Pacific",
+                "iata": "CX",
+                "icao": "CPA"
+            },
+            "flight": {
+                "number": "5628",
+                "iata": "CX5628",
+                "icao": "CPA5628",
+                "codeshared": {
+                    "airline_name": "hong kong express",
+                    "airline_iata": "uo",
+                    "airline_icao": "hke",
+                    "flight_number": "628",
+                    "flight_iata": "uo628",
+                    "flight_icao": "hke628"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "789295"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Heathrow",
+                "timezone": "Europe/London",
+                "iata": "LHR",
+                "icao": "EGLL",
+                "terminal": "5",
+                "gate": "D",
+                "delay": 187,
+                "scheduled": "2026-01-16T09:05:00+00:00",
+                "estimated": "2026-01-16T09:05:00+00:00",
+                "actual": "2026-01-16T09:52:00+00:00",
+                "estimated_runway": "2026-01-16T09:52:00+00:00",
+                "actual_runway": "2026-01-16T09:52:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T07:35:00+00:00",
+                "delay": 48,
+                "estimated": "2026-01-17T10:42:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JTL"
+            },
+            "flight": {
+                "number": "7082",
+                "iata": "JL7082",
+                "icao": "JTL7082",
+                "codeshared": {
+                    "airline_name": "british airways",
+                    "airline_iata": "ba",
+                    "airline_icao": "baw",
+                    "flight_number": "7",
+                    "flight_iata": "ba7",
+                    "flight_icao": "baw7"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "406F75"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Heathrow",
+                "timezone": "Europe/London",
+                "iata": "LHR",
+                "icao": "EGLL",
+                "terminal": "5",
+                "gate": "D",
+                "delay": 187,
+                "scheduled": "2026-01-16T09:05:00+00:00",
+                "estimated": "2026-01-16T09:05:00+00:00",
+                "actual": "2026-01-16T09:52:00+00:00",
+                "estimated_runway": "2026-01-16T09:52:00+00:00",
+                "actual_runway": "2026-01-16T09:52:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T07:35:00+00:00",
+                "delay": 48,
+                "estimated": "2026-01-17T10:42:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Iberia",
+                "iata": "IB",
+                "icao": "IBE"
+            },
+            "flight": {
+                "number": "3620",
+                "iata": "IB3620",
+                "icao": "IBE3620",
+                "codeshared": {
+                    "airline_name": "british airways",
+                    "airline_iata": "ba",
+                    "airline_icao": "baw",
+                    "flight_number": "7",
+                    "flight_iata": "ba7",
+                    "flight_icao": "baw7"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "406F75"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Hong Kong International",
+                "timezone": "Asia/Hong_Kong",
+                "iata": "HKG",
+                "icao": "VHHH",
+                "terminal": "1",
+                "gate": "211",
+                "delay": null,
+                "scheduled": "2026-01-16T23:55:00+00:00",
+                "estimated": "2026-01-16T23:55:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:45:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Hong Kong Express",
+                "iata": "UO",
+                "icao": "HKE"
+            },
+            "flight": {
+                "number": "624",
+                "iata": "UO624",
+                "icao": "HKE624",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "789284"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Sydney Kingsford Smith Airport",
+                "timezone": "Australia/Sydney",
+                "iata": "SYD",
+                "icao": "YSSY",
+                "terminal": "1",
+                "gate": "33",
+                "delay": null,
+                "scheduled": "2026-01-16T21:25:00+00:00",
+                "estimated": "2026-01-16T21:25:00+00:00",
+                "actual": "2026-01-16T21:35:00+00:00",
+                "estimated_runway": "2026-01-16T21:35:00+00:00",
+                "actual_runway": "2026-01-16T21:35:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:25:00+00:00",
+                "delay": 11,
+                "estimated": "2026-01-17T04:52:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Air France",
+                "iata": "AF",
+                "icao": "AFR"
+            },
+            "flight": {
+                "number": "9704",
+                "iata": "AF9704",
+                "icao": "AFR9704",
+                "codeshared": {
+                    "airline_name": "qantas",
+                    "airline_iata": "qf",
+                    "airline_icao": "qfa",
+                    "flight_number": "25",
+                    "flight_iata": "qf25",
+                    "flight_icao": "qfa25"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "7C1473"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Shanghai Pudong International",
+                "timezone": "Asia/Shanghai",
+                "iata": "PVG",
+                "icao": "ZSPD",
+                "terminal": "1",
+                "gate": "21",
+                "delay": null,
+                "scheduled": "2026-01-16T17:25:00+00:00",
+                "estimated": "2026-01-16T17:25:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T20:50:00+00:00",
+                "delay": 65,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JTL"
+            },
+            "flight": {
+                "number": "5792",
+                "iata": "JL5792",
+                "icao": "JTL5792",
+                "codeshared": {
+                    "airline_name": "china eastern airlines",
+                    "airline_iata": "mu",
+                    "airline_icao": "ces",
+                    "flight_number": "575",
+                    "flight_iata": "mu575",
+                    "flight_icao": "ces575"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "780D9D"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Shanghai Pudong International",
+                "timezone": "Asia/Shanghai",
+                "iata": "PVG",
+                "icao": "ZSPD",
+                "terminal": "1",
+                "gate": "21",
+                "delay": null,
+                "scheduled": "2026-01-16T17:25:00+00:00",
+                "estimated": "2026-01-16T17:25:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T20:50:00+00:00",
+                "delay": 65,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Shanghai Airlines",
+                "iata": "FM",
+                "icao": "CSH"
+            },
+            "flight": {
+                "number": "3037",
+                "iata": "FM3037",
+                "icao": "CSH3037",
+                "codeshared": {
+                    "airline_name": "china eastern airlines",
+                    "airline_iata": "mu",
+                    "airline_icao": "ces",
+                    "flight_number": "575",
+                    "flight_iata": "mu575",
+                    "flight_icao": "ces575"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "780D9D"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Newark Liberty International",
+                "timezone": "America/New_York",
+                "iata": "EWR",
+                "icao": "KEWR",
+                "terminal": "C",
+                "gate": "C128",
+                "delay": null,
+                "scheduled": "2026-01-16T09:40:00+00:00",
+                "estimated": "2026-01-16T09:40:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T14:20:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "131",
+                "iata": "UA131",
+                "icao": "UAL131",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AA92FA"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Newark Liberty International",
+                "timezone": "America/New_York",
+                "iata": "EWR",
+                "icao": "KEWR",
+                "terminal": "C",
+                "gate": "C128",
+                "delay": null,
+                "scheduled": "2026-01-16T09:40:00+00:00",
+                "estimated": "2026-01-16T09:40:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T14:20:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "7545",
+                "iata": "NH7545",
+                "icao": "ANA7545",
+                "codeshared": {
+                    "airline_name": "united airlines",
+                    "airline_iata": "ua",
+                    "airline_icao": "ual",
+                    "flight_number": "131",
+                    "flight_iata": "ua131",
+                    "flight_icao": "ual131"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AA92FA"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Helsinki-vantaa",
+                "timezone": "Europe/Helsinki",
+                "iata": "HEL",
+                "icao": "EFHK",
+                "terminal": null,
+                "gate": "46",
+                "delay": null,
+                "scheduled": "2026-01-16T18:00:00+00:00",
+                "estimated": "2026-01-16T18:00:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T14:25:00+00:00",
+                "delay": 12,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Finnair",
+                "iata": "AY",
+                "icao": "FIN"
+            },
+            "flight": {
+                "number": "61",
+                "iata": "AY61",
+                "icao": "FIN61",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "461F50"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Helsinki-vantaa",
+                "timezone": "Europe/Helsinki",
+                "iata": "HEL",
+                "icao": "EFHK",
+                "terminal": null,
+                "gate": "49",
+                "delay": null,
+                "scheduled": "2026-01-16T17:30:00+00:00",
+                "estimated": "2026-01-16T17:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T14:20:00+00:00",
+                "delay": 14,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "48",
+                "iata": "JL48",
+                "icao": "JAL48",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86E86E"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": null,
+            "departure": {
+                "airport": "Chitose",
+                "timezone": "Asia/Tokyo",
+                "iata": "CTS",
+                "icao": "RJCC",
+                "terminal": "D",
+                "gate": "6",
+                "delay": null,
+                "scheduled": "2026-01-16T16:05:00+00:00",
+                "estimated": "2026-01-16T16:05:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T17:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Air Do",
+                "iata": "HD",
+                "icao": "ADO"
+            },
+            "flight": {
+                "number": "4728",
+                "iata": "HD4728",
+                "icao": "ADO4728",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "846D0C"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Ninoy Aquino International",
+                "timezone": "Asia/Manila",
+                "iata": "MNL",
+                "icao": "RPLL",
+                "terminal": "1",
+                "gate": "2",
+                "delay": null,
+                "scheduled": "2026-01-16T23:30:00+00:00",
+                "estimated": "2026-01-16T23:30:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:25:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "78",
+                "iata": "JL78",
+                "icao": "JAL78",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Suvarnabhumi International",
+                "timezone": "Asia/Bangkok",
+                "iata": "BKK",
+                "icao": "VTBS",
+                "terminal": null,
+                "gate": "E10",
+                "delay": null,
+                "scheduled": "2026-01-16T22:25:00+00:00",
+                "estimated": "2026-01-16T22:25:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:05:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "850",
+                "iata": "NH850",
+                "icao": "ANA850",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Indira Gandhi International",
+                "timezone": "Asia/Kolkata",
+                "iata": "DEL",
+                "icao": "VIDP",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T20:50:00+00:00",
+                "estimated": "2026-01-16T20:50:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T07:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Air India",
+                "iata": "AI",
+                "icao": "AIC"
+            },
+            "flight": {
+                "number": "358",
+                "iata": "AI358",
+                "icao": "AIC358",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "8005EE"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Hartsfield-jackson Atlanta International",
+                "timezone": "America/New_York",
+                "iata": "ATL",
+                "icao": "KATL",
+                "terminal": "I",
+                "gate": "E18",
+                "delay": null,
+                "scheduled": "2026-01-16T10:10:00+00:00",
+                "estimated": "2026-01-16T10:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": "143",
+                "baggage": null,
+                "scheduled": "2026-01-17T14:35:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Delta Air Lines",
+                "iata": "DL",
+                "icao": "DAL"
+            },
+            "flight": {
+                "number": "295",
+                "iata": "DL295",
+                "icao": "DAL295",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "A6745A"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "cancelled",
+            "departure": {
+                "airport": "Franz Josef Strauss",
+                "timezone": "Europe/Berlin",
+                "iata": "MUC",
+                "icao": "EDDM",
+                "terminal": "2",
+                "gate": "L06",
+                "delay": null,
+                "scheduled": "2026-01-16T10:25:00+00:00",
+                "estimated": "2026-01-16T10:25:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:55:00+00:00",
+                "delay": 15,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Lufthansa",
+                "iata": "LH",
+                "icao": "DLH"
+            },
+            "flight": {
+                "number": "4924",
+                "iata": "LH4924",
+                "icao": "DLH4924",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "218",
+                    "flight_iata": "nh218",
+                    "flight_icao": "ana218"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Tan Son Nhat International",
+                "timezone": "Asia/Ho_Chi_Minh",
+                "iata": "SGN",
+                "icao": "VVTS",
+                "terminal": "2",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T23:05:00+00:00",
+                "estimated": "2026-01-16T23:05:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T07:00:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "892",
+                "iata": "NH892",
+                "icao": "ANA892",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Tan Son Nhat International",
+                "timezone": "Asia/Ho_Chi_Minh",
+                "iata": "SGN",
+                "icao": "VVTS",
+                "terminal": "2",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T17:20:00+00:00",
+                "estimated": "2026-01-16T17:20:00+00:00",
+                "actual": "2026-01-16T17:31:00+00:00",
+                "estimated_runway": "2026-01-16T17:31:00+00:00",
+                "actual_runway": "2026-01-16T17:31:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T01:00:00+00:00",
+                "delay": 12,
+                "estimated": "2026-01-17T00:32:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "FlexFlight",
+                "iata": "W2",
+                "icao": "FXT"
+            },
+            "flight": {
+                "number": "4820",
+                "iata": "W24820",
+                "icao": "FXT4820",
+                "codeshared": {
+                    "airline_name": "vietjet air",
+                    "airline_iata": "vj",
+                    "airline_icao": "vjc",
+                    "flight_number": "820",
+                    "flight_iata": "vj820",
+                    "flight_icao": "vjc820"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "88817C"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Tan Son Nhat International",
+                "timezone": "Asia/Ho_Chi_Minh",
+                "iata": "SGN",
+                "icao": "VVTS",
+                "terminal": "2",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T17:20:00+00:00",
+                "estimated": "2026-01-16T17:20:00+00:00",
+                "actual": "2026-01-16T17:31:00+00:00",
+                "estimated_runway": "2026-01-16T17:31:00+00:00",
+                "actual_runway": "2026-01-16T17:31:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T01:00:00+00:00",
+                "delay": 12,
+                "estimated": "2026-01-17T00:32:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": null,
+                "iata": "A1",
+                "icao": "A1"
+            },
+            "flight": {
+                "number": "2820",
+                "iata": "A12820",
+                "icao": "A12820",
+                "codeshared": {
+                    "airline_name": "vietjet air",
+                    "airline_iata": "vj",
+                    "airline_icao": "vjc",
+                    "flight_number": "820",
+                    "flight_iata": "vj820",
+                    "flight_icao": "vjc820"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "88817C"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Tan Son Nhat International",
+                "timezone": "Asia/Ho_Chi_Minh",
+                "iata": "SGN",
+                "icao": "VVTS",
+                "terminal": "2",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T17:20:00+00:00",
+                "estimated": "2026-01-16T17:20:00+00:00",
+                "actual": "2026-01-16T17:31:00+00:00",
+                "estimated_runway": "2026-01-16T17:31:00+00:00",
+                "actual_runway": "2026-01-16T17:31:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T01:00:00+00:00",
+                "delay": 12,
+                "estimated": "2026-01-17T00:32:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": null,
+                "iata": "H1",
+                "icao": "H1"
+            },
+            "flight": {
+                "number": "2176",
+                "iata": "H12176",
+                "icao": "H12176",
+                "codeshared": {
+                    "airline_name": "vietjet air",
+                    "airline_iata": "vj",
+                    "airline_icao": "vjc",
+                    "flight_number": "820",
+                    "flight_iata": "vj820",
+                    "flight_icao": "vjc820"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "88817C"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Heathrow",
+                "timezone": "Europe/London",
+                "iata": "LHR",
+                "icao": "EGLL",
+                "terminal": "3",
+                "gate": "29",
+                "delay": null,
+                "scheduled": "2026-01-16T08:35:00+00:00",
+                "estimated": "2026-01-16T08:35:00+00:00",
+                "actual": "2026-01-16T09:06:00+00:00",
+                "estimated_runway": "2026-01-16T09:06:00+00:00",
+                "actual_runway": "2026-01-16T09:06:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T07:25:00+00:00",
+                "delay": 32,
+                "estimated": "2026-01-17T06:47:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Iberia",
+                "iata": "IB",
+                "icao": "IBE"
+            },
+            "flight": {
+                "number": "7196",
+                "iata": "IB7196",
+                "icao": "IBE7196",
+                "codeshared": {
+                    "airline_name": "japan airlines",
+                    "airline_iata": "jl",
+                    "airline_icao": "jal",
+                    "flight_number": "42",
+                    "flight_iata": "jl42",
+                    "flight_icao": "jal42"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86DA1E"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Heathrow",
+                "timezone": "Europe/London",
+                "iata": "LHR",
+                "icao": "EGLL",
+                "terminal": "3",
+                "gate": "29",
+                "delay": null,
+                "scheduled": "2026-01-16T08:35:00+00:00",
+                "estimated": "2026-01-16T08:35:00+00:00",
+                "actual": "2026-01-16T09:06:00+00:00",
+                "estimated_runway": "2026-01-16T09:06:00+00:00",
+                "actual_runway": "2026-01-16T09:06:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T07:25:00+00:00",
+                "delay": 32,
+                "estimated": "2026-01-17T06:47:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "British Airways",
+                "iata": "BA",
+                "icao": "BAW"
+            },
+            "flight": {
+                "number": "4608",
+                "iata": "BA4608",
+                "icao": "BAW4608",
+                "codeshared": {
+                    "airline_name": "japan airlines",
+                    "airline_iata": "jl",
+                    "airline_icao": "jal",
+                    "flight_number": "42",
+                    "flight_iata": "jl42",
+                    "flight_icao": "jal42"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86DA1E"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "John F Kennedy International",
+                "timezone": "America/New_York",
+                "iata": "JFK",
+                "icao": "KJFK",
+                "terminal": "8",
+                "gate": "14",
+                "delay": null,
+                "scheduled": "2026-01-16T10:00:00+00:00",
+                "estimated": "2026-01-16T10:00:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T14:35:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "American Airlines",
+                "iata": "AA",
+                "icao": "AAL"
+            },
+            "flight": {
+                "number": "167",
+                "iata": "AA167",
+                "icao": "AAL167",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AB3856"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Shenzhen",
+                "timezone": "Asia/Shanghai",
+                "iata": "SZX",
+                "icao": "ZGSZ",
+                "terminal": null,
+                "gate": "E02",
+                "delay": null,
+                "scheduled": "2026-01-16T17:25:00+00:00",
+                "estimated": "2026-01-16T17:25:00+00:00",
+                "actual": "2026-01-16T17:38:00+00:00",
+                "estimated_runway": "2026-01-16T17:38:00+00:00",
+                "actual_runway": "2026-01-16T17:38:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:20:00+00:00",
+                "delay": 14,
+                "estimated": "2026-01-16T21:52:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Shenzhen Airlines",
+                "iata": "ZH",
+                "icao": "CSZ"
+            },
+            "flight": {
+                "number": "3207",
+                "iata": "ZH3207",
+                "icao": "CSZ3207",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "966",
+                    "flight_iata": "nh966",
+                    "flight_icao": "ana966"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86CED2"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Los Angeles International",
+                "timezone": "America/Los_Angeles",
+                "iata": "LAX",
+                "icao": "KLAX",
+                "terminal": "B",
+                "gate": "153",
+                "delay": null,
+                "scheduled": "2026-01-16T00:15:00+00:00",
+                "estimated": "2026-01-16T00:15:00+00:00",
+                "actual": "2026-01-16T00:26:00+00:00",
+                "estimated_runway": "2026-01-16T00:26:00+00:00",
+                "actual_runway": "2026-01-16T00:26:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:05:00+00:00",
+                "delay": 12,
+                "estimated": "2026-01-17T04:35:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JTL"
+            },
+            "flight": {
+                "number": "7015",
+                "iata": "JL7015",
+                "icao": "JTL7015",
+                "codeshared": {
+                    "airline_name": "american airlines",
+                    "airline_iata": "aa",
+                    "airline_icao": "aal",
+                    "flight_number": "169",
+                    "flight_iata": "aa169",
+                    "flight_icao": "aal169"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AB30E6"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Los Angeles International",
+                "timezone": "America/Los_Angeles",
+                "iata": "LAX",
+                "icao": "KLAX",
+                "terminal": "B",
+                "gate": "153",
+                "delay": null,
+                "scheduled": "2026-01-16T00:15:00+00:00",
+                "estimated": "2026-01-16T00:15:00+00:00",
+                "actual": "2026-01-16T00:26:00+00:00",
+                "estimated_runway": "2026-01-16T00:26:00+00:00",
+                "actual_runway": "2026-01-16T00:26:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:05:00+00:00",
+                "delay": 12,
+                "estimated": "2026-01-17T04:35:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "AlphaSky",
+                "iata": "AS",
+                "icao": "JAG"
+            },
+            "flight": {
+                "number": "6969",
+                "iata": "AS6969",
+                "icao": "JAG6969",
+                "codeshared": {
+                    "airline_name": "american airlines",
+                    "airline_iata": "aa",
+                    "airline_icao": "aal",
+                    "flight_number": "169",
+                    "flight_iata": "aa169",
+                    "flight_icao": "aal169"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "AB30E6"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Los Angeles International",
+                "timezone": "America/Los_Angeles",
+                "iata": "LAX",
+                "icao": "KLAX",
+                "terminal": "B",
+                "gate": "150",
+                "delay": null,
+                "scheduled": "2026-01-16T00:05:00+00:00",
+                "estimated": "2026-01-16T00:05:00+00:00",
+                "actual": "2026-01-16T00:39:00+00:00",
+                "estimated_runway": "2026-01-16T00:39:00+00:00",
+                "actual_runway": "2026-01-16T00:39:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:30:00+00:00",
+                "delay": 35,
+                "estimated": "2026-01-17T04:58:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "7983",
+                "iata": "UA7983",
+                "icao": "UAL7983",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "105",
+                    "flight_iata": "nh105",
+                    "flight_icao": "ana105"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86E778"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Singapore Changi",
+                "timezone": "Asia/Singapore",
+                "iata": "SIN",
+                "icao": "WSSS",
+                "terminal": "2",
+                "gate": "F41",
+                "delay": null,
+                "scheduled": "2026-01-16T22:45:00+00:00",
+                "estimated": "2026-01-16T22:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:20:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Singapore Airlines",
+                "iata": "SQ",
+                "icao": "SIA"
+            },
+            "flight": {
+                "number": "636",
+                "iata": "SQ636",
+                "icao": "SIA636",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Singapore Changi",
+                "timezone": "Asia/Singapore",
+                "iata": "SIN",
+                "icao": "WSSS",
+                "terminal": "1",
+                "gate": "D32",
+                "delay": null,
+                "scheduled": "2026-01-16T22:25:00+00:00",
+                "estimated": "2026-01-16T22:25:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "36",
+                "iata": "JL36",
+                "icao": "JAL36",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Singapore Changi",
+                "timezone": "Asia/Singapore",
+                "iata": "SIN",
+                "icao": "WSSS",
+                "terminal": "2",
+                "gate": "F42",
+                "delay": null,
+                "scheduled": "2026-01-16T22:20:00+00:00",
+                "estimated": "2026-01-16T22:20:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "844",
+                "iata": "NH844",
+                "icao": "ANA844",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Suvarnabhumi International",
+                "timezone": "Asia/Bangkok",
+                "iata": "BKK",
+                "icao": "VTBS",
+                "terminal": null,
+                "gate": "F6",
+                "delay": null,
+                "scheduled": "2026-01-16T22:05:00+00:00",
+                "estimated": "2026-01-16T22:05:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:40:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "34",
+                "iata": "JL34",
+                "icao": "JAL34",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Indira Gandhi International",
+                "timezone": "Asia/Kolkata",
+                "iata": "DEL",
+                "icao": "VIDP",
+                "terminal": "3",
+                "gate": "24",
+                "delay": null,
+                "scheduled": "2026-01-16T19:55:00+00:00",
+                "estimated": "2026-01-16T19:55:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:30:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "30",
+                "iata": "JL30",
+                "icao": "JAL30",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86E82A"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Indira Gandhi International",
+                "timezone": "Asia/Kolkata",
+                "iata": "DEL",
+                "icao": "VIDP",
+                "terminal": "3",
+                "gate": "24",
+                "delay": null,
+                "scheduled": "2026-01-16T19:55:00+00:00",
+                "estimated": "2026-01-16T19:55:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:30:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "SriLankan Airlines",
+                "iata": "UL",
+                "icao": "ALK"
+            },
+            "flight": {
+                "number": "3342",
+                "iata": "UL3342",
+                "icao": "ALK3342",
+                "codeshared": {
+                    "airline_name": "japan airlines",
+                    "airline_iata": "jl",
+                    "airline_icao": "jal",
+                    "flight_number": "30",
+                    "flight_iata": "jl30",
+                    "flight_icao": "jal30"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86E82A"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Vienna International",
+                "timezone": "Europe/Vienna",
+                "iata": "VIE",
+                "icao": "LOWW",
+                "terminal": "3",
+                "gate": "G16",
+                "delay": null,
+                "scheduled": "2026-01-16T10:35:00+00:00",
+                "estimated": "2026-01-16T10:35:00+00:00",
+                "actual": "2026-01-16T10:54:00+00:00",
+                "estimated_runway": "2026-01-16T10:54:00+00:00",
+                "actual_runway": "2026-01-16T10:54:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:55:00+00:00",
+                "delay": 19,
+                "estimated": "2026-01-17T06:26:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Austrian",
+                "iata": "OS",
+                "icao": "AUA"
+            },
+            "flight": {
+                "number": "8563",
+                "iata": "OS8563",
+                "icao": "AUA8563",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "206",
+                    "flight_iata": "nh206",
+                    "flight_icao": "ana206"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86CEF4"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Soekarno-Hatta International",
+                "timezone": "Asia/Jakarta",
+                "iata": "CGK",
+                "icao": "WIII",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T21:45:00+00:00",
+                "estimated": "2026-01-16T21:45:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T06:50:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "856",
+                "iata": "NH856",
+                "icao": "ANA856",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "San Francisco International",
+                "timezone": "America/Los_Angeles",
+                "iata": "SFO",
+                "icao": "KSFO",
+                "terminal": "I",
+                "gate": "1",
+                "delay": null,
+                "scheduled": "2026-01-16T00:20:00+00:00",
+                "estimated": "2026-01-16T00:20:00+00:00",
+                "actual": "2026-01-16T00:30:00+00:00",
+                "estimated_runway": "2026-01-16T00:30:00+00:00",
+                "actual_runway": "2026-01-16T00:30:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T04:50:00+00:00",
+                "delay": 11,
+                "estimated": "2026-01-17T04:09:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "United Airlines",
+                "iata": "UA",
+                "icao": "UAL"
+            },
+            "flight": {
+                "number": "7914",
+                "iata": "UA7914",
+                "icao": "UAL7914",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "107",
+                    "flight_iata": "nh107",
+                    "flight_icao": "ana107"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "8694FA"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Leonardo Da Vinci (Fiumicino)",
+                "timezone": "Europe/Rome",
+                "iata": "FCO",
+                "icao": "LIRF",
+                "terminal": "1",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T15:05:00+00:00",
+                "estimated": "2026-01-16T15:05:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T11:20:00+00:00",
+                "delay": 18,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ITA Airways",
+                "iata": "AZ",
+                "icao": "ITY"
+            },
+            "flight": {
+                "number": "792",
+                "iata": "AZ792",
+                "icao": "ITY792",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "4CAD48"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Shanghai Pudong International",
+                "timezone": "Asia/Shanghai",
+                "iata": "PVG",
+                "icao": "ZSPD",
+                "terminal": "2",
+                "gate": "J19",
+                "delay": null,
+                "scheduled": "2026-01-16T21:10:00+00:00",
+                "estimated": "2026-01-16T21:10:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T01:05:00+00:00",
+                "delay": 28,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Spring Airlines",
+                "iata": "9C",
+                "icao": "CQH"
+            },
+            "flight": {
+                "number": "8515",
+                "iata": "9C8515",
+                "icao": "CQH8515",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Doha International",
+                "timezone": "Asia/Qatar",
+                "iata": "DOH",
+                "icao": "OTHH",
+                "terminal": null,
+                "gate": "C40",
+                "delay": null,
+                "scheduled": "2026-01-16T09:30:00+00:00",
+                "estimated": "2026-01-16T09:30:00+00:00",
+                "actual": "2026-01-16T09:42:00+00:00",
+                "estimated_runway": "2026-01-16T09:42:00+00:00",
+                "actual_runway": "2026-01-16T09:42:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T01:00:00+00:00",
+                "delay": 13,
+                "estimated": "2026-01-17T00:32:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Qatar Airways",
+                "iata": "QR",
+                "icao": "QTR"
+            },
+            "flight": {
+                "number": "4850",
+                "iata": "QR4850",
+                "icao": "QTR4850",
+                "codeshared": {
+                    "airline_name": "japan airlines",
+                    "airline_iata": "jl",
+                    "airline_icao": "jal",
+                    "flight_number": "50",
+                    "flight_iata": "jl50",
+                    "flight_icao": "jal50"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86E7A2"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Suvarnabhumi International",
+                "timezone": "Asia/Bangkok",
+                "iata": "BKK",
+                "icao": "VTBS",
+                "terminal": null,
+                "gate": "C2",
+                "delay": 2,
+                "scheduled": "2026-01-16T14:50:00+00:00",
+                "estimated": "2026-01-16T14:50:00+00:00",
+                "actual": "2026-01-16T15:31:00+00:00",
+                "estimated_runway": "2026-01-16T15:31:00+00:00",
+                "actual_runway": "2026-01-16T15:31:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:30:00+00:00",
+                "delay": 42,
+                "estimated": "2026-01-16T22:32:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "5966",
+                "iata": "NH5966",
+                "icao": "ANA5966",
+                "codeshared": {
+                    "airline_name": "thai airways international",
+                    "airline_iata": "tg",
+                    "airline_icao": "tha",
+                    "flight_number": "660",
+                    "flight_iata": "tg660",
+                    "flight_icao": "tha660"
+                }
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "885102"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Indira Gandhi International",
+                "timezone": "Asia/Kolkata",
+                "iata": "DEL",
+                "icao": "VIDP",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T18:55:00+00:00",
+                "estimated": "2026-01-16T18:55:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "ANA",
+                "iata": "NH",
+                "icao": "ANA"
+            },
+            "flight": {
+                "number": "838",
+                "iata": "NH838",
+                "icao": "ANA838",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Indira Gandhi International",
+                "timezone": "Asia/Kolkata",
+                "iata": "DEL",
+                "icao": "VIDP",
+                "terminal": "3",
+                "gate": null,
+                "delay": null,
+                "scheduled": "2026-01-16T18:55:00+00:00",
+                "estimated": "2026-01-16T18:55:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "2",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T05:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Air India",
+                "iata": "AI",
+                "icao": "AIC"
+            },
+            "flight": {
+                "number": "8004",
+                "iata": "AI8004",
+                "icao": "AIC8004",
+                "codeshared": {
+                    "airline_name": "ana",
+                    "airline_iata": "nh",
+                    "airline_icao": "ana",
+                    "flight_number": "838",
+                    "flight_iata": "nh838",
+                    "flight_icao": "ana838"
+                }
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "scheduled",
+            "departure": {
+                "airport": "Seoul (Incheon)",
+                "timezone": "Asia/Seoul",
+                "iata": "ICN",
+                "icao": "RKSI",
+                "terminal": "1",
+                "gate": "K19",
+                "delay": null,
+                "scheduled": "2026-01-16T22:50:00+00:00",
+                "estimated": "2026-01-16T22:50:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "3",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-17T00:55:00+00:00",
+                "delay": null,
+                "estimated": null,
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Peach Aviation",
+                "iata": "MM",
+                "icao": "APJ"
+            },
+            "flight": {
+                "number": "808",
+                "iata": "MM808",
+                "icao": "APJ808",
+                "codeshared": null
+            },
+            "aircraft": null,
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Fukuoka",
+                "timezone": "Asia/Tokyo",
+                "iata": "FUK",
+                "icao": "RJFF",
+                "terminal": "D",
+                "gate": "6",
+                "delay": null,
+                "scheduled": "2026-01-16T21:10:00+00:00",
+                "estimated": "2026-01-16T21:10:00+00:00",
+                "actual": "2026-01-16T21:22:00+00:00",
+                "estimated_runway": "2026-01-16T21:22:00+00:00",
+                "actual_runway": "2026-01-16T21:22:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "1",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:40:00+00:00",
+                "delay": 13,
+                "estimated": "2026-01-16T22:28:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "332",
+                "iata": "JL332",
+                "icao": "JAL332",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "86DD90"
+            },
+            "live": null
+        },
+        {
+            "flight_date": "2026-01-16",
+            "flight_status": "active",
+            "departure": {
+                "airport": "Kagoshima",
+                "timezone": "Asia/Tokyo",
+                "iata": "KOJ",
+                "icao": "RJFK",
+                "terminal": "D",
+                "gate": "10",
+                "delay": null,
+                "scheduled": "2026-01-16T21:00:00+00:00",
+                "estimated": "2026-01-16T21:00:00+00:00",
+                "actual": "2026-01-16T21:08:00+00:00",
+                "estimated_runway": "2026-01-16T21:08:00+00:00",
+                "actual_runway": "2026-01-16T21:08:00+00:00"
+            },
+            "arrival": {
+                "airport": "Haneda Airport",
+                "timezone": "Asia/Tokyo",
+                "iata": "HND",
+                "icao": "RJTT",
+                "terminal": "1",
+                "gate": null,
+                "baggage": null,
+                "scheduled": "2026-01-16T22:35:00+00:00",
+                "delay": 8,
+                "estimated": "2026-01-16T22:24:00+00:00",
+                "actual": null,
+                "estimated_runway": null,
+                "actual_runway": null
+            },
+            "airline": {
+                "name": "Japan Airlines",
+                "iata": "JL",
+                "icao": "JAL"
+            },
+            "flight": {
+                "number": "654",
+                "iata": "JL654",
+                "icao": "JAL654",
+                "codeshared": null
+            },
+            "aircraft": {
+                "registration": null,
+                "iata": null,
+                "icao": null,
+                "icao24": "850E36"
+            },
+            "live": null
+        }
+    ]
+}
