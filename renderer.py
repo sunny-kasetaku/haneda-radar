@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v7.3 Delay & Cancel Handle)
+# Project: KASETACK - renderer.py (v7.4 Tactical Sync)
 # ==========================================
 import json
 import os
@@ -23,30 +23,27 @@ def run_render(password):
     except:
         now_dt = datetime.now()
     
-    # 解析範囲 (-30分 ～ +90分)
+    # --- 戦略的解析範囲：-30分 〜 +105分 (今から1時間45分先まで見る) ---
     start_win = now_dt - timedelta(minutes=30)
-    end_win = now_dt + timedelta(minutes=90)
+    end_win = now_dt + timedelta(minutes=105) 
 
-    # フィルタリング ＆ 集計
     flights = []
     pax_t1, pax_t2, pax_t3 = 0, 0, 0
 
     for f in raw_flights:
-        # --- 1. ステータスチェック ---
+        # 1. 欠航便は計算から外す
         status = f.get("status", "")
         if "欠航" in status or "Cancelled" in status:
-            continue # 欠航便は計算から除外
+            continue
 
-        # --- 2. 時刻の決定 (変更時刻があればそれを最優先) ---
-        # ログの "到着予定(JST)" に遅延後の時間が入っていることを想定
+        # 2. 到着予定時刻を取得
         time_str = f.get("time", "")
-        f_dt = None
         try:
             t_part = time_str.split("T")[1][:5] if "T" in time_str else time_str[:5]
             f_dt = datetime.strptime(t_part, "%H:%M")
         except: continue
 
-        # --- 3. 解析範囲内か判定 ---
+        # 3. 解析範囲内（-30分 〜 +105分）か判定
         if start_win <= f_dt <= end_win:
             flights.append(f)
             pax = f.get("pax", 0)
@@ -55,10 +52,10 @@ def run_render(password):
             elif "T2" in term: pax_t2 += pax
             else: pax_t3 += pax
 
-    # 時刻順に並び替え
+    # 時刻順に整列
     flights.sort(key=lambda x: x.get("time", ""))
 
-    # --- 4. 統計比率配分 (Tさんエクセル) ---
+    # --- Tさん統計比率配分 ---
     current_hour = now_dt.hour
     WEIGHT_MASTER = {
         7:[2,0,1,0,8], 8:[8,9,13,4,0], 9:[10,9,16,3,1], 10:[6,8,9,4,0],
@@ -76,7 +73,7 @@ def run_render(password):
 
     total_pax = t1_s + t1_n + t2_3 + t2_4 + t3_i
 
-    # --- 5. 判定・UI生成 ---
+    # 判定・ナビ
     pax_counts = [t1_s, t1_n, t2_3, t2_4, t3_i]
     max_val = max(pax_counts)
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
@@ -96,7 +93,7 @@ def run_render(password):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v7.3 Professional</title>
+        <title>KASETACK Radar v7.4 Tactical</title>
         <style>
             @keyframes flash {{ 0% {{ opacity: 0.5; background:#fff; }} 100% {{ opacity: 1; background:#000; }} }}
             body.loading {{ animation: flash 0.4s ease-out; }}
@@ -117,13 +114,12 @@ def run_render(password):
         <script>
             function checkPass() {{
                 const storageKey = "kasetack_auth_pass_v1";
-                const pass = "{password}";
-                if (localStorage.getItem(storageKey) === pass) {{
+                if (localStorage.getItem(storageKey) === "{password}") {{
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                 }} else {{
                     const input = prompt("パスワードを入力");
-                    if (input === pass) {{ localStorage.setItem(storageKey, input); location.reload(); }}
+                    if (input === "{password}") {{ localStorage.setItem(storageKey, input); location.reload(); }}
                 }}
             }}
             window.onload = checkPass;
@@ -138,6 +134,10 @@ def run_render(password):
                 <div style="font-size:32px; font-weight:bold;">{st}</div>
             </div>
 
+            <div style="display: flex; justify-content: space-around; font-size: 12px; color: #999; margin-bottom: 15px; background: #111; padding: 8px; border-radius: 10px;">
+                <span>🌈<b>S</b>:800~</span><span>🔥<b>A</b>:400~</span><span>✅<b>B</b>:100~</span><span>⚠️<b>C</b>:1~</span><span>🌑<b>D</b>:0</span>
+            </div>
+
             <div class="grid">
                 <div class="t-card {'best-choice' if best_idx==0 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==0 else '' }<div style="color:#999;font-size:13px;">1号(T1南)</div><div class="t-num">{t1_s}人</div></div>
                 <div class="t-card {'best-choice' if best_idx==1 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==1 else '' }<div style="color:#999;font-size:13px;">2号(T1北)</div><div class="t-num">{t1_n}人</div></div>
@@ -150,7 +150,7 @@ def run_render(password):
             {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else f["time"][:5]}</div><div class="col-name" style="color:#FFD700;">{f["flight_no"]}</div><div class="col-origin">{AIRPORT_MAP.get(f.get("origin",""), f.get("origin","---"))}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights]) if flights else '<div style="padding:40px; text-align:center; color:#666;">解析範囲内に有効な到着便はありません</div>'}
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
-            <div style="text-align:center; color:#888; font-size:12px;">最終取得: {update_time} | v7.3 Professional</div>
+            <div style="text-align:center; color:#888; font-size:12px;">最終取得: {update_time} | v7.4 Tactical</div>
         </div>
         <script>
             let sec = 60;
@@ -165,4 +165,4 @@ def run_render(password):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ v7.3：遅延・欠航対応 ＆ 視界拡大完了")
+    print(f"✅ v7.4：視界拡大により将来の大型便（20:29）を捕捉可能にしました")
