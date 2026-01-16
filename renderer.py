@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v6.1 Final Fusion)
+# Project: KASETACK - renderer.py (v6.2 Golden Navigation)
 # ==========================================
 import json
 import os
@@ -19,14 +19,12 @@ def run_render(password):
     update_time = data.get("update_time", "--:--")
     flights = data.get("flights", [])
 
-    # 現在の時刻（時）を取得
     try:
         current_hour = int(update_time.split(":")[0])
     except:
         current_hour = datetime.now().hour
 
-    # --- 【戦略エンジン】エクセル統計に基づく比率マスター ---
-    # [1号, 2号, 3号, 4号, 4号国際]
+    # --- エクセル統計比率マスター ---
     WEIGHT_MASTER = {
         7:  [2, 0, 1, 0, 8],   8:  [8, 9, 13, 4, 0],  9:  [10, 9, 16, 3, 1],
         10: [6, 8, 9, 4, 0],   11: [10, 10, 10, 6, 1], 12: [9, 7, 14, 4, 1],
@@ -39,21 +37,28 @@ def run_render(password):
     w = WEIGHT_MASTER.get(current_hour, [1, 1, 1, 1, 1])
     w_sum = sum(w) if sum(w) > 0 else 5
 
-    # 全旅客数を統計比率で各乗り場に分配
-    t1_s = int(total_pax * (w[0] / w_sum))
-    t1_n = int(total_pax * (w[1] / w_sum))
-    t2_3 = int(total_pax * (w[2] / w_sum))
-    t2_4 = int(total_pax * (w[3] / w_sum))
-    t3_i = int(total_pax * (w[4] / w_sum))
+    # 各乗り場の期待値計算
+    pax_counts = [
+        int(total_pax * (w[0] / w_sum)), # 1号(T1南)
+        int(total_pax * (w[1] / w_sum)), # 2号(T1北)
+        int(total_pax * (w[2] / w_sum)), # 3号(T2)
+        int(total_pax * (w[3] / w_sum)), # 4号(T2)
+        int(total_pax * (w[4] / w_sum))  # 国際(T3)
+    ]
+    t1_s, t1_n, t2_3, t2_4, t3_i = pax_counts
 
-    # 深夜ブースト判定（演出用）
+    # 【新機能】どこが一番アツいかを判定
+    max_val = max(pax_counts)
+    best_idx = pax_counts.index(max_val) if max_val > 0 else -1
+    stand_names = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
+    best_stand_name = stand_names[best_idx] if best_idx != -1 else "待機推奨"
+
+    # 深夜ブースト演出
     display_pax = total_pax
-    boost_text = "本データは15分ごとに自動更新されます。"
     if current_hour >= 23 or current_hour <= 1:
         display_pax = int(total_pax * 1.5)
-        boost_text = "🌙 深夜需要ブースト発動中（期待値1.5倍）"
 
-    # ランク判定 & シンボル設定
+    # ランク判定
     if display_pax >= 800: rank, r_color, status_text, symbol = "S", "#FFD700", "【最高】 需要爆発", "🌈"
     elif display_pax >= 400: rank, r_color, status_text, symbol = "A", "#FF6B00", "【推奨】 需要過多", "🔥"
     elif display_pax >= 100: rank, r_color, status_text, symbol = "B", "#00FF00", "【待機】 需要あり", "✅"
@@ -66,31 +71,26 @@ def run_render(password):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v6.1 Final</title>
+        <title>KASETACK Radar v6.2</title>
         <style>
             @keyframes flash {{ 0% {{ opacity: 0.5; background:#fff; }} 100% {{ opacity: 1; background:#000; }} }}
             body.loading {{ animation: flash 0.4s ease-out; }}
             body {{ background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
             #main-content {{ display:none; width:100%; max-width:480px; }}
             .info-banner {{ border: 2px solid #FFD700; border-radius: 12px; padding: 12px; text-align: center; color: #FFD700; font-size: 15px; font-weight: bold; margin-bottom: 20px; }}
-            .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 40px 20px; text-align: center; margin-bottom: 20px; }}
-            .rank-display-wrap {{ display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }}
-            .rank-symbol {{ font-size: 60px; }}
+            .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 30px 20px; text-align: center; margin-bottom: 20px; }}
             .rank-display {{ font-size: 150px; font-weight: bold; color: {r_color}; line-height: 1; }}
-            .status-label {{ font-size: 36px; font-weight: bold; color: #fff; }}
-            .rank-thresholds {{ display: flex; justify-content: space-around; font-size: 13px; color: #999; margin-bottom: 25px; background: #111; padding: 10px; border-radius: 10px; }}
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }}
-            .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 20px; text-align: center; }}
-            .t-title {{ color: #999; font-size: 15px; }}
-            .t-num {{ font-size: 42px; font-weight: bold; color: #FFF; }}
-            .advice-box {{ background: #1A1A1A; border-left: 6px solid #FFD700; padding: 20px; margin-bottom: 25px; }}
-            .table-header {{ display: flex; justify-content: space-between; color: #FFD700; font-weight: bold; padding: 12px 8px; border-bottom: 1px solid #333; }}
-            .row {{ display: flex; justify-content: space-between; padding: 15px 8px; border-bottom: 1px solid #222; font-size: 16px; }}
-            .col-time, .col-name, .col-origin, .col-pax {{ width: 25%; text-align: center; }}
-            .col-name {{ color: #FFD700; }}
+            .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
+            
+            /* 【黄金ナビ】最高期待値のカードを光らせる */
+            .best-choice {{ border: 3px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); background: #2A2A1A; }}
+            .best-badge {{ position: absolute; top: -10px; right: -5px; background: #FFD700; color: #000; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }}
+
+            .t-title {{ color: #999; font-size: 14px; }}
+            .t-num {{ font-size: 38px; font-weight: bold; color: #FFF; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 20px; padding: 25px; font-size: 28px; font-weight: bold; margin: 25px 0; border: none; cursor: pointer; }}
-            .footer-timer {{ text-align: center; color: #888; font-size: 15px; }}
-            #timer {{ color: #FFD700; font-weight: bold; }}
+            .advice-box {{ background: #1A1A1A; border-left: 6px solid #FFD700; padding: 15px; font-size: 16px; margin-bottom: 20px; }}
         </style>
         <script>
             function checkPass() {{
@@ -98,50 +98,51 @@ def run_render(password):
                 if (localStorage.getItem(storageKey) === "{password}") {{
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
-                    return;
+                }} else {{
+                    const input = prompt("パスワードを入力");
+                    if (input === "{password}") {{ localStorage.setItem(storageKey, input); location.reload(); }}
                 }}
-                const input = prompt("パスワードを入力してください");
-                if (input === "{password}") {{
-                    localStorage.setItem(storageKey, input);
-                    location.reload();
-                }} else {{ window.location.reload(); }}
             }}
             window.onload = checkPass;
-            function manualUpdate() {{ document.body.classList.add('loading'); setTimeout(() => location.reload(true), 100); }}
         </script>
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 案内：{boost_text}</div>
+            <div class="info-banner">⚠️ 現在の狙い目：{best_stand_name}</div>
             <div class="rank-card">
-                <div class="rank-display-wrap">
-                    <span class="rank-symbol">{symbol}</span>
-                    <div class="rank-display">{rank}</div>
-                </div>
-                <div class="status-label">{status_text}</div>
-            </div>
-            <div class="rank-thresholds">
-                <span>🌈<b style="color:#FFD700">S</b>:800~</span><span>🔥<b style="color:#FF6B00">A</b>:400~</span><span>✅<b style="color:#00FF00">B</b>:100~</span><span>⚠️<b style="color:#FFFFFF">C</b>:1~</span><span>🌑<b style="color:#888">D</b>:0</span>
+                <div style="font-size:60px;">{symbol} <span style="font-size:150px; color:{r_color};">{rank}</span></div>
+                <div style="font-size:32px; font-weight:bold;">{status_text}</div>
             </div>
             <div class="grid">
-                <div class="t-card"><div class="t-title">1号(T1南)</div><div class="t-num">{t1_s}人</div></div>
-                <div class="t-card"><div class="t-title">2号(T1北)</div><div class="t-num">{t1_n}人</div></div>
-                <div class="t-card"><div class="t-title">3号(T2)</div><div class="t-num">{t2_3}人</div></div>
-                <div class="t-card"><div class="t-title">4号(T2)</div><div class="t-num">{t2_4}人</div></div>
-                <div class="t-card" style="grid-column: 1/3;"><div class="t-title">国際(T3)</div><div class="t-num">{t3_i}人</div></div>
+                <div class="t-card {'best-choice' if best_idx==0 else ''}">
+                    { '<div class="best-badge">🏆 BEST</div>' if best_idx==0 else '' }
+                    <div class="t-title">1号(T1南)</div><div class="t-num">{t1_s}人</div>
+                </div>
+                <div class="t-card {'best-choice' if best_idx==1 else ''}">
+                    { '<div class="best-badge">🏆 BEST</div>' if best_idx==1 else '' }
+                    <div class="t-title">2号(T1北)</div><div class="t-num">{t1_n}人</div>
+                </div>
+                <div class="t-card {'best-choice' if best_idx==2 else ''}">
+                    { '<div class="best-badge">🏆 BEST</div>' if best_idx==2 else '' }
+                    <div class="t-title">3号(T2)</div><div class="t-num">{t2_3}人</div>
+                </div>
+                <div class="t-card {'best-choice' if best_idx==3 else ''}">
+                    { '<div class="best-badge">🏆 BEST</div>' if best_idx==3 else '' }
+                    <div class="t-title">4号(T2)</div><div class="t-num">{t2_4}人</div>
+                </div>
+                <div class="t-card {'best-choice' if best_idx==4 else ''}" style="grid-column: 1/3;">
+                    { '<div class="best-badge">🏆 BEST</div>' if best_idx==4 else '' }
+                    <div class="t-title">国際(T3)</div><div class="t-num">{t3_i}人</div>
+                </div>
             </div>
-            <div class="advice-box">⚡ 参謀：{current_hour}時台は統計データに基づき最適な期待値を算出。</div>
-            <div class="table-header"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
-            {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else "---"}</div><div class="col-name">{f["flight_no"]}</div><div class="col-origin">{f.get("origin","---")}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights[:20]]) if flights else '<div style="padding:20px;text-align:center;color:#666;">対象なし</div>'}
-            <button class="update-btn" onclick="manualUpdate()">最新情報に更新</button>
-            <div class="footer-timer">画面の自動更新まであと <span id="timer">60</span> 秒 | {update_time}取得</div>
+            <div class="advice-box">⚡ 参謀：{current_hour}時台の最高期待値は {best_stand_name} です。</div>
+            <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
         </div>
         <script>
             let sec = 60;
             setInterval(() => {{
                 sec--;
-                if(sec >= 0) document.getElementById('timer').innerText = sec;
-                if(sec <= 0) manualUpdate();
+                if(sec <= 0) location.reload(true);
             }}, 1000);
         </script>
     </body>
@@ -149,4 +150,4 @@ def run_render(password):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ 戦略エンジン v6.1：精密デザイン ＆ エクセル統計 融合完了")
+    print(f"✅ 黄金ナビゲート（最高期待値ハイライト）を実装完了")
