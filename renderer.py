@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v7.1 Legend Restore)
+# Project: KASETACK - renderer.py (v7.3 Delay & Cancel Handle)
 # ==========================================
 import json
 import os
@@ -18,41 +18,47 @@ def run_render(password):
     update_time = data.get("update_time", "--:--")
     raw_flights = data.get("flights", [])
 
-    # --- 1. 時間枠の精密フィルタ (-30分 ～ +45分) ---
     try:
         now_dt = datetime.strptime(update_time, "%H:%M")
     except:
         now_dt = datetime.now()
     
+    # 解析範囲 (-30分 ～ +90分)
     start_win = now_dt - timedelta(minutes=30)
-    end_win = now_dt + timedelta(minutes=45)
+    end_win = now_dt + timedelta(minutes=90)
 
-    def get_time_obj(f_time_str):
-        try:
-            # T区切りや日付付きにも対応
-            t_str = f_time_str.split("T")[1][:5] if "T" in f_time_str else f_time_str[:5]
-            return datetime.strptime(t_str, "%H:%M")
-        except: return None
-
-    # 解析範囲内の便だけに絞り込み ＆ 時刻順ソート
+    # フィルタリング ＆ 集計
     flights = []
+    pax_t1, pax_t2, pax_t3 = 0, 0, 0
+
     for f in raw_flights:
-        f_dt = get_time_obj(f.get("time", ""))
-        if f_dt and start_win <= f_dt <= end_win:
+        # --- 1. ステータスチェック ---
+        status = f.get("status", "")
+        if "欠航" in status or "Cancelled" in status:
+            continue # 欠航便は計算から除外
+
+        # --- 2. 時刻の決定 (変更時刻があればそれを最優先) ---
+        # ログの "到着予定(JST)" に遅延後の時間が入っていることを想定
+        time_str = f.get("time", "")
+        f_dt = None
+        try:
+            t_part = time_str.split("T")[1][:5] if "T" in time_str else time_str[:5]
+            f_dt = datetime.strptime(t_part, "%H:%M")
+        except: continue
+
+        # --- 3. 解析範囲内か判定 ---
+        if start_win <= f_dt <= end_win:
             flights.append(f)
-    
+            pax = f.get("pax", 0)
+            term = f.get("terminal", "")
+            if "T1" in term: pax_t1 += pax
+            elif "T2" in term: pax_t2 += pax
+            else: pax_t3 += pax
+
+    # 時刻順に並び替え
     flights.sort(key=lambda x: x.get("time", ""))
 
-    # --- 2. ターミナル別の実数集計 ---
-    pax_t1, pax_t2, pax_t3 = 0, 0, 0
-    for f in flights:
-        pax = f.get("pax", 0)
-        term = f.get("terminal", "")
-        if "T1" in term: pax_t1 += pax
-        elif "T2" in term: pax_t2 += pax
-        elif "T3" in term or "International" in term: pax_t3 += pax
-
-    # --- 3. エクセル比率を適用 ---
+    # --- 4. 統計比率配分 (Tさんエクセル) ---
     current_hour = now_dt.hour
     WEIGHT_MASTER = {
         7:[2,0,1,0,8], 8:[8,9,13,4,0], 9:[10,9,16,3,1], 10:[6,8,9,4,0],
@@ -62,34 +68,27 @@ def run_render(password):
     }
     w = WEIGHT_MASTER.get(current_hour, [1, 1, 1, 1, 1])
 
-    w12 = (w[0] + w[1]) or 2
-    t1_s = int(pax_t1 * w[0] / w12)
-    t1_n = int(pax_t1 * w[1] / w12)
-
-    w34i = (w[2] + w[3] + w[4]) or 3
-    t2_3 = int(pax_t2 * w[2] / w34i)
-    t2_4 = int(pax_t2 * w[3] / w34i)
-    t2_intl = int(pax_t2 * w[4] / w34i)
-    t3_i = pax_t3 + t2_intl
+    t1_s = int(pax_t1 * w[0] / ((w[0]+w[1]) or 2))
+    t1_n = int(pax_t1 * w[1] / ((w[0]+w[1]) or 2))
+    t2_3 = int(pax_t2 * w[2] / ((w[2]+w[3]+w[4]) or 3))
+    t2_4 = int(pax_t2 * w[3] / ((w[2]+w[3]+w[4]) or 3))
+    t3_i = pax_t3 + int(pax_t2 * w[4] / ((w[2]+w[3]+w[4]) or 3))
 
     total_pax = t1_s + t1_n + t2_3 + t2_4 + t3_i
 
-    # --- 4. 判定 ＆ ナビ ---
+    # --- 5. 判定・UI生成 ---
     pax_counts = [t1_s, t1_n, t2_3, t2_4, t3_i]
     max_val = max(pax_counts)
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
     stand_names = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
 
-    display_pax = total_pax
-    if current_hour >= 23 or current_hour <= 1: display_pax = int(total_pax * 1.5)
+    if total_pax >= 800: rank, r_color, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
+    elif total_pax >= 400: rank, r_color, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
+    elif total_pax >= 100: rank, r_color, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
+    elif total_pax > 0: rank, r_color, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
+    else: rank, r_color, sym, st = "D", "#888", "🌑", "【撤退】 需要なし"
 
-    if display_pax >= 800: rank, r_color, status_text, symbol = "S", "#FFD700", "【最高】 需要爆発", "🌈"
-    elif display_pax >= 400: rank, r_color, status_text, symbol = "A", "#FF6B00", "【推奨】 需要過多", "🔥"
-    elif display_pax >= 100: rank, r_color, status_text, symbol = "B", "#00FF00", "【待機】 需要あり", "✅"
-    elif display_pax > 0: rank, r_color, status_text, symbol = "C", "#FFFFFF", "【注意】 需要僅少", "⚠️"
-    else: rank, r_color, status_text, symbol = "D", "#888", "【撤退】 需要なし", "🌑"
-
-    AIRPORT_MAP = {"CTS":"新千歳","OKA":"那覇","FUK":"福岡","ITM":"伊丹","KIX":"関空","NGO":"中部","LAX":"ロス","HNL":"ホノルル","IAD":"ワシントン","DFW":"ダラス","MSP":"ミネアポリス"}
+    AIRPORT_MAP = {"CTS":"新千歳","OKA":"那覇","FUK":"福岡","ITM":"伊丹","KIX":"関空","NGO":"中部","LAX":"ロス","HNL":"ホノルル","IAD":"ワシントン","DFW":"ダラス","MSP":"ミネアポリス","HKD":"函館","ASJ":"佐賀","NGS":"長崎"}
 
     html_content = f"""
     <!DOCTYPE html>
@@ -97,16 +96,15 @@ def run_render(password):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v7.1</title>
+        <title>KASETACK Radar v7.3 Professional</title>
         <style>
             @keyframes flash {{ 0% {{ opacity: 0.5; background:#fff; }} 100% {{ opacity: 1; background:#000; }} }}
             body.loading {{ animation: flash 0.4s ease-out; }}
             body {{ background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
             #main-content {{ display:none; width:100%; max-width:480px; }}
             .info-banner {{ border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-size: 14px; font-weight: bold; margin-bottom: 15px; }}
-            .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 30px 20px; text-align: center; margin-bottom: 10px; }}
+            .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 30px 20px; text-align: center; margin-bottom: 15px; }}
             .rank-display {{ font-size: 150px; font-weight: bold; color: {r_color}; line-height: 1; }}
-            .rank-thresholds {{ display: flex; justify-content: space-around; font-size: 12px; color: #999; margin-bottom: 20px; background: #111; padding: 10px; border-radius: 10px; }}
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
             .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
             .best-choice {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }}
@@ -136,12 +134,8 @@ def run_render(password):
             <div class="info-banner">⚠️ 範囲：{start_win.strftime('%H:%M')}〜{end_win.strftime('%H:%M')} | 狙い目：{stand_names[best_idx] if best_idx != -1 else "なし"}</div>
             
             <div class="rank-card">
-                <div style="font-size:60px;">{symbol} <span style="font-size:150px; color:{r_color};">{rank}</span></div>
-                <div style="font-size:32px; font-weight:bold;">{status_text}</div>
-            </div>
-
-            <div class="rank-thresholds">
-                <span>🌈<b>S</b>:800~</span><span>🔥<b>A</b>:400~</span><span>✅<b>B</b>:100~</span><span>⚠️<b>C</b>:1~</span><span>🌑<b>D</b>:0</span>
+                <div style="font-size:60px;">{sym} <span style="font-size:150px; color:{r_color};">{rank}</span></div>
+                <div style="font-size:32px; font-weight:bold;">{st}</div>
             </div>
 
             <div class="grid">
@@ -153,10 +147,10 @@ def run_render(password):
             </div>
 
             <div style="display:flex; justify-content:space-between; color:#FFD700; font-weight:bold; padding:10px 5px; border-bottom:1px solid #333;"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
-            {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else f["time"][:5]}</div><div class="col-name" style="color:#FFD700;">{f["flight_no"]}</div><div class="col-origin">{AIRPORT_MAP.get(f.get("origin",""), f.get("origin","---"))}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights]) if flights else '<div style="padding:40px; text-align:center; color:#666;">現在、解析範囲内に到着便はありません</div>'}
+            {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else f["time"][:5]}</div><div class="col-name" style="color:#FFD700;">{f["flight_no"]}</div><div class="col-origin">{AIRPORT_MAP.get(f.get("origin",""), f.get("origin","---"))}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights]) if flights else '<div style="padding:40px; text-align:center; color:#666;">解析範囲内に有効な到着便はありません</div>'}
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
-            <div style="text-align:center; color:#888; font-size:12px;">自動更新まで <span id="timer">60</span> 秒 | v7.1 Professional</div>
+            <div style="text-align:center; color:#888; font-size:12px;">最終取得: {update_time} | v7.3 Professional</div>
         </div>
         <script>
             let sec = 60;
@@ -171,4 +165,4 @@ def run_render(password):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ v7.1：凡例復活 ＆ 解析範囲（{start_win.strftime('%H:%M')}〜{end_win.strftime('%H:%M')}）の監視を継続")
+    print(f"✅ v7.3：遅延・欠航対応 ＆ 視界拡大完了")
