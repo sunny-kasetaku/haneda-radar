@@ -11,10 +11,8 @@ except Exception:
     ACCESS_KEY = None
 
 def get_refined_arrival_time(arrival_data):
-    if arrival_data.get('actual'):
-        return arrival_data['actual']
-    if arrival_data.get('estimated'):
-        return arrival_data['estimated']
+    if arrival_data.get('actual'): return arrival_data['actual']
+    if arrival_data.get('estimated'): return arrival_data['estimated']
     return arrival_data.get('scheduled')
 
 def fetch_flights(target_airport="HND"):
@@ -23,44 +21,37 @@ def fetch_flights(target_airport="HND"):
         return []
 
     url = "http://api.aviationstack.com/v1/flights"
-    
-    # 💡 深夜対応ロジック：
-    # 深夜0時〜早朝3時までは、「昨日」の便にこそ需要があるため、取得日を調整します。
     now_jst = datetime.now(JST)
+    
+    # 💡 魔法のロジック：深夜3時までは「昨日」のデータを指定して取得する
+    # これにより、日付が変わった瞬間にデータが消えるのを防ぎます。
     if now_jst.hour < 3:
-        # 深夜3時までは前日の日付で検索（23時台の着陸便を捕まえるため）
         target_date = (now_jst - timedelta(days=1)).strftime('%Y-%m-%d')
     else:
         target_date = now_jst.strftime('%Y-%m-%d')
 
+    # パラメータ設定
     params = {
         'access_key': ACCESS_KEY,
         'arr_iata': target_airport,
-        'limit': 100
-        # 日付指定を入れることで、朝の便に押し出されるのを防ぎます
-        # 'flight_date': target_date # ティアによって制限があるため、一旦含めずステータスで調整
+        'limit': 100,
+        'flight_date': target_date # 👈 明示的に日付を指定
     }
 
     try:
-        # 💡 ステータスを 'landed'（着陸済み）にすることで、
-        # 今まさに客が降りてきている「直近の便」を優先的に取得します。
-        params['flight_status'] = 'landed'
-        
         response = requests.get(url, params=params, timeout=15)
-        if response.status_code != 200:
-            return []
+        if response.status_code != 200: return []
             
         raw_data = response.json()
-        if 'data' not in raw_data:
-            return []
+        if 'data' not in raw_data: return []
 
         processed_flights = []
         for flight in raw_data['data']:
+            # ステータスを問わず、羽田着の便をすべて精査対象にする
             arrival = flight.get('arrival', {})
             arrival_time = get_refined_arrival_time(arrival)
             
-            if not arrival_time:
-                continue
+            if not arrival_time: continue
 
             processed_flights.append({
                 'flight_iata': flight.get('flight', {}).get('iata'),
