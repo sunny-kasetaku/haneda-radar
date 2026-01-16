@@ -40,16 +40,37 @@ def run_render(password="0116"):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>KASETACK Radar v4.0 Live</title>
+        # renderer.py の script セクションを以下のように書き換えます（全文の中の該当部分）
+
         <script>
             function checkPass() {{
+                const storageKey = "kasetack_auth_pass";
+                const savedPass = localStorage.getItem(storageKey);
+                const correctPass = "{password}";
+
+                // すでに保存されているパスワードが正しいかチェック
+                if (savedPass === correctPass) {{
+                    document.getElementById('main-content').style.display = 'block';
+                    return;
+                }}
+
+                // 保存されていない、または間違っている場合のみ prompt を出す
                 const input = prompt("パスワードを入力してください");
-                if (input !== "{password}") {{
+                if (input === correctPass) {{
+                    localStorage.setItem(storage_key, input); // ブラウザに保存
+                    document.getElementById('main-content').style.display = 'block';
+                }} else {{
                     alert("無効なパスワードです");
                     window.location.reload();
-                }} else {{
-                    document.getElementById('main-content').style.display = 'block';
                 }}
             }}
+            
+            // ログアウト（パスワード再入力）したい時のための関数（必要であれば）
+            function logout() {{
+                localStorage.removeItem("kasetack_auth_pass");
+                location.reload();
+            }}
+
             window.onload = checkPass;
         </script>
         <style>
