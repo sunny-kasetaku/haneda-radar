@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v7.3 Professional</title>
+        <title>KASETACK Radar v7.4 Tactical</title>
         <style>
             @keyframes flash { 0% { opacity: 0.5; background:#fff; } 100% { opacity: 1; background:#000; } }
             body.loading { animation: flash 0.4s ease-out; }
@@ -25,13 +25,12 @@
         <script>
             function checkPass() {
                 const storageKey = "kasetack_auth_pass_v1";
-                const pass = "0116";
-                if (localStorage.getItem(storageKey) === pass) {
+                if (localStorage.getItem(storageKey) === "0116") {
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                 } else {
                     const input = prompt("パスワードを入力");
-                    if (input === pass) { localStorage.setItem(storageKey, input); location.reload(); }
+                    if (input === "0116") { localStorage.setItem(storageKey, input); location.reload(); }
                 }
             }
             window.onload = checkPass;
@@ -39,11 +38,15 @@
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲：18:43〜20:43 | 狙い目：国際(T3)</div>
+            <div class="info-banner">⚠️ 範囲：18:53〜21:08 | 狙い目：国際(T3)</div>
             
             <div class="rank-card">
                 <div style="font-size:60px;">✅ <span style="font-size:150px; color:#00FF00;">B</span></div>
                 <div style="font-size:32px; font-weight:bold;">【待機】 需要あり</div>
+            </div>
+
+            <div style="display: flex; justify-content: space-around; font-size: 12px; color: #999; margin-bottom: 15px; background: #111; padding: 8px; border-radius: 10px;">
+                <span>🌈<b>S</b>:800~</span><span>🔥<b>A</b>:400~</span><span>✅<b>B</b>:100~</span><span>⚠️<b>C</b>:1~</span><span>🌑<b>D</b>:0</span>
             </div>
 
             <div class="grid">
@@ -58,7 +61,7 @@
             <div class="row"><div class="col-time">20:29</div><div class="col-name" style="color:#FFD700;">NH125</div><div class="col-origin">ロス</div><div class="col-pax">320名</div></div>
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
-            <div style="text-align:center; color:#888; font-size:12px;">最終取得: 19:13 | v7.3 Professional</div>
+            <div style="text-align:center; color:#888; font-size:12px;">最終取得: 19:23 | v7.4 Tactical</div>
         </div>
         <script>
             let sec = 60;
