@@ -1,9 +1,8 @@
 name: Haneda Radar Auto Update
 
 on:
-  workflow_dispatch:        # 手動実行ボタン
+  workflow_dispatch:         # 手動実行ボタン
 
-# --- [指示(A): トップレベルに権限を追加] ---
 permissions:
   contents: write
   pages: write
@@ -18,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
-    # デプロイ環境の指定
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -37,15 +35,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      # --- [指示(B): Run Haneda Radar (既存のenvを維持)] ---
+      # --- [修正箇所：envを足して金庫の鍵をプログラムに渡す] ---
       - name: Run Haneda Radar
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          # SITE_URLはconfig.py直書きを優先しますが、念のためenvも残します
           SITE_URL: ${{ secrets.SITE_URL }}
         run: python haneda_radar.py
 
-      # --- [鉄則: 既存のgit push (保存) ステップを温存] ---
+      # --- [保存ステップ：index.htmlをリポジトリに残す] ---
       - name: Commit and Push changes
         run: |
           git config --local user.name "GitHub Action"
@@ -59,13 +56,11 @@ jobs:
             git push
           fi
 
-      # --- [指示(B): Upload artifact] ---
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
 
-      # --- [指示(B): Deploy to GitHub Pages] ---
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
