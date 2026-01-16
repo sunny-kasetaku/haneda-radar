@@ -1,8 +1,9 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v5.7 Symbol Restore)
+# Project: KASETACK - renderer.py (v6.1 Final Fusion)
 # ==========================================
 import json
 import os
+from datetime import datetime
 from config import CONFIG
 
 def run_render(password):
@@ -17,24 +18,47 @@ def run_render(password):
     total_pax = data.get("total_pax", 0)
     update_time = data.get("update_time", "--:--")
     flights = data.get("flights", [])
+
+    # 現在の時刻（時）を取得
+    try:
+        current_hour = int(update_time.split(":")[0])
+    except:
+        current_hour = datetime.now().hour
+
+    # --- 【戦略エンジン】エクセル統計に基づく比率マスター ---
+    # [1号, 2号, 3号, 4号, 4号国際]
+    WEIGHT_MASTER = {
+        7:  [2, 0, 1, 0, 8],   8:  [8, 9, 13, 4, 0],  9:  [10, 9, 16, 3, 1],
+        10: [6, 8, 9, 4, 0],   11: [10, 10, 10, 6, 1], 12: [9, 7, 14, 4, 1],
+        13: [10, 9, 8, 4, 0],  14: [8, 5, 9, 7, 0],   15: [7, 7, 13, 3, 0],
+        16: [7, 12, 10, 5, 2], 17: [10, 7, 10, 4, 6],  18: [10, 8, 11, 9, 1],
+        19: [9, 7, 11, 3, 1],  20: [11, 7, 11, 4, 2],  21: [10, 10, 14, 4, 1],
+        22: [7, 7, 9, 4, 2],   23: [1, 0, 2, 3, 0]
+    }
     
-    t1_s = data.get("t1_south_pax", 0)
-    t1_n = data.get("t1_north_pax", 0)
-    t2_3 = data.get("t2_3_pax", 0)
-    t2_4 = data.get("t2_4_pax", 0)
-    t3_i = data.get("t3_intl_pax", 0)
+    w = WEIGHT_MASTER.get(current_hour, [1, 1, 1, 1, 1])
+    w_sum = sum(w) if sum(w) > 0 else 5
+
+    # 全旅客数を統計比率で各乗り場に分配
+    t1_s = int(total_pax * (w[0] / w_sum))
+    t1_n = int(total_pax * (w[1] / w_sum))
+    t2_3 = int(total_pax * (w[2] / w_sum))
+    t2_4 = int(total_pax * (w[3] / w_sum))
+    t3_i = int(total_pax * (w[4] / w_sum))
+
+    # 深夜ブースト判定（演出用）
+    display_pax = total_pax
+    boost_text = "本データは15分ごとに自動更新されます。"
+    if current_hour >= 23 or current_hour <= 1:
+        display_pax = int(total_pax * 1.5)
+        boost_text = "🌙 深夜需要ブースト発動中（期待値1.5倍）"
 
     # ランク判定 & シンボル設定
-    if total_pax >= 800:
-        rank, r_color, status_text, symbol = "S", "#FFD700", "【最高】 需要爆発", "🌈"
-    elif total_pax >= 400:
-        rank, r_color, status_text, symbol = "A", "#FF6B00", "【推奨】 需要過多", "🔥"
-    elif total_pax >= 100:
-        rank, r_color, status_text, symbol = "B", "#00FF00", "【待機】 需要あり", "✅"
-    elif total_pax > 0:
-        rank, r_color, status_text, symbol = "C", "#FFFFFF", "【注意】 需要僅少", "⚠️"
-    else:
-        rank, r_color, status_text, symbol = "D", "#888", "【撤退】 需要なし", "🌑"
+    if display_pax >= 800: rank, r_color, status_text, symbol = "S", "#FFD700", "【最高】 需要爆発", "🌈"
+    elif display_pax >= 400: rank, r_color, status_text, symbol = "A", "#FF6B00", "【推奨】 需要過多", "🔥"
+    elif display_pax >= 100: rank, r_color, status_text, symbol = "B", "#00FF00", "【待機】 需要あり", "✅"
+    elif display_pax > 0: rank, r_color, status_text, symbol = "C", "#FFFFFF", "【注意】 需要僅少", "⚠️"
+    else: rank, r_color, status_text, symbol = "D", "#888", "【撤退】 需要なし", "🌑"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -42,7 +66,7 @@ def run_render(password):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v5.7</title>
+        <title>KASETACK Radar v6.1 Final</title>
         <style>
             @keyframes flash {{ 0% {{ opacity: 0.5; background:#fff; }} 100% {{ opacity: 1; background:#000; }} }}
             body.loading {{ animation: flash 0.4s ease-out; }}
@@ -71,18 +95,16 @@ def run_render(password):
         <script>
             function checkPass() {{
                 const storageKey = "kasetack_auth_pass_v1";
-                const savedPass = localStorage.getItem(storageKey);
-                const correctPass = "{password}";
-                if (savedPass === correctPass) {{
+                if (localStorage.getItem(storageKey) === "{password}") {{
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                     return;
                 }}
                 const input = prompt("パスワードを入力してください");
-                if (input === correctPass) {{
+                if (input === "{password}") {{
                     localStorage.setItem(storageKey, input);
-                    document.getElementById('main-content').style.display = 'block';
-                }} else {{ alert("無効なパスワードです"); window.location.reload(); }}
+                    location.reload();
+                }} else {{ window.location.reload(); }}
             }}
             window.onload = checkPass;
             function manualUpdate() {{ document.body.classList.add('loading'); setTimeout(() => location.reload(true), 100); }}
@@ -90,7 +112,7 @@ def run_render(password):
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 案内：本データは15分ごとに自動更新されます。<br>解析範囲：現在時刻の前後 60分 (±30分)</div>
+            <div class="info-banner">⚠️ 案内：{boost_text}</div>
             <div class="rank-card">
                 <div class="rank-display-wrap">
                     <span class="rank-symbol">{symbol}</span>
@@ -99,11 +121,7 @@ def run_render(password):
                 <div class="status-label">{status_text}</div>
             </div>
             <div class="rank-thresholds">
-                <span>🌈<b style="color:#FFD700">S</b>:800~</span>
-                <span>🔥<b style="color:#FF6B00">A</b>:400~</span>
-                <span>✅<b style="color:#00FF00">B</b>:100~</span>
-                <span>⚠️<b style="color:#FFFFFF">C</b>:1~</span>
-                <span>🌑<b style="color:#888">D</b>:0</span>
+                <span>🌈<b style="color:#FFD700">S</b>:800~</span><span>🔥<b style="color:#FF6B00">A</b>:400~</span><span>✅<b style="color:#00FF00">B</b>:100~</span><span>⚠️<b style="color:#FFFFFF">C</b>:1~</span><span>🌑<b style="color:#888">D</b>:0</span>
             </div>
             <div class="grid">
                 <div class="t-card"><div class="t-title">1号(T1南)</div><div class="t-num">{t1_s}人</div></div>
@@ -112,18 +130,17 @@ def run_render(password):
                 <div class="t-card"><div class="t-title">4号(T2)</div><div class="t-num">{t2_4}人</div></div>
                 <div class="t-card" style="grid-column: 1/3;"><div class="t-title">国際(T3)</div><div class="t-num">{t3_i}人</div></div>
             </div>
-            <div class="advice-box">羽田全体で約{total_pax}名の需要。</div>
+            <div class="advice-box">⚡ 参謀：{current_hour}時台は統計データに基づき最適な期待値を算出。</div>
             <div class="table-header"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
             {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else "---"}</div><div class="col-name">{f["flight_no"]}</div><div class="col-origin">{f.get("origin","---")}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights[:20]]) if flights else '<div style="padding:20px;text-align:center;color:#666;">対象なし</div>'}
             <button class="update-btn" onclick="manualUpdate()">最新情報に更新</button>
-            <div class="footer-timer">画面の自動再読み込みまであと <span id="timer">60</span> 秒</div>
+            <div class="footer-timer">画面の自動更新まであと <span id="timer">60</span> 秒 | {update_time}取得</div>
         </div>
         <script>
             let sec = 60;
-            const timerElement = document.getElementById('timer');
             setInterval(() => {{
                 sec--;
-                if(sec >= 0) timerElement.innerText = sec;
+                if(sec >= 0) document.getElementById('timer').innerText = sec;
                 if(sec <= 0) manualUpdate();
             }}, 1000);
         </script>
@@ -132,4 +149,4 @@ def run_render(password):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ シンボル(🌈🔥等)復刻 ＆ 更新ピカッを完全復旧")
+    print(f"✅ 戦略エンジン v6.1：精密デザイン ＆ エクセル統計 融合完了")
