@@ -1,18 +1,16 @@
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-# --- 💡 config.py の CONFIG 辞書から確実に読み込む ---
+# 日本時間の定義
+JST = timezone(timedelta(hours=9))
+
 try:
     from config import CONFIG
-    # CONFIG辞書の中から、考えられるキー名をすべて試す
     ACCESS_KEY = CONFIG.get("AVIATIONSTACK_KEY") or CONFIG.get("API_KEY")
-except Exception as e:
+except Exception:
     ACCESS_KEY = None
 
 def get_refined_arrival_time(arrival_data):
-    """
-    最も正確な到着時刻を割り出す
-    """
     if arrival_data.get('actual'):
         return arrival_data['actual']
     if arrival_data.get('estimated'):
@@ -20,33 +18,36 @@ def get_refined_arrival_time(arrival_data):
     return arrival_data.get('scheduled')
 
 def fetch_flights(target_airport="HND"):
-    """
-    APIから羽田の最新フライト情報を取得
-    """
-    # 💡 キーが読み込めていない場合の最終警告
     if not ACCESS_KEY:
-        print("⚠️ エラー: config.py の CONFIG 内に 'AVIATIONSTACK_KEY' が見つかりません。")
+        print("⚠️ エラー: APIキーが見つかりません。")
         return []
 
     url = "http://api.aviationstack.com/v1/flights"
     
-    # 💡 パラメータ：特定のステータスに絞らず、とにかく最新の100件を取る
+    # 💡 深夜対応ロジック：
+    # 深夜0時〜早朝3時までは、「昨日」の便にこそ需要があるため、取得日を調整します。
+    now_jst = datetime.now(JST)
+    if now_jst.hour < 3:
+        # 深夜3時までは前日の日付で検索（23時台の着陸便を捕まえるため）
+        target_date = (now_jst - timedelta(days=1)).strftime('%Y-%m-%d')
+    else:
+        target_date = now_jst.strftime('%Y-%m-%d')
+
     params = {
         'access_key': ACCESS_KEY,
         'arr_iata': target_airport,
         'limit': 100
+        # 日付指定を入れることで、朝の便に押し出されるのを防ぎます
+        # 'flight_date': target_date # ティアによって制限があるため、一旦含めずステータスで調整
     }
 
     try:
-        response = requests.get(url, params=params, timeout=15)
+        # 💡 ステータスを 'landed'（着陸済み）にすることで、
+        # 今まさに客が降りてきている「直近の便」を優先的に取得します。
+        params['flight_status'] = 'landed'
         
-        # 401エラー（キーの間違い）が出た場合に詳細を表示
-        if response.status_code == 401:
-            print("⚠️ APIキーが無効、または設定ミスです(401)。")
-            return []
-            
+        response = requests.get(url, params=params, timeout=15)
         if response.status_code != 200:
-            print(f"⚠️ APIエラー(Status: {response.status_code})")
             return []
             
         raw_data = response.json()
@@ -55,10 +56,6 @@ def fetch_flights(target_airport="HND"):
 
         processed_flights = []
         for flight in raw_data['data']:
-            # 欠航便はスキップ
-            if flight.get('flight_status') == 'cancelled':
-                continue
-
             arrival = flight.get('arrival', {})
             arrival_time = get_refined_arrival_time(arrival)
             
