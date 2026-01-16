@@ -1,7 +1,6 @@
 import requests
 from datetime import datetime, timedelta, timezone
 
-# 日本時間の定義
 JST = timezone(timedelta(hours=9))
 
 try:
@@ -21,33 +20,32 @@ def fetch_flights(target_airport="HND"):
         return []
 
     url = "http://api.aviationstack.com/v1/flights"
-    now_jst = datetime.now(JST)
     
-    # 💡 魔法のロジック：深夜3時までは「昨日」のデータを指定して取得する
-    # これにより、日付が変わった瞬間にデータが消えるのを防ぎます。
-    if now_jst.hour < 3:
-        target_date = (now_jst - timedelta(days=1)).strftime('%Y-%m-%d')
-    else:
-        target_date = now_jst.strftime('%Y-%m-%d')
-
-    # パラメータ設定
+    # 💡 戦略変更：日付指定を完全に削除し、
+    # 'flight_status': 'landed'（着陸済み）の最新100件だけを要求します。
+    # これなら日付を跨いでも「直近に降りた便」が確実に手に入ります。
     params = {
         'access_key': ACCESS_KEY,
         'arr_iata': target_airport,
         'limit': 100,
-        'flight_date': target_date # 👈 明示的に日付を指定
+        'flight_status': 'landed' 
     }
 
     try:
         response = requests.get(url, params=params, timeout=15)
-        if response.status_code != 200: return []
+        
+        # 💡 デバッグ用：エラー時に詳細を出す
+        if response.status_code != 200:
+            print(f"⚠️ APIエラー: ステータスコード {response.status_code}")
+            print(f"メッセージ: {response.text[:100]}") # エラー理由のヒントを表示
+            return []
             
         raw_data = response.json()
-        if 'data' not in raw_data: return []
+        if 'data' not in raw_data:
+            return []
 
         processed_flights = []
         for flight in raw_data['data']:
-            # ステータスを問わず、羽田着の便をすべて精査対象にする
             arrival = flight.get('arrival', {})
             arrival_time = get_refined_arrival_time(arrival)
             
@@ -64,5 +62,5 @@ def fetch_flights(target_airport="HND"):
         return processed_flights
 
     except Exception as e:
-        print(f"⚠️ 通信エラー: {e}")
+        print(f"⚠️ 通信中に例外が発生しました: {e}")
         return []
