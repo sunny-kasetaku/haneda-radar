@@ -4,15 +4,15 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v7.4 Tactical</title>
         <style>
             @keyframes flash { 0% { opacity: 0.5; background:#fff; } 100% { opacity: 1; background:#000; } }
             body.loading { animation: flash 0.4s ease-out; }
             body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }
             #main-content { display:none; width:100%; max-width:480px; }
             .info-banner { border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-size: 14px; font-weight: bold; margin-bottom: 15px; }
-            .rank-card { background: #222; border: 2px solid #444; border-radius: 25px; padding: 30px 20px; text-align: center; margin-bottom: 15px; }
-            .rank-display { font-size: 150px; font-weight: bold; color: #00FF00; line-height: 1; }
+            .rank-card { background: #222; border: 2px solid #444; border-radius: 25px; padding: 30px 20px; text-align: center; margin-bottom: 10px; }
+            .rank-display { font-size: 150px; font-weight: bold; color: #FF6B00; line-height: 1; }
+            .rank-thresholds { display: flex; justify-content: space-around; font-size: 12px; color: #999; margin-bottom: 20px; background: #111; padding: 10px; border-radius: 10px; }
             .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
             .t-card { background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }
             .best-choice { border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
@@ -20,6 +20,7 @@
             .t-num { font-size: 38px; font-weight: bold; color: #FFF; }
             .row { display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #222; font-size: 14px; }
             .update-btn { background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; margin: 20px 0; border: none; cursor: pointer; }
+            .footer-timer { text-align: center; color: #888; font-size: 13px; margin-top: 15px; }
             #timer { color: #FFD700; font-weight: bold; }
         </style>
         <script>
@@ -38,14 +39,14 @@
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲：18:53〜21:08 | 狙い目：国際(T3)</div>
+            <div class="info-banner">⚠️ 範囲：19:00〜21:15 | 狙い目：国際(T3)</div>
             
             <div class="rank-card">
-                <div style="font-size:60px;">✅ <span style="font-size:150px; color:#00FF00;">B</span></div>
-                <div style="font-size:32px; font-weight:bold;">【待機】 需要あり</div>
+                <div style="font-size:60px;">🔥 <span class="rank-display">A</span></div>
+                <div style="font-size:32px; font-weight:bold;">【推奨】 需要過多</div>
             </div>
 
-            <div style="display: flex; justify-content: space-around; font-size: 12px; color: #999; margin-bottom: 15px; background: #111; padding: 8px; border-radius: 10px;">
+            <div class="rank-thresholds">
                 <span>🌈<b>S</b>:800~</span><span>🔥<b>A</b>:400~</span><span>✅<b>B</b>:100~</span><span>⚠️<b>C</b>:1~</span><span>🌑<b>D</b>:0</span>
             </div>
 
@@ -54,20 +55,25 @@
                 <div class="t-card "><div style="color:#999;font-size:13px;">2号(T1北)</div><div class="t-num">0人</div></div>
                 <div class="t-card "><div style="color:#999;font-size:13px;">3号(T2)</div><div class="t-num">0人</div></div>
                 <div class="t-card "><div style="color:#999;font-size:13px;">4号(T2)</div><div class="t-num">0人</div></div>
-                <div class="t-card best-choice" style="grid-column: 1/3;"><div class="best-badge">🏆 BEST</div><div style="color:#999;font-size:13px;">国際(T3)</div><div class="t-num">320人</div></div>
+                <div class="t-card best-choice" style="grid-column: 1/3;"><div class="best-badge">🏆 BEST</div><div style="color:#999;font-size:13px;">国際(T3)</div><div class="t-num">440人</div></div>
             </div>
 
             <div style="display:flex; justify-content:space-between; color:#FFD700; font-weight:bold; padding:10px 5px; border-bottom:1px solid #333;"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
-            <div class="row"><div class="col-time">20:29</div><div class="col-name" style="color:#FFD700;">NH125</div><div class="col-origin">ロス</div><div class="col-pax">320名</div></div>
+            <div class="row"><div class="col-time">20:29</div><div class="col-name" style="color:#FFD700;">NH125</div><div class="col-origin">ロス</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">21:11</div><div class="col-name" style="color:#FFD700;">NH111</div><div class="col-origin">ORD</div><div class="col-pax">120名</div></div>
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
-            <div style="text-align:center; color:#888; font-size:12px;">最終取得: 19:23 | v7.4 Tactical</div>
+            
+            <div class="footer-timer">
+                画面の自動再読み込みまであと <span id="timer">60</span> 秒<br>
+                最終データ取得: 19:30 | v7.5 Final
+            </div>
         </div>
         <script>
             let sec = 60;
+            const timerElement = document.getElementById('timer');
             setInterval(() => {
                 sec--;
-                if(sec >= 0) document.getElementById('timer').innerText = sec;
+                if(sec >= 0) timerElement.innerText = sec;
                 if(sec <= 0) location.reload(true);
             }, 1000);
         </script>
