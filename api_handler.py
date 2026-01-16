@@ -6,7 +6,7 @@ try:
     from config import AVIATIONSTACK_KEY as ACCESS_KEY
 except ImportError:
     # config.py がない場合は、ここに直接キーを貼り付けてください
-    ACCESS_KEY = "あなたのAPIキーをここに"
+    ACCESS_KEY = "76e04028a66e0e2d2b42d7d9c75462e7"
 
 def get_refined_arrival_time(arrival_data):
     """
