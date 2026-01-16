@@ -1,7 +1,6 @@
 import requests
 from datetime import datetime, timedelta, timezone
 
-# 日本時間の定義
 JST = timezone(timedelta(hours=9))
 
 try:
@@ -11,7 +10,7 @@ except Exception:
     ACCESS_KEY = None
 
 def get_refined_arrival_time(arrival_data):
-    """ APIの到着データから時刻を抽出 """
+    # 深夜は「実際に着いた時間(actual)」が何より重要です
     return arrival_data.get('actual') or arrival_data.get('estimated') or arrival_data.get('scheduled')
 
 def fetch_flights(target_airport="HND"):
@@ -21,23 +20,23 @@ def fetch_flights(target_airport="HND"):
 
     url = "http://api.aviationstack.com/v1/flights"
     
-    # 💡 策：あえて絞り込みをせず、羽田着の最新100件をありのまま取得
+    # 💡 戦略：ステータスを 'landed'（着陸済み）に限定します。
+    # これにより「これから来る朝の便」は無視され、
+    # 「23時台、0時台に実際に着いた便」が100件分リストに並びます。
     params = {
         'access_key': ACCESS_KEY,
         'arr_iata': target_airport,
-        'limit': 100
+        'limit': 100,
+        'flight_status': 'landed' 
     }
 
     try:
         response = requests.get(url, params=params, timeout=15)
-        
         if response.status_code != 200:
-            print(f"⚠️ APIエラー: ステータス {response.status_code}")
             return []
             
         raw_data = response.json()
-        if 'data' not in raw_data or not raw_data['data']:
-            print("⚠️ APIから返されたデータが空です。")
+        if 'data' not in raw_data:
             return []
 
         processed_flights = []
@@ -57,6 +56,5 @@ def fetch_flights(target_airport="HND"):
 
         return processed_flights
 
-    except Exception as e:
-        print(f"⚠️ 通信エラー: {e}")
+    except Exception:
         return []
