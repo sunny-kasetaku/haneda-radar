@@ -4,19 +4,16 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v5.2 Live</title>
+        <title>KASETACK Radar v5.3 Live</title>
         <script>
             function checkPass() {
                 const storageKey = "kasetack_auth_pass_v1";
                 const savedPass = localStorage.getItem(storageKey);
                 const correctPass = "0116";
-
-                // 正しいパスワードが保存されていれば表示
                 if (savedPass === correctPass) {
                     document.getElementById('main-content').style.display = 'block';
                     return;
                 }
-
                 const input = prompt("パスワードを入力してください");
                 if (input === correctPass) {
                     localStorage.setItem(storageKey, input);
@@ -27,6 +24,11 @@
                 }
             }
             window.onload = checkPass;
+
+            // 更新ボタンの動作を確実に定義
+            function manualUpdate() {
+                location.reload(true);
+            }
         </script>
         <style>
             body { background:#000; color:#fff; font-family:'Helvetica Neue',Arial,sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }
@@ -43,7 +45,10 @@
             .table-header { display: flex; justify-content: space-between; color: #FFD700; font-weight: bold; padding: 10px 5px; border-bottom: 1px solid #333; }
             .row { display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #222; font-size: 14px; }
             .col-time { width: 20%; } .col-name { width: 25%; color: #FFD700; } .col-origin { width: 25%; } .col-pax { width: 20%; text-align: right; }
-            .update-btn { background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; margin: 20px 0; }
+            /* 更新ボタンのデザイン */
+            .update-btn { background: #FFD700; color: #000; width: 100%; border: none; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; margin: 20px 0; cursor: pointer; }
+            .footer { text-align: center; color: #666; font-size: 12px; margin-top: 10px; line-height: 1.6; }
+            #timer { color: #FFD700; font-weight: bold; font-size: 14px; }
         </style>
     </head>
     <body>
@@ -63,16 +68,26 @@
             <div class="advice-box">⚡ 参謀アドバイス：羽田全体で約4960名の需要。</div>
             <div class="table-header"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
             <div class="row"><div class="col-time">17:55</div><div class="col-name">AA175</div><div class="col-origin">DFW</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">15:10</div><div class="col-name">DL121</div><div class="col-origin">MSP</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:12</div><div class="col-name">DL7</div><div class="col-origin">LAX</div><div class="col-pax">240名</div></div><div class="row"><div class="col-time">16:36</div><div class="col-name">HA863</div><div class="col-origin">HNL</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">16:21</div><div class="col-name">JL1</div><div class="col-origin">SFO</div><div class="col-pax">240名</div></div><div class="row"><div class="col-time">17:17</div><div class="col-name">JL15</div><div class="col-origin">LAX</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">17:34</div><div class="col-name">JL44</div><div class="col-origin">LHR</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">17:12</div><div class="col-name">JL5</div><div class="col-origin">JFK</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">16:42</div><div class="col-name">JL52</div><div class="col-origin">SYD</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:47</div><div class="col-name">JL73</div><div class="col-origin">HNL</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">15:12</div><div class="col-name">LA6700</div><div class="col-origin">LAX</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:12</div><div class="col-name">NH101</div><div class="col-origin">IAD</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:41</div><div class="col-name">NH1088</div><div class="col-origin">YGJ</div><div class="col-pax">200名</div></div><div class="row"><div class="col-time">17:08</div><div class="col-name">NH109</div><div class="col-origin">JFK</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">21:11</div><div class="col-name">NH111</div><div class="col-origin">ORD</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">20:29</div><div class="col-name">NH125</div><div class="col-origin">LAX</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">16:45</div><div class="col-name">NH185</div><div class="col-origin">HNL</div><div class="col-pax">320名</div></div><div class="row"><div class="col-time">17:32</div><div class="col-name">NH212</div><div class="col-origin">LHR</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">15:09</div><div class="col-name">NH216</div><div class="col-origin">CDG</div><div class="col-pax">120名</div></div><div class="row"><div class="col-time">17:29</div><div class="col-name">NH224</div><div class="col-origin">FRA</div><div class="col-pax">320名</div></div>
-            <button class="update-btn" onclick="location.reload()">最新情報に更新</button>
-            <div style="text-align:center; color:#666; font-size:12px;">
-                最終データ取得: 17:06 | v5.2 Live
+            
+            <button class="update-btn" onclick="manualUpdate()">最新情報に更新</button>
+
+            <div class="footer">
+                画面の自動更新まであと <span id="timer">60</span> 秒<br>
+                最終データ取得: 17:12 | v5.3 Live
             </div>
         </div>
         <script>
+            // カウントダウン処理の復活
             let sec = 60;
+            const timerElement = document.getElementById('timer');
             setInterval(() => {
                 sec--;
-                if(sec == 0) location.reload();
+                if(sec >= 0) {
+                    timerElement.innerText = sec;
+                }
+                if(sec <= 0) {
+                    location.reload(true);
+                }
             }, 1000);
         </script>
     </body>
