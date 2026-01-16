@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v7.6 Final Timer)
+# Project: KASETACK - renderer.py (v7.7 Localization Master)
 # ==========================================
 import json
 import os
@@ -23,9 +23,25 @@ def run_render(password):
     except:
         now_dt = datetime.now()
     
-    # 解析範囲：-30分 〜 +105分 (将来の波を捉える)
+    # 解析範囲：-30分 〜 +105分
     start_win = now_dt - timedelta(minutes=30)
     end_win = now_dt + timedelta(minutes=105)
+
+    # --- 空港名マスター辞書（大幅拡充） ---
+    AIRPORT_MAP = {
+        # 国内線
+        "CTS":"新千歳", "OKA":"那覇", "FUK":"福岡", "ITM":"伊丹", "KIX":"関空", 
+        "NGO":"中部", "HKD":"函館", "ASJ":"佐賀", "NGS":"長崎", "YGJ":"米子", 
+        "OKJ":"岡山", "MYJ":"松山", "TAK":"高松", "UKB":"神戸", "KUM":"熊谷",
+        # 国際線（北米）
+        "LAX":"ロス", "JFK":"ニューヨーク", "SFO":"S.フラシスコ", "ORD":"シカゴ", 
+        "DFW":"ダラス", "MSP":"ミネアポリス", "IAD":"ワシントン", "SEA":"シアトル", 
+        "HNL":"ホノルル", "YVR":"バンクーバー", "EWR":"ニューアーク",
+        # 国際線（欧州・他）
+        "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", "MUC":"ミュンヘン",
+        "SYD":"シドニー", "SIN":"シンガポール", "BKK":"バンコク", "HKG":"香港",
+        "ICN":"仁川", "GMP":"金浦", "TSA":"松山(台北)", "TPE":"桃園"
+    }
 
     flights = []
     pax_t1, pax_t2, pax_t3 = 0, 0, 0
@@ -78,8 +94,6 @@ def run_render(password):
     elif total_pax > 0: r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
     else: r, c, sym, st = "D", "#888", "🌑", "【撤退】 需要なし"
 
-    AIRPORT_MAP = {"CTS":"新千歳","OKA":"那覇","FUK":"福岡","ITM":"伊丹","KIX":"関空","NGO":"中部","LAX":"ロス","HNL":"ホノルル","IAD":"ワシントン","DFW":"ダラス","MSP":"ミネアポリス","HKD":"函館","ASJ":"佐賀","NGS":"長崎","YGJ":"米子","CDG":"パリ"}
-
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -106,12 +120,13 @@ def run_render(password):
         <script>
             function checkPass() {{
                 const storageKey = "kasetack_auth_pass_v1";
-                if (localStorage.getItem(storageKey) === "{password}") {{
+                const pass = "{password}";
+                if (localStorage.getItem(storageKey) === pass) {{
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                 }} else {{
                     const input = prompt("パスワードを入力");
-                    if (input === "{password}") {{ localStorage.setItem(storageKey, input); location.reload(); }}
+                    if (input === pass) {{ localStorage.setItem(storageKey, input); location.reload(); }}
                 }}
             }}
             window.onload = checkPass;
@@ -135,11 +150,11 @@ def run_render(password):
                 <div class="t-card {'best-choice' if best_idx==4 else ''}" style="grid-column: 1/3;">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==4 else '' }<div style="color:#999;font-size:13px;">国際(T3)</div><div class="t-num">{t3_i}人</div></div>
             </div>
             <div style="display:flex; justify-content:space-between; color:#FFD700; font-weight:bold; padding:10px 5px; border-bottom:1px solid #333;"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
-            {"".join([f'<div class="row"><div style="width:25%; text-align:center;">{f["time"].split("T")[1][:5] if "T" in f["time"] else f["time"][:5]}</div><div style="width:25%; text-align:center; color:#FFD700;">{f["flight_no"]}</div><div style="width:25%; text-align:center;">{AIRPORT_MAP.get(f.get("origin",""), f.get("origin","---"))}</div><div style="width:25%; text-align:center;">{f["pax"]}名</div></div>' for f in flights]) if flights else '<div style="padding:40px; text-align:center; color:#666;">解析範囲内に有効な到着便はありません</div>'}
+            {"".join([f'<div style="display:flex; justify-content:space-between; padding:12px 5px; border-bottom:1px solid #222; font-size:14px;"><div style="width:25%; text-align:center;">{f["time"].split("T")[1][:5] if "T" in f["time"] else f["time"][:5]}</div><div style="width:25%; text-align:center; color:#FFD700;">{f["flight_no"]}</div><div style="width:25%; text-align:center;">{AIRPORT_MAP.get(f.get("origin",""), f.get("origin","---"))}</div><div style="width:25%; text-align:center;">{f["pax"]}名</div></div>' for f in flights]) if flights else '<div style="padding:40px; text-align:center; color:#666;">解析範囲内に有効な到着便はありません</div>'}
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer-timer">
                 画面の自動再読み込みまであと <span id="timer">60</span> 秒<br>
-                最終データ取得: {update_time} | v7.6 Final
+                最終データ取得: {update_time} | v7.7 Final
             </div>
         </div>
         <script>
@@ -156,4 +171,4 @@ def run_render(password):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ v7.6：タイマー完全復旧 ＆ 全要素の整合性を確保")
+    print(f"✅ v7.7：空港名日本語化を完遂 ＆ タイマーを完全固定")
