@@ -1,11 +1,11 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v5.2 Fix Discord Link)
+# Project: KASETACK - renderer.py (v5.3 Restore Timer & Button)
 # ==========================================
 import json
 import os
 from config import CONFIG
 
-def run_render(password): # 固定値 "0116" を削除し、外部からの入力を受け取るように修正
+def run_render(password):
     result_file = CONFIG.get("RESULT_JSON")
     report_file = CONFIG.get("REPORT_FILE")
     
@@ -18,14 +18,12 @@ def run_render(password): # 固定値 "0116" を削除し、外部からの入�
     update_time = data.get("update_time", "--:--")
     flights = data.get("flights", [])
     
-    # ターミナル別集計
     t1_s = data.get("t1_south_pax", 0)
     t1_n = data.get("t1_north_pax", 0)
     t2_3 = data.get("t2_3_pax", 0)
     t2_4 = data.get("t2_4_pax", 0)
     t3_i = data.get("t3_intl_pax", 0)
 
-    # ランク判定
     rank = "D"; r_color = "#555"; status_text = "【撤退】 需要なし"
     if total_pax >= 800: rank, r_color, status_text = "S", "#FFD700", "【最高】 需要爆発"
     elif total_pax >= 400: rank, r_color, status_text = "A", "#FF6B00", "【推奨】 需要過多"
@@ -38,19 +36,16 @@ def run_render(password): # 固定値 "0116" を削除し、外部からの入�
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v5.2 Live</title>
+        <title>KASETACK Radar v5.3 Live</title>
         <script>
             function checkPass() {{
                 const storageKey = "kasetack_auth_pass_v1";
                 const savedPass = localStorage.getItem(storageKey);
                 const correctPass = "{password}";
-
-                // 正しいパスワードが保存されていれば表示
                 if (savedPass === correctPass) {{
                     document.getElementById('main-content').style.display = 'block';
                     return;
                 }}
-
                 const input = prompt("パスワードを入力してください");
                 if (input === correctPass) {{
                     localStorage.setItem(storageKey, input);
@@ -61,6 +56,11 @@ def run_render(password): # 固定値 "0116" を削除し、外部からの入�
                 }}
             }}
             window.onload = checkPass;
+
+            // 更新ボタンの動作を確実に定義
+            function manualUpdate() {{
+                location.reload(true);
+            }}
         </script>
         <style>
             body {{ background:#000; color:#fff; font-family:'Helvetica Neue',Arial,sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
@@ -77,7 +77,10 @@ def run_render(password): # 固定値 "0116" を削除し、外部からの入�
             .table-header {{ display: flex; justify-content: space-between; color: #FFD700; font-weight: bold; padding: 10px 5px; border-bottom: 1px solid #333; }}
             .row {{ display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #222; font-size: 14px; }}
             .col-time {{ width: 20%; }} .col-name {{ width: 25%; color: #FFD700; }} .col-origin {{ width: 25%; }} .col-pax {{ width: 20%; text-align: right; }}
-            .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; margin: 20px 0; }}
+            /* 更新ボタンのデザイン */
+            .update-btn {{ background: #FFD700; color: #000; width: 100%; border: none; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; margin: 20px 0; cursor: pointer; }}
+            .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 10px; line-height: 1.6; }}
+            #timer {{ color: #FFD700; font-weight: bold; font-size: 14px; }}
         </style>
     </head>
     <body>
@@ -97,16 +100,26 @@ def run_render(password): # 固定値 "0116" を削除し、外部からの入�
             <div class="advice-box">⚡ 参謀アドバイス：羽田全体で約{total_pax}名の需要。</div>
             <div class="table-header"><div>時刻</div><div>便名</div><div>出身</div><div>推計</div></div>
             {"".join([f'<div class="row"><div class="col-time">{f["time"].split("T")[1][:5] if "T" in f["time"] else "---"}</div><div class="col-name">{f["flight_no"]}</div><div class="col-origin">{f.get("origin","---")}</div><div class="col-pax">{f["pax"]}名</div></div>' for f in flights[:20]])}
-            <button class="update-btn" onclick="location.reload()">最新情報に更新</button>
-            <div style="text-align:center; color:#666; font-size:12px;">
-                最終データ取得: {update_time} | v5.2 Live
+            
+            <button class="update-btn" onclick="manualUpdate()">最新情報に更新</button>
+
+            <div class="footer">
+                画面の自動更新まであと <span id="timer">60</span> 秒<br>
+                最終データ取得: {update_time} | v5.3 Live
             </div>
         </div>
         <script>
+            // カウントダウン処理の復活
             let sec = 60;
+            const timerElement = document.getElementById('timer');
             setInterval(() => {{
                 sec--;
-                if(sec == 0) location.reload();
+                if(sec >= 0) {{
+                    timerElement.innerText = sec;
+                }}
+                if(sec <= 0) {{
+                    location.reload(true);
+                }}
             }}, 1000);
         </script>
     </body>
@@ -114,4 +127,4 @@ def run_render(password): # 固定値 "0116" を削除し、外部からの入�
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ パスワード門番(記憶型)を適用完了")
+    print(f"✅ タイマー＆更新ボタンを完全復旧")
