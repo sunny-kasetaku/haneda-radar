@@ -28,28 +28,30 @@ def main():
         flights = fetch_flights()
         if flights:
             now = datetime.now(JST)
-            print(f"\n🔍 【データ解析】合計 {len(flights)} 件のデータを精査中...")
+            print(f"\n🔍 【データ解析】最新 {len(flights)} 件を精査中...")
             
-            # 到着時間をJSTに変換して、現在に近い便をリストアップ
+            # 全データの時間範囲を確認
+            all_times = []
             relevant_flights = []
             for f in flights:
                 try:
-                    # ISO形式から変換。タイムゾーンがない場合はUTCとみなしてJSTへ
-                    t_str = f['arrival_time']
-                    if 'T' in t_str:
-                        if not ('+' in t_str or 'Z' in t_str): t_str += 'Z'
-                        t_jst = datetime.fromisoformat(t_str.replace('Z', '+00:00')).astimezone(JST)
-                        # 前後4時間以内を表示対象に広げる
-                        if now - timedelta(hours=4) <= t_jst <= now + timedelta(hours=4):
-                            relevant_flights.append((f, t_jst))
+                    t_str = f['arrival_time'].replace('Z', '+00:00')
+                    t_jst = datetime.fromisoformat(t_str).astimezone(JST)
+                    all_times.append(t_jst)
+                    # 前後3時間以内の重要便
+                    if now - timedelta(hours=3) <= t_jst <= now + timedelta(hours=3):
+                        relevant_flights.append((f, t_jst))
                 except: continue
+            
+            if all_times:
+                print(f"📊 データ範囲: {min(all_times).strftime('%m/%d %H:%M')} 〜 {max(all_times).strftime('%m/%d %H:%M')}")
             
             print("直近の重要便（乗り場への影響大）:")
             relevant_flights.sort(key=lambda x: x[1], reverse=True)
             if not relevant_flights:
-                print("  (現在、該当する時間帯の便がリストにありません)")
+                print("  (現在、判定時刻に該当する便がリスト内にありません)")
             else:
-                for f, t in relevant_flights[:12]:
+                for f, t in relevant_flights[:10]:
                     print(f"  ✈️ {f['flight_iata'].ljust(7)} | 到着:{t.strftime('%H:%M')} | T:{str(f['terminal']).ljust(2)} | {f['airline']}")
             print("-" * 65)
 
