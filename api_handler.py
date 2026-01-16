@@ -1,22 +1,24 @@
 import requests
 from datetime import datetime, timedelta
 
-# config.py から設定を読み込む（以前の haneda_radar.py の形式に対応）
+# config.py から設定を読み込む
 try:
     from config import CONFIG
+    # CONFIG辞書からキーを取得
     ACCESS_KEY = CONFIG.get("AVIATIONSTACK_KEY")
-except (ImportError, KeyError):
-    # もしもの時の予備
-    ACCESS_KEY = "あなたのAPIキー" 
+    
+    # もし AVIATIONSTACK_KEY という名前でなければ、一般的に使われる他の名前も試す
+    if not ACCESS_KEY:
+        ACCESS_KEY = CONFIG.get("API_KEY")
+except ImportError:
+    ACCESS_KEY = None
 
 def get_refined_arrival_time(arrival_data):
     """
     APIの到着データから、最も信頼できる到着時刻を一つ選出する
-    優先順位: 1.実着(actual) 2.推定(estimated) 3.遅延込(scheduled+delay) 4.定刻(scheduled)
     """
     if arrival_data.get('actual'):
         return arrival_data['actual']
-    
     if arrival_data.get('estimated'):
         return arrival_data['estimated']
     
@@ -28,29 +30,39 @@ def get_refined_arrival_time(arrival_data):
             base_time = datetime.fromisoformat(scheduled_str.replace('Z', '+00:00'))
             refined_time = base_time + timedelta(minutes=int(delay))
             return refined_time.isoformat()
-        except Exception:
+        except:
             return scheduled_str
-            
     return scheduled_str
 
 def fetch_flights(target_airport="HND"):
     """
     APIから羽田のフライト情報を取得
-    flight_status='active' を指定することで、未来の予定便(scheduled)に
-    データ枠を占領されるのを防ぎ、今まさに羽田に向かっている便を優先的に取得します。
     """
+    # キーが取得できていない場合の安全策
+    if not ACCESS_KEY:
+        print("⚠️ エラー: APIキー(AVIATIONSTACK_KEY)が config.py 内で見つかりません。")
+        return []
+
     url = "http://api.aviationstack.com/v1/flights"
+    
+    # 💡 パラメータを確実にセット
     params = {
         'access_key': ACCESS_KEY,
         'arr_iata': target_airport,
         'limit': 100,
-        # 💡 ここが重要：今空にいる便（または着陸直後の便）を狙います
-        'flight_status': 'active' 
+        'flight_status': 'active'
     }
 
     try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
+        # タイムアウトを設定してフリーズを防ぐ
+        response = requests.get(url, params=params, timeout=15)
+        
+        # エラーがあればここで詳細を表示
+        if response.status_code != 200:
+            print(f"⚠️ APIエラー発生 (Status: {response.status_code})")
+            print(f"URL: {response.url.split('access_key=')[0]}access_key=HIDDEN...")
+            return []
+            
         raw_data = response.json()
 
         if 'data' not in raw_data:
@@ -58,7 +70,6 @@ def fetch_flights(target_airport="HND"):
 
         processed_flights = []
         for flight in raw_data['data']:
-            # 欠航便は除外
             if flight.get('flight_status') == 'cancelled':
                 continue
 
@@ -79,5 +90,5 @@ def fetch_flights(target_airport="HND"):
         return processed_flights
 
     except Exception as e:
-        print(f"⚠️ API取得エラー: {e}")
+        print(f"⚠️ 通信エラー: {e}")
         return []
