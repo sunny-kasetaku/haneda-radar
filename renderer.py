@@ -1,5 +1,5 @@
 # ==========================================
-# Project: KASETACK - renderer.py (v5.0 UI Rebirth)
+# Project: KASETACK - renderer.py (v5.1 Remember Password)
 # ==========================================
 import json
 import os
@@ -18,15 +18,14 @@ def run_render(password="0116"):
     update_time = data.get("update_time", "--:--")
     flights = data.get("flights", [])
     
-    # ターミナル別集計（analyzerから渡される想定のデータ）
-    # まだ0の場合は0と表示されますが、器は完璧に用意しました
+    # ターミナル別集計
     t1_s = data.get("t1_south_pax", 0)
     t1_n = data.get("t1_north_pax", 0)
     t2_3 = data.get("t2_3_pax", 0)
     t2_4 = data.get("t2_4_pax", 0)
     t3_i = data.get("t3_intl_pax", 0)
 
-    # ランク判定ロジック
+    # ランク判定
     rank = "D"; r_color = "#555"; status_text = "【撤退】 需要なし"
     if total_pax >= 800: rank, r_color, status_text = "S", "#FFD700", "【最高】 需要爆発"
     elif total_pax >= 400: rank, r_color, status_text = "A", "#FF6B00", "【推奨】 需要過多"
@@ -39,56 +38,42 @@ def run_render(password="0116"):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar v4.0 Live</title>
-        # renderer.py の script セクションを以下のように書き換えます（全文の中の該当部分）
-
+        <title>KASETACK Radar v5.1 Live</title>
         <script>
             function checkPass() {{
-                const storageKey = "kasetack_auth_pass";
+                const storageKey = "kasetack_auth_pass_v1";
                 const savedPass = localStorage.getItem(storageKey);
                 const correctPass = "{password}";
 
-                // すでに保存されているパスワードが正しいかチェック
+                // すでに正しいパスワードを保存している場合は、そのまま表示
                 if (savedPass === correctPass) {{
                     document.getElementById('main-content').style.display = 'block';
                     return;
                 }}
 
-                // 保存されていない、または間違っている場合のみ prompt を出す
+                // 保存されていない場合のみ入力を求める
                 const input = prompt("パスワードを入力してください");
                 if (input === correctPass) {{
-                    localStorage.setItem(storage_key, input); // ブラウザに保存
+                    localStorage.setItem(storageKey, input); // ブラウザに保存
                     document.getElementById('main-content').style.display = 'block';
                 }} else {{
                     alert("無効なパスワードです");
                     window.location.reload();
                 }}
             }}
-            
-            // ログアウト（パスワード再入力）したい時のための関数（必要であれば）
-            function logout() {{
-                localStorage.removeItem("kasetack_auth_pass");
-                location.reload();
-            }}
-
             window.onload = checkPass;
         </script>
         <style>
             body {{ background:#000; color:#fff; font-family:'Helvetica Neue',Arial,sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
             #main-content {{ display:none; width:100%; max-width:450px; }}
             
-            /* ヘッダー案内 */
             .info-banner {{ border: 2px solid #FFD700; border-radius: 10px; padding: 10px; text-align: center; color: #FFD700; font-size: 13px; margin-bottom: 15px; }}
-            
-            /* メインランクカード */
             .rank-card {{ background: #1A1A1A; border: 2px solid #444; border-radius: 20px; padding: 30px 20px; text-align: center; margin-bottom: 15px; position: relative; }}
             .rank-display {{ font-size: 100px; font-weight: bold; color: {r_color}; line-height: 1; margin-bottom: 10px; }}
             .status-label {{ font-size: 24px; font-weight: bold; color: #fff; }}
 
-            /* ランク閾値表示 */
             .rank-thresholds {{ display: flex; justify-content: space-around; font-size: 12px; color: #888; margin-bottom: 15px; padding: 0 10px; }}
 
-            /* ターミナルグリッド */
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }}
             .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 15px; padding: 15px; text-align: center; }}
             .t-title {{ color: #AAA; font-size: 13px; margin-bottom: 5px; }}
@@ -96,16 +81,13 @@ def run_render(password="0116"):
             .t-unit {{ font-size: 16px; color: #FFF; }}
             .full-card {{ grid-column: 1 / span 2; }}
 
-            /* 参謀アドバイス */
             .advice-box {{ background: #1A1A1A; border-left: 5px solid #FFD700; padding: 15px; text-align: left; margin-bottom: 20px; }}
             .advice-title {{ color: #FFD700; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; }}
 
-            /* テーブル */
             .table-header {{ display: flex; justify-content: space-between; color: #FFD700; font-weight: bold; padding: 10px 5px; border-bottom: 1px solid #333; font-size: 14px; }}
             .row {{ display: flex; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #222; font-size: 14px; }}
             .col-time {{ width: 20%; }} .col-name {{ width: 25%; color: #FFD700; }} .col-origin {{ width: 25%; }} .col-pax {{ width: 20%; text-align: right; }}
 
-            /* ボタン */
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border: none; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; margin: 20px 0; cursor: pointer; }}
             .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 10px; }}
         </style>
@@ -139,7 +121,7 @@ def run_render(password="0116"):
 
             <div class="advice-box">
                 <div class="advice-title">⚡ 参謀アドバイス：</div>
-                羽田全体で約{total_pax}名の需要を検知。{stand if 'stand' in locals() else '---'}付近が有力です。
+                羽田全体で約{total_pax}名の需要を検知。
             </div>
 
             <div class="table-header">
@@ -151,7 +133,7 @@ def run_render(password="0116"):
 
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer">60</span> 秒<br>
-                最終データ取得: {update_time} | v4.0 Live
+                最終データ取得: {update_time} | v5.1 Live
             </div>
         </div>
         <script>
@@ -167,4 +149,4 @@ def run_render(password="0116"):
     """
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"✅ UI完全復刻＆門番適用完了 (Pass: {password})")
+    print(f"✅ 記憶型パスワード門番を適用完了 (Pass: {password})")
