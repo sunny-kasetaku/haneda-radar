@@ -6,16 +6,14 @@ def generate_html_new(demand_results, _):
     flight_list = demand_results.get("flights", [])
     
     # ---------------------------------------------------------
-    # 0. 空港コード辞書 (日本語化用)
+    # 0. 空港コード辞書
     # ---------------------------------------------------------
     AIRPORT_MAP = {
-        # 国内
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
         "KCZ":"高知", "TAK":"高松", "KMJ":"熊本", "KMI":"宮崎", "KOJ":"鹿児島",
         "ISG":"石垣", "MMY":"宮古", "IWK":"岩国", "UBJ":"山口宇部", "TKS":"徳島",
         "AOJ":"青森", "MSJ":"三沢", "OIT":"大分", "AXT":"秋田", "GAJ":"山形",
-        # 国際
         "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", "SFO":"サンフランシスコ",
         "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", "HEL":"ヘルシンキ",
         "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", "BKK":"ﾊﾞﾝｺｸ",
@@ -35,7 +33,7 @@ def generate_html_new(demand_results, _):
     else:              r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
     # ---------------------------------------------------------
-    # 2. ターミナルカード (Grid)
+    # 2. ターミナルカード
     # ---------------------------------------------------------
     target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
     pax_counts = [demand_results.get(k, 0) for k in target_keys]
@@ -58,20 +56,15 @@ def generate_html_new(demand_results, _):
         """
 
     # ---------------------------------------------------------
-    # 3. フライトテーブル (日本語化 & 全件表示 & 日本時間JST化)
+    # 3. フライトテーブル (JST変換 & 日本語化)
     # ---------------------------------------------------------
     table_rows = ""
-    
     for f in flight_list:
-        # ★ここだけ修正しました：UTC文字列を解析して+9時間する処理
         raw_time = str(f.get('arrival_time', ''))
         if 'T' in raw_time:
             try:
-                # ISO形式(UTC)を読み込む
                 dt_utc = datetime.fromisoformat(raw_time.replace('Z', '+00:00'))
-                # 9時間足してJSTにする
                 dt_jst = dt_utc + timedelta(hours=9)
-                # 文字列に戻す (HH:MM)
                 time_str = dt_jst.strftime('%H:%M')
             except:
                 time_str = "---"
@@ -79,8 +72,6 @@ def generate_html_new(demand_results, _):
             time_str = "---"
 
         pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
-        
-        # 辞書を使って出発地を変換
         origin_code = f.get('origin', '')
         origin_name = AIRPORT_MAP.get(origin_code, origin_code)
 
@@ -112,7 +103,7 @@ def generate_html_new(demand_results, _):
         """
 
     # ---------------------------------------------------------
-    # 5. HTML組み立て (聖域レイアウト維持)
+    # 5. HTML組み立て (目に優しいダークフラッシュ版)
     # ---------------------------------------------------------
     html_content = f"""
     <!DOCTYPE html>
@@ -120,9 +111,14 @@ def generate_html_new(demand_results, _):
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            /* Base */
-            @keyframes flash {{ 0% {{ opacity: 0.5; background:#fff; }} 100% {{ opacity: 1; background:#000; }} }}
-            body.loading {{ animation: flash 0.4s ease-out; }}
+            /* Base: 白フラッシュを廃止し、透明度だけの変化に変更 */
+            @keyframes flash {{ 
+                0% {{ opacity: 0.6; }} 
+                50% {{ opacity: 0.8; }} 
+                100% {{ opacity: 1; }} 
+            }}
+            body.loading {{ animation: flash 0.8s ease-out; }}
+            
             body {{ background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
             #main-content {{ display:none; width:100%; max-width:480px; }}
             
@@ -148,7 +144,7 @@ def generate_html_new(demand_results, _):
             .flight-table th {{ color:gold; padding:10px; border-bottom:1px solid #333; text-align:center; }}
             .flight-table td {{ padding: 10px; border-bottom: 1px solid #222; text-align: center; }}
 
-            /* 5. Forecast (Vertical) */
+            /* 5. Forecast */
             .forecast-box {{ background: #111; border: 1px solid #444; border-radius: 15px; padding: 15px; margin-bottom: 20px; }}
             .fc-row {{ border-bottom: 1px dashed #333; padding: 10px 0; }}
             .fc-row:last-child {{ border-bottom: none; }}
@@ -182,7 +178,7 @@ def generate_html_new(demand_results, _):
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲: 直近3時間 | 実数: {demand_results.get('unique_count')}機</div>
+            <div class="info-banner">⚠️ 範囲: 直近75分 | 実数: {demand_results.get('unique_count')}機</div>
             
             <div class="rank-card">
                 <div class="rank-display">{sym} {r}</div>
@@ -216,7 +212,7 @@ def generate_html_new(demand_results, _):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v8.0 JST Final
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v8.0 Dark-Flash
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
