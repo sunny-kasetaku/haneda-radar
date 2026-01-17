@@ -2,36 +2,34 @@
     <!DOCTYPE html>
     <html lang="ja">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+            @keyframes flash { 0% { opacity: 0.5; background:#fff; } 100% { opacity: 1; background:#000; } }
+            body.loading { animation: flash 0.4s ease-out; }
             body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }
             #main-content { display:none; width:100%; max-width:480px; }
-            .info-banner { border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-size: 14px; margin-bottom: 15px; }
+            .info-banner { border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-weight: bold; margin-bottom: 15px; }
             .rank-card { background: #222; border: 2px solid #444; border-radius: 25px; padding: 25px 20px; text-align: center; margin-bottom: 15px; }
             .rank-display { font-size: 100px; font-weight: bold; color: #FFD700; line-height: 1; }
-            .forecast-box { background: #111; border: 1px dashed #444; border-radius: 15px; padding: 15px; margin-bottom: 20px; }
-            .forecast-grid { display: flex; justify-content: space-around; text-align: center; }
-            .fc-label { font-size: 11px; color: #888; }
-            .fc-pax { font-size: 20px; font-weight: bold; color: #00FF00; }
+            .forecast-box { background: #111; border: 1px dashed #444; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
             .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
             .t-card { background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }
-            .best-choice { border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+            .best-choice { border: 2px solid #FFD700 !important; }
             .best-badge { position: absolute; top: -8px; right: -5px; background: #FFD700; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
             .t-num { font-size: 32px; font-weight: bold; }
             .section-title { color: gold; font-weight: bold; font-size: 14px; margin: 20px 0 10px; border-left: 4px solid gold; padding-left: 8px; }
+            .flight-table { width: 100%; font-size: 13px; border-collapse: collapse; background: #111; }
+            .flight-table td { padding: 10px 5px; border-bottom: 1px solid #222; text-align: center; }
+            .cam-link { display: block; text-align: center; padding: 15px; background: #333; color: #FFD700; text-decoration: none; border-radius: 12px; margin-bottom: 20px; font-weight: bold; border: 1px solid #444; }
             .update-btn { background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 20px; font-size: 24px; font-weight: bold; border: none; cursor: pointer; }
         </style>
         <script>
             function checkPass() {
-                const storageKey = "kasetack_auth_pass_v2";
-                if (localStorage.getItem(storageKey) === "kase") {
+                if (localStorage.getItem("kasetack_auth_pass_v2") === "kase") {
                     document.getElementById('main-content').style.display = 'block';
+                    document.body.classList.add('loading');
                 } else {
-                    if (prompt("パスワードを入力") === "kase") {
-                        localStorage.setItem(storageKey, "kase");
-                        location.reload();
-                    }
+                    if (prompt("パスワード入力") === "kase") { localStorage.setItem("kasetack_auth_pass_v2", "kase"); location.reload(); }
                 }
             }
             window.onload = checkPass;
@@ -39,79 +37,39 @@
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">分析：直近300便（実数: 133機）</div>
+            <div class="info-banner">⚠️ 300便解析 | 実数: 300機</div>
             
             <div class="rank-card">
-                <div style="font-size:40px;">🌈 <span class="rank-display">S</span></div>
+                <div>🌈 <span class="rank-display">S</span></div>
                 <div style="font-size:24px; font-weight:bold;">【最高】 需要爆発</div>
             </div>
 
-            <div class="section-title">🕒 3時間先までの需要予測</div>
+            <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-link">🎥 ライブカメラで現場を確認</a>
+
+            <div class="section-title">🕒 3時間先までの予測（機材推計込）</div>
             <div class="forecast-box">
-                <div class="forecast-grid">
-                    <div class="forecast-item">
-                        <div class="fc-label">0:00迄</div>
-                        <div class="fc-pax">0人</div>
-                    </div>
-                    <div class="forecast-item" style="border-left: 1px solid #333; padding-left:10px;">
-                        <div class="fc-label">1:00迄</div>
-                        <div class="fc-pax">0人</div>
-                    </div>
-                    <div class="forecast-item" style="border-left: 1px solid #333; padding-left:10px;">
-                        <div class="fc-label">2:00迄</div>
-                        <div class="fc-pax">0人</div>
-                    </div>
+                <div style="display:flex; justify-content:space-around; text-align:center;">
+                    <div><div style="font-size:11px; color:#888;">0:00迄</div><div style="font-size:20px; font-weight:bold; color:#00FF00;">0人</div></div>
+                    <div style="border-left:1px solid #333; padding-left:10px;"><div style="font-size:11px; color:#888;">1:00迄</div><div style="font-size:20px; font-weight:bold; color:#00FF00;">0人</div></div>
+                    <div style="border-left:1px solid #333; padding-left:10px;"><div style="font-size:11px; color:#888;">2:00迄</div><div style="font-size:20px; font-weight:bold; color:#00FF00;">0人</div></div>
                 </div>
             </div>
 
-            <div class="grid">
-                
-        <div class="t-card best-choice" >
-            <div class="best-badge">🏆 BEST</div>
-            <div style="color:#999;font-size:12px;">1号(T1南)</div>
-            <div class="t-num">8850人</div>
-        </div>
-        
-        <div class="t-card " >
-            
-            <div style="color:#999;font-size:12px;">2号(T1北)</div>
-            <div class="t-num">0人</div>
-        </div>
-        
-        <div class="t-card " >
-            
-            <div style="color:#999;font-size:12px;">3号(T2)</div>
-            <div class="t-num">3300人</div>
-        </div>
-        
-        <div class="t-card " >
-            
-            <div style="color:#999;font-size:12px;">4号(T2)</div>
-            <div class="t-num">4950人</div>
-        </div>
-        
-        <div class="t-card " style="grid-column: 1/3;">
-            
-            <div style="color:#999;font-size:12px;">国際(T3)</div>
-            <div class="t-num">2850人</div>
-        </div>
-        
-            </div>
+            <div class="grid"><div class="t-card best-choice" ><div class="best-badge">🏆 BEST</div><div style="color:#888;font-size:12px;">1号(T1南)</div><div class="t-num">23850人</div></div><div class="t-card " ><div style="color:#888;font-size:12px;">2号(T1北)</div><div class="t-num">0人</div></div><div class="t-card " ><div style="color:#888;font-size:12px;">3号(T2)</div><div class="t-num">5640人</div></div><div class="t-card " ><div style="color:#888;font-size:12px;">4号(T2)</div><div class="t-num">8460人</div></div><div class="t-card " style="grid-column: 1/3;"><div style="color:#888;font-size:12px;">国際(T3)</div><div class="t-num">11750人</div></div></div>
+
+            <div class="section-title">✈️ 分析の根拠</div>
+            <table class="flight-table"><tr style="color:gold; font-size:11px;"><td>時刻</td><td>便名</td><td>出発地</td><td>推計</td></tr><tr><td>21:26</td><td style='color:gold;'>SQ5964</td><td>IWK</td><td>150名</td></tr><tr><td>21:26</td><td style='color:gold;'>PR3181</td><td>IWK</td><td>150名</td></tr><tr><td>21:23</td><td style='color:gold;'>NU192</td><td>KMQ</td><td>150名</td></tr><tr><td>17:27</td><td style='color:gold;'>NU934</td><td>MMY</td><td>150名</td></tr><tr><td>19:55</td><td style='color:gold;'>HA5000</td><td>HKG</td><td>150名</td></tr><tr><td>19:55</td><td style='color:gold;'>CX6320</td><td>HKG</td><td>150名</td></tr><tr><td>21:26</td><td style='color:gold;'>NH640</td><td>IWK</td><td>150名</td></tr><tr><td>16:51</td><td style='color:gold;'>CA6705</td><td>SHA</td><td>250名</td></tr><tr><td>16:34</td><td style='color:gold;'>MU4181</td><td>SHA</td><td>250名</td></tr><tr><td>16:34</td><td style='color:gold;'>FM1022</td><td>SHA</td><td>250名</td></tr></table>
 
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             
-            <div style="text-align:center; color:#888; font-size:12px; margin-top:20px;">
-                自動更新まで <span id="timer">60</span> 秒 | 更新: 23:20
+            <div style="font-size:11px; color:#666; margin-top:15px; line-height:1.4; padding:10px; border:1px solid #222;">
+                【免責事項】 本システムはAviationstack APIデータと機材サイズ推計（30/70/150/250名）による期待値です。実際の行列を保証するものではありません。
+            </div>
+
+            <div style="text-align:center; color:#888; font-size:12px; margin-top:20px; padding-bottom:30px;">
+                自動更新まで <span id="timer" style="color:gold; font-weight:bold; font-size:16px;">60</span> 秒 | 23:33 更新
             </div>
         </div>
-        <script>
-            let sec = 60;
-            setInterval(() => {
-                sec--;
-                if(sec >= 0) document.getElementById('timer').innerText = sec;
-                if(sec <= 0) location.reload(true);
-            }, 1000);
-        </script>
-    </body>
-    </html>
+        <script>let sec=60; setInterval(()=>{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); },1000);</script>
+    </body></html>
     
