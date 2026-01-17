@@ -5,7 +5,7 @@ import os
 
 CONFIG = {
     # 航空データAPIキー
-    "API_KEY": "76e04028a66e0e2d2b42d7d9c75462e7",
+    "API_KEY": "7dd32199bfacf0d3d6f8d538b4511d29b",
     
     # Discord Webhook (GitHub Secretsから取得)
     "DISCORD_WEBHOOK_URL": os.environ.get("DISCORD_WEBHOOK_URL", ""),
