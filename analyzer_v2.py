@@ -2,8 +2,8 @@ from datetime import datetime, timedelta, timezone
 
 def analyze_demand(flights):
     """
-    重複排除 ＆ 時間窓フィルタリング（完全整合性版）
-    リストに「計算に使った便」だけを残すことで、レンダラー側の合計と一致させる。
+    重複排除 ＆ 実戦的時間窓フィルタリング（-30分 〜 +45分）
+    現場のドライバーが最も気にする「直近」の需要のみを抽出。
     """
     
     # 1. バケツの初期化
@@ -15,12 +15,13 @@ def analyze_demand(flights):
     now_utc = datetime.now(timezone.utc)
     now_jst = datetime.now()
     
-    # 時間窓の設定（前後90分）
-    # この期間の便だけを「現在の需要」としてカウントし、リストにも残す
-    range_start = now_utc - timedelta(minutes=90)
-    range_end = now_utc + timedelta(minutes=90)
+    # ★実戦仕様：集計対象の時間窓設定
+    # 過去30分（到着済みで客が出てくる頃）〜 未来45分（これから着陸）
+    # この「75分間」の便だけを、現在の「アクティブ需要」としてカウントする
+    range_start = now_utc - timedelta(minutes=30)
+    range_end = now_utc + timedelta(minutes=45)
     
-    # 3時間予測用バケツ
+    # 3時間予測用バケツ（こちらは未来を広く見る）
     forecast = {
         "h1": {"label": (now_jst + timedelta(hours=1)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
         "h2": {"label": (now_jst + timedelta(hours=2)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
@@ -28,7 +29,7 @@ def analyze_demand(flights):
     }
 
     seen_vessels = set()
-    unique_flights = [] # ここには「時間窓内」の便だけを入れる
+    unique_flights = [] # 時間窓内の便だけを入れる
 
     for f in flights:
         # --- A. 重複排除 ---
@@ -57,7 +58,7 @@ def analyze_demand(flights):
         try:
             flight_time = datetime.fromisoformat(t_str.replace('Z', '+00:00'))
             
-            # 【重要】時間窓チェック
+            # 【重要】時間窓チェック (-30分 〜 +45分)
             if range_start <= flight_time <= range_end:
                 # 範囲内なら「今の客」としてカウント ＆ リストに追加
                 unique_flights.append(f)
@@ -70,7 +71,7 @@ def analyze_demand(flights):
                     pax_t3 += pax
 
             # --- D. 3時間予測（未来判定） ---
-            # ※予測は「範囲外の未来」も含めて計算する必要があるため、flight_timeから直接判定
+            # ここは時間窓に関係なく、未来の便をすべてチェック
             diff_hours = (flight_time - now_utc).total_seconds() / 3600
 
             if 0 <= diff_hours < 1:
@@ -105,5 +106,5 @@ def analyze_demand(flights):
         "国際(T3)":  pax_t3,
         "forecast": forecast,
         "unique_count": len(unique_flights),
-        "flights": unique_flights # 厳選されたリスト
+        "flights": unique_flights
     }
