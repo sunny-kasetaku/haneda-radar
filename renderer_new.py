@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 def generate_html_new(demand_results, flight_list):
+    # --- 1. 設定と準備 ---
     AIRPORT_MAP = {
         "CTS":"新千歳", "OKA":"那覇", "FUK":"福岡", "ITM":"伊丹", "KIX":"関空", 
         "NGO":"中部", "HKD":"函館", "ASJ":"佐賀", "NGS":"長崎", "YGJ":"米子", 
@@ -14,7 +15,7 @@ def generate_html_new(demand_results, flight_list):
         "ICN":"仁川", "GMP":"金浦", "TSA":"松山(台北)", "TPE":"桃園"
     }
 
-    # 数値集計
+    # ランク判定
     total = sum(v for k, v in demand_results.items() if k not in ["forecast", "unique_count"])
     if total >= 800: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 400: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
@@ -23,17 +24,36 @@ def generate_html_new(demand_results, flight_list):
 
     now_str = datetime.now().strftime('%H:%M')
     forecast = demand_results.get("forecast", {})
-    
-    # 時間枠データの安全な取得
     h1 = forecast.get('h1', {"label": "-", "pax": 0})
     h2 = forecast.get('h2', {"label": "-", "pax": 0})
     h3 = forecast.get('h3', {"label": "-", "pax": 0})
 
+    # --- 2. ターミナルごとのカード作成（エラー回避のため事前に計算） ---
     target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
     pax_counts = [demand_results.get(k, 0) for k in target_keys]
     max_val = max(pax_counts) if pax_counts else 0
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
 
+    cards_html = ""
+    for i, name in enumerate(target_keys):
+        # BESTバッジとスタイルの判定
+        is_best = (i == best_idx)
+        card_class = "best-choice" if is_best else ""
+        badge = '<div class="best-badge">🏆 BEST</div>' if is_best else ""
+        num = demand_results.get(name, 0)
+        
+        # 国際線だけ横長にする
+        grid_style = 'style="grid-column: 1/3;"' if name == "国際(T3)" else ""
+        
+        cards_html += f"""
+        <div class="t-card {card_class}" {grid_style}>
+            {badge}
+            <div style="color:#999;font-size:12px;">{name}</div>
+            <div class="t-num">{num}人</div>
+        </div>
+        """
+
+    # --- 3. HTML本体の組み立て ---
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -52,7 +72,7 @@ def generate_html_new(demand_results, flight_list):
             .fc-pax {{ font-size: 20px; font-weight: bold; color: #00FF00; }}
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
             .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
-            .best-choice {{ border: 2px solid #FFD700 !important; }}
+            .best-choice {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3); }}
             .best-badge {{ position: absolute; top: -8px; right: -5px; background: #FFD700; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }}
             .t-num {{ font-size: 32px; font-weight: bold; }}
             .section-title {{ color: gold; font-weight: bold; font-size: 14px; margin: 20px 0 10px; border-left: 4px solid gold; padding-left: 8px; }}
@@ -76,11 +96,13 @@ def generate_html_new(demand_results, flight_list):
     <body>
         <div id="main-content">
             <div class="info-banner">分析：直近300便（実数: {demand_results.get('unique_count', 0)}機）</div>
+            
             <div class="rank-card">
                 <div style="font-size:40px;">{sym} <span class="rank-display">{r}</span></div>
                 <div style="font-size:24px; font-weight:bold;">{st}</div>
             </div>
-            <div class="section-title">🕒 3時間先までの予測</div>
+
+            <div class="section-title">🕒 3時間先までの需要予測</div>
             <div class="forecast-box">
                 <div class="forecast-grid">
                     <div class="forecast-item">
@@ -97,7 +119,27 @@ def generate_html_new(demand_results, flight_list):
                     </div>
                 </div>
             </div>
+
             <div class="grid">
-                <div class="t-card {'best-choice' if best_idx==0 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==0 else '' }<div style="color:#999;font-size:12px;">1号(T1南)</div><div class="t-num">{demand_results.get('1号(T1南)', 0)}</div></div>
-                <div class="t-card {'best-choice' if best_idx==1 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==1 else '' }<div style="color:#999;font-size:12px;">2号(T1北)</div><div class="t-num">{demand_results.get('2号(T1北)', 0)}</div></div>
-                <div class="t-card {'best-choice' if
+                {cards_html}
+            </div>
+
+            <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
+            
+            <div style="text-align:center; color:#888; font-size:12px; margin-top:20px;">
+                自動更新まで <span id="timer">60</span> 秒 | 更新: {now_str}
+            </div>
+        </div>
+        <script>
+            let sec = 60;
+            setInterval(() => {{
+                sec--;
+                if(sec >= 0) document.getElementById('timer').innerText = sec;
+                if(sec <= 0) location.reload(true);
+            }}, 1000);
+        </script>
+    </body>
+    </html>
+    """
+    with open("index_test.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
