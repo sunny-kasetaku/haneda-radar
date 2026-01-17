@@ -2,7 +2,8 @@ from datetime import datetime, timedelta, timezone
 
 def analyze_demand(flights):
     """
-    重複排除 ＆ 時間窓フィルタリング（集計対象の厳選）
+    重複排除 ＆ 時間窓フィルタリング（完全整合性版）
+    リストに「計算に使った便」だけを残すことで、レンダラー側の合計と一致させる。
     """
     
     # 1. バケツの初期化
@@ -14,9 +15,8 @@ def analyze_demand(flights):
     now_utc = datetime.now(timezone.utc)
     now_jst = datetime.now()
     
-    # ★ここが新機能：集計対象とする「時間窓」の設定
-    # テスト用として「前後90分」の便だけを「現在の需要」としてカウントする
-    # （本来の仕様：過去30分〜未来45分に近づけています）
+    # 時間窓の設定（前後90分）
+    # この期間の便だけを「現在の需要」としてカウントし、リストにも残す
     range_start = now_utc - timedelta(minutes=90)
     range_end = now_utc + timedelta(minutes=90)
     
@@ -28,19 +28,16 @@ def analyze_demand(flights):
     }
 
     seen_vessels = set()
-    unique_flights = []
+    unique_flights = [] # ここには「時間窓内」の便だけを入れる
 
     for f in flights:
         # --- A. 重複排除 ---
         t_str = str(f.get('arrival_time', ''))
         origin = f.get('origin', 'UNK')
-        
-        # 時刻(分まで)＋出発地で重複チェック
         vessel_key = f"{t_str[:16]}_{origin}"
 
         if vessel_key in seen_vessels:
             continue 
-
         seen_vessels.add(vessel_key)
         
         # --- B. 機材サイズ推計 ---
@@ -48,22 +45,23 @@ def analyze_demand(flights):
         term = str(f.get('terminal', ''))
         
         if '3' in term or 'I' in term:
-            pax = 250 # 国際線
+            pax = 250
         elif any(x in airline for x in ["WINGS", "J-AIR", "HAC", "AMX", "ORC", "IBEX", "COMMUTER"]):
-            pax = 50  # 小型
+            pax = 50
         else:
-            pax = 150 # 標準
+            pax = 150
 
         f['pax_estimated'] = pax
-        unique_flights.append(f)
-
-        # --- C. 時間解析と振り分け ---
+        
+        # --- C. 時間解析と厳密な振り分け ---
         try:
             flight_time = datetime.fromisoformat(t_str.replace('Z', '+00:00'))
             
-            # 【重要】現在の「メイン需要（上のカード）」に加算するかどうかの判定
-            # 指定した「時間窓（前後90分）」に入っている便だけを足す！
+            # 【重要】時間窓チェック
             if range_start <= flight_time <= range_end:
+                # 範囲内なら「今の客」としてカウント ＆ リストに追加
+                unique_flights.append(f)
+                
                 if '1' in term:
                     pax_t1 += pax
                 elif '2' in term:
@@ -71,7 +69,8 @@ def analyze_demand(flights):
                 else:
                     pax_t3 += pax
 
-            # --- D. 3時間予測（未来判定）は別途計算 ---
+            # --- D. 3時間予測（未来判定） ---
+            # ※予測は「範囲外の未来」も含めて計算する必要があるため、flight_timeから直接判定
             diff_hours = (flight_time - now_utc).total_seconds() / 3600
 
             if 0 <= diff_hours < 1:
@@ -84,21 +83,20 @@ def analyze_demand(flights):
         except:
             pass
 
-    # 3. 予測ステータスの判定
+    # 3. 予測ステータス判定
     for k in ["h1", "h2", "h3"]:
         val = forecast[k]["pax"]
         if val >= 400:
             forecast[k]["status"] = "🚀 超高"
-            forecast[k]["comment"] = "🔥 激アツ・第2波到来"
+            forecast[k]["comment"] = "🔥 激アツ・第2波"
         elif val >= 200:
             forecast[k]["status"] = "⚠️ 中"
-            forecast[k]["comment"] = "➡️ 需要継続中"
+            forecast[k]["comment"] = "➡️ 需要継続"
         else:
             forecast[k]["status"] = "👀 低"
-            forecast[k]["comment"] = "⬇️ 撤収準備・待機"
+            forecast[k]["comment"] = "⬇️ 撤収準備"
 
     # 4. 最終結果
-    # T1, T2は単純2等分
     return {
         "1号(T1南)": int(pax_t1 * 0.5),
         "2号(T1北)": int(pax_t1 * 0.5),
@@ -107,5 +105,5 @@ def analyze_demand(flights):
         "国際(T3)":  pax_t3,
         "forecast": forecast,
         "unique_count": len(unique_flights),
-        "flights": unique_flights
+        "flights": unique_flights # 厳選されたリスト
     }

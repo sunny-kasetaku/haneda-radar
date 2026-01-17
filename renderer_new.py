@@ -2,11 +2,31 @@ import os
 from datetime import datetime
 
 def generate_html_new(demand_results, _):
-    # フライトリストの取得
+    # フライトリスト（analyzerで厳選済み）
     flight_list = demand_results.get("flights", [])
     
     # ---------------------------------------------------------
-    # 1. ランク判定 & 色設定
+    # 0. 空港コード辞書 (日本語化用)
+    # ---------------------------------------------------------
+    AIRPORT_MAP = {
+        # 国内
+        "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
+        "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
+        "KCZ":"高知", "TAK":"高松", "KMJ":"熊本", "KMI":"宮崎", "KOJ":"鹿児島",
+        "ISG":"石垣", "MMY":"宮古", "IWK":"岩国", "UBJ":"山口宇部", "TKS":"徳島",
+        "AOJ":"青森", "MSJ":"三沢", "OIT":"大分", "AXT":"秋田", "GAJ":"山形",
+        # 国際
+        "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", "SFO":"サンフランシスコ",
+        "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", "HEL":"ヘルシンキ",
+        "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", "BKK":"ﾊﾞﾝｺｸ",
+        "KUL":"ｸｱﾗﾙﾝﾌﾟｰﾙ", "CGK":"ｼﾞｬｶﾙﾀ", "MNL":"マニラ", "SGN":"ホーチミン",
+        "HAN":"ハノイ", "HKG":"香港", "TPE":"台北(桃園)", "TSA":"台北(松山)",
+        "ICN":"ソウル(仁川)", "GMP":"ソウル(金浦)", "PEK":"北京", "PVG":"上海(浦東)",
+        "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
+    }
+
+    # ---------------------------------------------------------
+    # 1. ランク判定
     # ---------------------------------------------------------
     total = sum(v for k, v in demand_results.items() if k not in ["forecast", "unique_count", "flights"])
     if total >= 600: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
@@ -38,48 +58,47 @@ def generate_html_new(demand_results, _):
         """
 
     # ---------------------------------------------------------
-    # 3. フライトテーブル (分析の根拠)
+    # 3. フライトテーブル (日本語化 & 全件表示)
     # ---------------------------------------------------------
     table_rows = ""
-    # 直近8件を表示
-    for f in flight_list[:8]:
+    # [:8]の制限を削除し、全て表示
+    for f in flight_list:
         time_str = f.get('arrival_time', '')[11:16] if 'T' in str(f.get('arrival_time')) else "---"
         pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
+        
+        # 辞書を使って出発地を変換
+        origin_code = f.get('origin', '')
+        origin_name = AIRPORT_MAP.get(origin_code, origin_code) # 辞書になければコードのまま
+
         table_rows += f"""
         <tr>
             <td>{time_str}</td>
             <td style='color:gold;'>{f.get('flight_iata')}</td>
-            <td>{f.get('origin')}</td>
+            <td>{origin_name}</td>
             <td>{pax_disp}</td>
         </tr>
         """
 
     # ---------------------------------------------------------
-    # 4. 需要予測 (縦並びリスト作成)
+    # 4. 需要予測
     # ---------------------------------------------------------
     f_data = demand_results.get("forecast", {})
-    # 1時間ごとのHTMLブロックを作成
     forecast_html = ""
     for k in ["h1", "h2", "h3"]:
         item = f_data.get(k, {})
-        label = item.get('label', '--:--')
-        pax = item.get('pax', 0)
-        status = item.get('status', '-')
-        comment = item.get('comment', '-')
-        
         forecast_html += f"""
         <div class="fc-row">
-            <div class="fc-time">[{label}]</div>
+            <div class="fc-time">[{item.get('label','--:--')}]</div>
             <div class="fc-main">
-                <span class="fc-status">{status}</span>
-                <span class="fc-pax">(推計 {pax}人)</span>
+                <span class="fc-status">{item.get('status','-')}</span>
+                <span class="fc-pax">(推計 {item.get('pax',0)}人)</span>
             </div>
-            <div class="fc-comment">└ {comment}</div>
+            <div class="fc-comment">└ {item.get('comment','-')}</div>
         </div>
         """
 
     # ---------------------------------------------------------
-    # 5. HTML組み立て (聖域レイアウト)
+    # 5. HTML組み立て (聖域レイアウト維持)
     # ---------------------------------------------------------
     html_content = f"""
     <!DOCTYPE html>
