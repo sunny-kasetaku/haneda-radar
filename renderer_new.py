@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 def generate_html_new(demand_results, _):
-    # フライトリスト（analyzerで厳選済み）
+    # フライトリスト
     flight_list = demand_results.get("flights", [])
     
     # ---------------------------------------------------------
@@ -56,18 +56,16 @@ def generate_html_new(demand_results, _):
         """
 
     # ---------------------------------------------------------
-    # 3. フライトテーブル (JST変換 & 日本語化)
+    # 3. フライトテーブル (補正なし・そのまま表示)
     # ---------------------------------------------------------
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
+        
+        # データがすでにJST(日本時間)なので、計算せず文字を切り出すだけにする
         if 'T' in raw_time:
-            try:
-                dt_utc = datetime.fromisoformat(raw_time.replace('Z', '+00:00'))
-                dt_jst = dt_utc + timedelta(hours=9)
-                time_str = dt_jst.strftime('%H:%M')
-            except:
-                time_str = "---"
+            # "2023-xx-xxT16:55:00" -> "16:55"
+            time_str = raw_time[11:16]
         else:
             time_str = "---"
 
@@ -103,7 +101,7 @@ def generate_html_new(demand_results, _):
         """
 
     # ---------------------------------------------------------
-    # 5. HTML組み立て (目に優しいダークフラッシュ版)
+    # 5. HTML組み立て
     # ---------------------------------------------------------
     html_content = f"""
     <!DOCTYPE html>
@@ -111,7 +109,7 @@ def generate_html_new(demand_results, _):
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            /* Base: 白フラッシュを廃止し、透明度だけの変化に変更 */
+            /* Base: Dark-Flash */
             @keyframes flash {{ 
                 0% {{ opacity: 0.6; }} 
                 50% {{ opacity: 0.8; }} 
@@ -212,7 +210,7 @@ def generate_html_new(demand_results, _):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v8.0 Dark-Flash
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v8.0 JST-Direct
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
