@@ -14,6 +14,7 @@ def generate_html_new(demand_results, flight_list):
         "ICN":"仁川", "GMP":"金浦", "TSA":"松山(台北)", "TPE":"桃園"
     }
 
+    # 数値集計
     total = sum(v for k, v in demand_results.items() if k not in ["forecast", "unique_count"])
     if total >= 800: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 400: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
@@ -22,6 +23,12 @@ def generate_html_new(demand_results, flight_list):
 
     now_str = datetime.now().strftime('%H:%M')
     forecast = demand_results.get("forecast", {})
+    
+    # 時間枠データの安全な取得
+    h1 = forecast.get('h1', {"label": "-", "pax": 0})
+    h2 = forecast.get('h2', {"label": "-", "pax": 0})
+    h3 = forecast.get('h3', {"label": "-", "pax": 0})
+
     target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
     pax_counts = [demand_results.get(k, 0) for k in target_keys]
     max_val = max(pax_counts) if pax_counts else 0
@@ -77,30 +84,20 @@ def generate_html_new(demand_results, flight_list):
             <div class="forecast-box">
                 <div class="forecast-grid">
                     <div class="forecast-item">
-                        <div class="fc-label">{forecast.get('h1', {{}}).get('label', '-')}</div>
-                        <div class="fc-pax">{forecast.get('h1', {{}}).get('pax', 0)}人</div>
+                        <div class="fc-label">{h1['label']}</div>
+                        <div class="fc-pax">{h1['pax']}人</div>
                     </div>
                     <div class="forecast-item" style="border-left: 1px solid #333; padding-left:10px;">
-                        <div class="fc-label">{forecast.get('h2', {{}}).get('label', '-')}</div>
-                        <div class="fc-pax">{forecast.get('h2', {{}}).get('pax', 0)}人</div>
+                        <div class="fc-label">{h2['label']}</div>
+                        <div class="fc-pax">{h2['pax']}人</div>
                     </div>
                     <div class="forecast-item" style="border-left: 1px solid #333; padding-left:10px;">
-                        <div class="fc-label">{forecast.get('h3', {{}}).get('label', '-')}</div>
-                        <div class="fc-pax">{forecast.get('h3', {{}}).get('pax', 0)}人</div>
+                        <div class="fc-label">{h3['label']}</div>
+                        <div class="fc-pax">{h3['pax']}人</div>
                     </div>
                 </div>
             </div>
             <div class="grid">
                 <div class="t-card {'best-choice' if best_idx==0 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==0 else '' }<div style="color:#999;font-size:12px;">1号(T1南)</div><div class="t-num">{demand_results.get('1号(T1南)', 0)}</div></div>
                 <div class="t-card {'best-choice' if best_idx==1 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==1 else '' }<div style="color:#999;font-size:12px;">2号(T1北)</div><div class="t-num">{demand_results.get('2号(T1北)', 0)}</div></div>
-                <div class="t-card {'best-choice' if best_idx==2 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==2 else '' }<div style="color:#999;font-size:12px;">3号(T2)</div><div class="t-num">{demand_results.get('3号(T2)', 0)}</div></div>
-                <div class="t-card {'best-choice' if best_idx==3 else ''}">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==3 else '' }<div style="color:#999;font-size:12px;">4号(T2)</div><div class="t-num">{demand_results.get('4号(T2)', 0)}</div></div>
-                <div class="t-card {'best-choice' if best_idx==4 else ''}" style="grid-column: 1/3;">{ '<div class="best-badge">🏆 BEST</div>' if best_idx==4 else '' }<div style="color:#999;font-size:12px;">国際(T3)</div><div class="t-num">{demand_results.get('国際(T3)', 0)}</div></div>
-            </div>
-            <button class="update-btn" onclick="location.reload(true)">更新</button>
-        </div>
-    </body>
-    </html>
-    """
-    with open("index_test.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
+                <div class="t-card {'best-choice' if
