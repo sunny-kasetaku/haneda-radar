@@ -24,27 +24,26 @@ def analyze_demand(flights):
             seen_flights.add(f_key)
             unique_flights.append(f)
             
-            # 💡 機材サイズの推計ロジック
+            # 💡 機材サイズ推計（プロデューサーの指摘を反映）
             airline = str(f.get('airline', '')).upper()
             term = str(f.get('terminal', ''))
             
-            # APIに人数があればそれを使う
-            pax = f.get('pax')
-            if not pax:
-                if '3' in term or 'I' in term: # 国際線
-                    pax = 250
-                elif any(x in airline for x in ["WINGS", "AIR", "COMMUTER"]): # 小型・地方便
-                    pax = 80
-                else: # 標準国内線
-                    pax = 150
+            if '3' in term or 'I' in term:
+                pax = 250 # 国際線大型
+            elif any(x in airline for x in ["ORC", "COMMUTER", "AMX"]):
+                pax = 30  # 最小機材
+            elif any(x in airline for x in ["WINGS", "J-AIR", "HAC"]):
+                pax = 70  # 小型地方便
+            else:
+                pax = 150 # 標準国内線
             
-            f['pax'] = pax # rendererで表示するために保存
+            f['pax_estimated'] = pax
             
             if '1' in term: pax_t1 += pax
             elif '2' in term: pax_t2 += pax
             else: pax_t3 += pax
 
-            # 予測集計
+            # 3時間予測（現在時刻以降）
             a_str = f.get('arrival_time', '')
             try:
                 dt = datetime.fromisoformat(a_str.replace('Z', '+00:00'))
@@ -55,13 +54,11 @@ def analyze_demand(flights):
             except: pass
 
     w = WEIGHT_MASTER.get(now.hour, [1,1,1,1,1])
-    t1_total_w, t2_total_w = (w[0]+w[1]) or 2, (w[2]+w[3]+w[4]) or 3
+    t1_w, t2_w = (w[0]+w[1]) or 2, (w[2]+w[3]+w[4]) or 3
 
     return {
-        "1号(T1南)": int(pax_t1 * w[0] / t1_total_w),
-        "2号(T1北)": int(pax_t1 * w[1] / t1_total_w),
-        "3号(T2)":   int(pax_t2 * w[2] / t2_total_w),
-        "4号(T2)":   int(pax_t2 * w[3] / t2_total_w),
-        "国際(T3)":  pax_t3 + int(pax_t2 * w[4] / t2_total_w),
+        "1号(T1南)": int(pax_t1 * w[0] / t1_w), "2号(T1北)": int(pax_t1 * w[1] / t1_w),
+        "3号(T2)": int(pax_t2 * w[2] / t2_w), "4号(T2)": int(pax_t2 * w[3] / t2_w),
+        "国際(T3)": pax_t3 + int(pax_t2 * w[4] / t2_w),
         "forecast": forecast, "unique_count": len(unique_flights), "flights": unique_flights
     }
