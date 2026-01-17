@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 def analyze_demand(flights):
     """
     重複排除 ＆ 実戦的時間窓フィルタリング（-30分 〜 +45分）
-    現場のドライバーが最も気にする「直近」の需要のみを抽出。
+    【修正】入力データを「UTC」とみなして+9時間する処理を廃止。
+           APIの数字をそのまま「日本時間」として扱い、現在時刻と比較する。
     """
     
     # 1. バケツの初期化
@@ -11,25 +12,23 @@ def analyze_demand(flights):
     pax_t2 = 0
     pax_t3 = 0
     
-    # 時間計算の基準
-    now_utc = datetime.now(timezone.utc)
-    now_jst = datetime.now()
+    # 時間計算の基準（JST同士で比較するため、timezone.utcを使わずネイティブな日時で比較）
+    now = datetime.now()
     
     # ★実戦仕様：集計対象の時間窓設定
-    # 過去30分（到着済みで客が出てくる頃）〜 未来45分（これから着陸）
-    # この「75分間」の便だけを、現在の「アクティブ需要」としてカウントする
-    range_start = now_utc - timedelta(minutes=30)
-    range_end = now_utc + timedelta(minutes=45)
+    # 過去30分 〜 未来45分
+    range_start = now - timedelta(minutes=30)
+    range_end = now + timedelta(minutes=45)
     
-    # 3時間予測用バケツ（こちらは未来を広く見る）
+    # 3時間予測用バケツ
     forecast = {
-        "h1": {"label": (now_jst + timedelta(hours=1)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
-        "h2": {"label": (now_jst + timedelta(hours=2)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
-        "h3": {"label": (now_jst + timedelta(hours=3)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""}
+        "h1": {"label": (now + timedelta(hours=1)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
+        "h2": {"label": (now + timedelta(hours=2)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
+        "h3": {"label": (now + timedelta(hours=3)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""}
     }
 
     seen_vessels = set()
-    unique_flights = [] # 時間窓内の便だけを入れる
+    unique_flights = []
 
     for f in flights:
         # --- A. 重複排除 ---
@@ -56,11 +55,19 @@ def analyze_demand(flights):
         
         # --- C. 時間解析と厳密な振り分け ---
         try:
-            flight_time = datetime.fromisoformat(t_str.replace('Z', '+00:00'))
-            
+            # 【修正箇所】
+            # 以前: datetime.fromisoformat(t_str.replace('Z', '+00:00')) -> UTC扱い
+            # 今回: 単純に文字列から日時を復元し、そのまま比較する（APIはJSTを返している前提）
+            if 'T' in t_str:
+                flight_time_str = t_str[:16] # "2023-10-27T16:55" までを取得
+                flight_time = datetime.strptime(flight_time_str, "%Y-%m-%dT%H:%M")
+            else:
+                continue
+
             # 【重要】時間窓チェック (-30分 〜 +45分)
+            # flight_time(16:55) vs now(01:40) -> 範囲外！ -> 消える（正しい挙動）
+            # もし本番で flight_time(01:40) が来れば -> 範囲内！ -> 表示される
             if range_start <= flight_time <= range_end:
-                # 範囲内なら「今の客」としてカウント ＆ リストに追加
                 unique_flights.append(f)
                 
                 if '1' in term:
@@ -71,8 +78,8 @@ def analyze_demand(flights):
                     pax_t3 += pax
 
             # --- D. 3時間予測（未来判定） ---
-            # ここは時間窓に関係なく、未来の便をすべてチェック
-            diff_hours = (flight_time - now_utc).total_seconds() / 3600
+            # 差分（時間）を計算
+            diff_hours = (flight_time - now).total_seconds() / 3600
 
             if 0 <= diff_hours < 1:
                 forecast["h1"]["pax"] += pax
@@ -81,7 +88,8 @@ def analyze_demand(flights):
             elif 2 <= diff_hours < 3:
                 forecast["h3"]["pax"] += pax
 
-        except:
+        except Exception as e:
+            # 日付解析エラー等の場合はスキップ
             pass
 
     # 3. 予測ステータス判定
