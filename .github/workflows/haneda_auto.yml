@@ -1,12 +1,14 @@
 name: Run Haneda Radar
 
+# ▼▼▼ これがないとGASから呼べません（ここが消えていた原因です） ▼▼▼
 on:
-  workflow_dispatch: # 👈 これが「スタートボタン」です！これがないとGASは動きません
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    # 鍵の設定
     env:
       AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -35,5 +37,6 @@ jobs:
           git commit -m "Update flight data" || exit 0
           git push
 
+      # ▼ 最後にURLを表示します
       - name: Show URL
         run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
