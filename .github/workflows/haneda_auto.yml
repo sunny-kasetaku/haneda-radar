@@ -2,6 +2,8 @@ name: Haneda Radar Auto Update
 
 on:
   workflow_dispatch:         # 手動実行ボタン
+  # schedule:                # ★テストが成功したら、ここのコメントアウト(#)を外して自動化します
+  #   - cron: '*/10 * * * *' # 10分ごとに実行
 
 permissions:
   contents: write
@@ -35,19 +37,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      # --- [修正箇所：envを足して金庫の鍵をプログラムに渡す] ---
+      # --- [修正箇所：金庫の鍵をプログラムに渡す設定] ---
       - name: Run Haneda Radar
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           SITE_URL: ${{ secrets.SITE_URL }}
-        run: python haneda_radar.py
+          # ▼▼▼ ここに新しい鍵を追加しました！ ▼▼▼
+          AVIATIONSTACK_API_KEY: ${{ secrets.AVIATIONSTACK_API_KEY }}
+        
+        # ▼▼▼ ファイル名を main_v8.py に合わせました ▼▼▼
+        # ※もしPythonファイル名を haneda_radar.py のままにしているなら、ここを戻してください
+        run: python main_v8.py
 
-      # --- [保存ステップ：index.htmlをリポジトリに残す] ---
+      # --- [保存ステップ：生成されたファイルをリポジトリに残す] ---
       - name: Commit and Push changes
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
-          git add index.html analysis_result.json haneda_raw.json
+          # 必要なファイルだけを追加
+          git add index.html secret.json
+          # もしログなども残すならここに追加
           if git diff --staged --quiet; then
             echo "No changes"
           else

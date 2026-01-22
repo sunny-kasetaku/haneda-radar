@@ -1,13 +1,14 @@
 import os
 from datetime import datetime, timedelta
 
-def generate_html_new(demand_results, _):
-    # フライトリスト
+# ★引数を変更: prev_data ではなく daily_password を受け取るようにします
+def generate_html_new(demand_results, daily_password):
+    
     flight_list = demand_results.get("flights", [])
     
-    # ---------------------------------------------------------
-    # 0. 空港コード辞書
-    # ---------------------------------------------------------
+    # (中略：空港辞書やランク判定ロジックはそのまま...)
+    # ※以前のコードと同じ部分は省略せず、必要な箇所だけ修正して全体を出しますね
+
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -23,18 +24,14 @@ def generate_html_new(demand_results, _):
         "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
     }
 
-    # ---------------------------------------------------------
     # 1. ランク判定
-    # ---------------------------------------------------------
     total = sum(v for k, v in demand_results.items() if k not in ["forecast", "unique_count", "flights"])
     if total >= 600: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 300: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 100: r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
     else:              r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
-    # ---------------------------------------------------------
-    # 2. ターミナルカード
-    # ---------------------------------------------------------
+    # 2. カード生成
     target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
     pax_counts = [demand_results.get(k, 0) for k in target_keys]
     max_val = max(pax_counts) if pax_counts else 0
@@ -55,20 +52,14 @@ def generate_html_new(demand_results, _):
         </div>
         """
 
-    # ---------------------------------------------------------
-    # 3. フライトテーブル (補正なし・そのまま表示)
-    # ---------------------------------------------------------
+    # 3. テーブル生成 (JST Direct)
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
-        
-        # データがすでにJST(日本時間)なので、計算せず文字を切り出すだけにする
         if 'T' in raw_time:
-            # "2023-xx-xxT16:55:00" -> "16:55"
             time_str = raw_time[11:16]
         else:
             time_str = "---"
-
         pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
         origin_code = f.get('origin', '')
         origin_name = AIRPORT_MAP.get(origin_code, origin_code)
@@ -82,9 +73,7 @@ def generate_html_new(demand_results, _):
         </tr>
         """
 
-    # ---------------------------------------------------------
-    # 4. 需要予測
-    # ---------------------------------------------------------
+    # 4. 予測生成
     f_data = demand_results.get("forecast", {})
     forecast_html = ""
     for k in ["h1", "h2", "h3"]:
@@ -100,49 +89,32 @@ def generate_html_new(demand_results, _):
         </div>
         """
 
-    # ---------------------------------------------------------
     # 5. HTML組み立て
-    # ---------------------------------------------------------
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            /* Base: Dark-Flash */
-            @keyframes flash {{ 
-                0% {{ opacity: 0.6; }} 
-                50% {{ opacity: 0.8; }} 
-                100% {{ opacity: 1; }} 
-            }}
+            @keyframes flash {{ 0% {{ opacity: 0.6; }} 50% {{ opacity: 0.8; }} 100% {{ opacity: 1; }} }}
             body.loading {{ animation: flash 0.8s ease-out; }}
-            
             body {{ background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
             #main-content {{ display:none; width:100%; max-width:480px; }}
             
-            /* 1. Banner */
             .info-banner {{ border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-weight: bold; margin-bottom: 15px; font-size: 14px; }}
-            
-            /* 2. Rank & Legend */
             .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 20px; text-align: center; margin-bottom: 15px; }}
             .rank-display {{ font-size: 80px; font-weight: bold; color: {c}; line-height: 1; }}
             .rank-sub {{ font-size: 20px; font-weight: bold; margin-top:5px; }}
             .legend {{ display:flex; justify-content:center; gap:8px; font-size:10px; color:#888; margin-top:15px; border-top:1px solid #333; padding-top:10px; flex-wrap: wrap; }}
-            
-            /* 3. Grid */
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
             .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
             .best-choice {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.2); }}
             .best-badge {{ position: absolute; top: -8px; right: -5px; background: #FFD700; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }}
             .t-num {{ font-size: 32px; font-weight: bold; margin-top:5px; }}
-
-            /* 4. Table */
             .section-title {{ color: gold; font-weight: bold; font-size: 14px; margin: 0 0 5px 0; border-left: 4px solid gold; padding-left: 10px; }}
             .flight-table {{ width: 100%; font-size: 13px; border-collapse: collapse; background: #111; border-radius:10px; overflow:hidden; margin-bottom: 25px; }}
             .flight-table th {{ color:gold; padding:10px; border-bottom:1px solid #333; text-align:center; }}
             .flight-table td {{ padding: 10px; border-bottom: 1px solid #222; text-align: center; }}
-
-            /* 5. Forecast */
             .forecast-box {{ background: #111; border: 1px solid #444; border-radius: 15px; padding: 15px; margin-bottom: 20px; }}
             .fc-row {{ border-bottom: 1px dashed #333; padding: 10px 0; }}
             .fc-row:last-child {{ border-bottom: none; }}
@@ -151,24 +123,39 @@ def generate_html_new(demand_results, _):
             .fc-status {{ font-weight: bold; color: #fff; margin-right: 5px; }}
             .fc-pax {{ color: #00FF00; font-weight: bold; }}
             .fc-comment {{ font-size: 12px; color: #888; margin-left: 10px; }}
-
-            /* 6. Camera & Disclaimer */
             .cam-box {{ background:#111; border:1px solid #444; border-radius:15px; padding:15px; margin-bottom:20px; text-align:center; }}
             .cam-title {{ color:#FFD700; font-weight:bold; font-size:14px; margin-bottom:10px; }}
             .cam-btn {{ display: block; padding: 12px; background: #FFD700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; margin-bottom:10px; }}
             .disclaimer {{ font-size: 10px; color: #888; text-align: left; line-height: 1.4; }}
-
-            /* 7. Update & Footer */
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }}
             .footer {{ text-align:center; color:#666; font-size:11px; padding-bottom:30px; }}
         </style>
         <script>
+            // ★今日の正解パスワードを埋め込む
+            const TODAY_PASS = "{daily_password}";
+
             function checkPass() {{
-                if (localStorage.getItem("kasetack_auth_pass_v2") === "kase") {{
+                // ローカルストレージに保存されているパスワードを取得
+                const savedPass = localStorage.getItem("haneda_auth_pass_daily");
+                
+                // 「保存されたパス」と「今日の正解」が一致するか？
+                if (savedPass === TODAY_PASS) {{
+                    // 一致すればOK（今日すでに認証済み）
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                 }} else {{
-                    if (prompt("パスワード入力") === "kase") {{ localStorage.setItem("kasetack_auth_pass_v2", "kase"); location.reload(); }}
+                    // 不一致（初めて または 日付が変わってパスが変わった）
+                    const userLayout = prompt("【本日のパスワード】数字4桁を入力してください");
+                    
+                    if (userLayout === TODAY_PASS) {{
+                        // 正解なら保存して表示
+                        localStorage.setItem("haneda_auth_pass_daily", TODAY_PASS);
+                        document.getElementById('main-content').style.display = 'block';
+                        document.body.classList.add('loading');
+                    }} else {{
+                        alert("パスワードが違います。Discordを確認してください。");
+                        location.reload(); // 再読み込みしてやり直し
+                    }}
                 }}
             }}
             window.onload = checkPass;
@@ -210,7 +197,7 @@ def generate_html_new(demand_results, _):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v8.0 JST-Direct
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v8.2 Daily-Pass
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
