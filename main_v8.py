@@ -20,50 +20,31 @@ def main():
     print("-" * 50)
     print(f"開始時刻: {start_time.strftime('%Y-%m-%d %H:%M:%S')} (JST)")
 
-    # ▼ 日付をシードにして、その日固定のランダムな4桁を生成
+    # パスワードはランダムを維持（これがないとログインできないため）
     random.seed(start_time.strftime('%Y%m%d'))
     daily_pass = f"{random.randint(0, 9999):04d}"
     
     print(f"【重要】本日のランダムパスワード: {daily_pass}")
     print("-" * 50)
 
-    # 2. データ取得
-    print("📡 AviationStackから最新データを取得中...")
-    flights_raw = fetch_flight_data(CONFIG.get("AVIATION_STACK_API_KEY"))
-    raw_count = len(flights_raw)
+    # 2. データ取得（フィルターなしの元の状態に戻しました）
+    print("📡 データを再取得中（フィルター解除版）...")
+    flights = fetch_flight_data(CONFIG.get("AVIATION_STACK_API_KEY"))
     
-    # 3. 旅客便のみにフィルタリング
-    # typeがpassengerであること、便名にCargo等が含まれないことを確認
-    flights = [
-        f for f in flights_raw 
-        if f.get('type') != 'cargo'
-        and 'cargo' not in (f.get('flight_iata') or '').lower()
-        and f.get('flight_status') != 'cancelled'
-    ]
-    passenger_count = len(flights)
-    cargo_count = raw_count - passenger_count
-
-    print(f"📊 データ取得結果:")
-    print(f"   -> 全取得件数: {raw_count}件")
-    print(f"   -> 貨物/不要便の除外: -{cargo_count}件")
-    print(f"   -> 分析対象(旅客便): {passenger_count}件")
+    print(f"📊 取得件数: {len(flights)}件 (全ての便を分析対象にします)")
     
-    # 4. 分析
+    # 3. 分析
     analysis_result = analyze_demand(flights)
     
-    # 5. HTML生成
+    # 4. HTML生成
     render_html(analysis_result, daily_pass)
     
-    # 6. 通知 (Discord) - 朝6時台のみ
+    # 5. 通知 (Discord)
     bot = DiscordBot()
     if start_time.hour == 6 and 0 <= start_time.minute < 20:
-        print("🔔 Discord通知フェーズ: 定時連絡を送信します。")
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
-    else:
-        print(f"ℹ️  Discord通知フェーズ: 定時外のためスキップ（現在 {start_time.hour}時）")
 
-    print("-" * 50)
-    print("終了: 全プロセスが正常に完了しました。")
+    print("✅ 元の取得条件に戻しました。完了です。")
     print("-" * 50)
 
 if __name__ == "__main__":
