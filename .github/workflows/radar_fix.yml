@@ -1,6 +1,10 @@
-name: HanedaFix
-on: [workflow_dispatch, push]
-permissions: { contents: write }
+name: FinalFix
+on:
+  workflow_dispatch:
+  push:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -8,15 +12,16 @@ jobs:
     env:
       AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-        with: { python-version: '3.9' }
+        with:
+          python-version: '3.9'
       - run: pip install requests
       - run: python main_v8.py
-      - run: git config --global user.email "action@github.com"
-      - run: git config --global user.name "GitHub Action"
+      - run: git config --local user.email "action@github.com"
+      - run: git config --local user.name "GitHub Action"
       - run: git add index.html
-      - run: git commit -m "Update" || echo "No changes"
+      - run: git commit -m "Update" || exit 0
       - run: git push -f origin HEAD:main
-      - run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
