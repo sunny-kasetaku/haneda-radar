@@ -5,6 +5,8 @@ on:
 
 permissions:
   contents: write
+  pages: write      # 追加：Pagesへの書き込み権限
+  id-token: write   # 追加：認証用
 
 jobs:
   build:
@@ -19,19 +21,21 @@ jobs:
         with:
           python-version: '3.9'
       - run: pip install requests
-      - run: python main_v8.py  # ここで最新の index.html が作られます
-      
-      # 1. 念のためソースコード側（mainブランチ）も更新しておく
-      - run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add index.html
-          git commit -m "Update index.html by action" || exit 0
-          git push origin HEAD:main
+      - run: python main_v8.py  # index.htmlを生成
 
-      # 2. 【最重要】Webサイト公開用の枝（gh-pages）に最新の index.html を送り込む
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      # 最新の index.html を公開用の荷物としてまとめる
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .  # 今いる場所（index.htmlがある場所）をそのまま公開
+          path: '.'  # 今いる場所のファイルをアップロード
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4  # ここで直接Webサイトを上書き公開する
