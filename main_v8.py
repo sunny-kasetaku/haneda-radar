@@ -1,57 +1,47 @@
-# main_v8.py (Final Integration)
-# ---------------------------------------------------------
-# 羽田空港タクシー需要予測システム v8.4
-# ---------------------------------------------------------
 import os
 import requests
-from datetime import datetime
-from config import CONFIG 
+import json
+import random
+from datetime import datetime, timedelta
+# ▼ ここを修正しました（fetch_flights_v2 -> fetch_flight_data）
+from api_handler_v2 import fetch_flight_data
+from analyzer_v2 import analyze_demand
+from renderer_new import render_html
+from discord_bot import DiscordBot
 
-# ★修正済みの api_handler_v2 を読み込む
-from api_handler_v2 import fetch_flights_v2
-import analyzer_v2 as analyzer
-import renderer_new as renderer
-import discord_bot as bot
+# 設定
+CONFIG = {
+    "AVIATION_STACK_API_KEY": os.environ.get("AVIATION_STACK_API_KEY"),
+    "DISCORD_WEBHOOK_URL": os.environ.get("DISCORD_WEBHOOK_URL"),
+}
 
 def main():
-    start_time = datetime.now()
-    print(f"START: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    # 日本時間 (JST)
+    start_time = datetime.utcnow() + timedelta(hours=9)
+    print(f"START: {start_time.strftime('%Y-%m-%d %H:%M:%S')} (JST)")
 
-    # 1. パスワード生成 (Rendererへ渡す用)
-    daily_pass = start_time.strftime('%m%d') 
+    # パスワード生成 (テスト運用中は日付固定でもOKですが、コード上はランダム版にしておきます)
+    # ※もし日付固定のままが良ければ daily_pass = start_time.strftime('%m%d') に戻してください
+    daily_pass = str(random.randint(1000, 9999))
+    print(f"LOG: 本日のパスワード生成 -> {daily_pass}")
 
     # 2. データ取得
-    # ★ここで修正した api_handler_v2 を使います！
-    # 3ページ分(300件)取得し、Analyzer用に整形されたデータが返ってきます
-    flights = fetch_flights_v2(target_airport="HND", pages=3)
+    # ▼ ここも名前を合わせました
+    flights = fetch_flight_data(CONFIG.get("AVIATION_STACK_API_KEY"))
     
-    if not flights:
-        print("WARNING: データが0件のため終了します")
-        return
-
     # 3. 分析
-    # 整形済みデータなので、Analyzerにそのまま渡してOK
-    try:
-        results = analyzer.analyze_demand(flights)
-        print("✅ 分析完了")
-    except Exception as e:
-        print(f"❌ Analyzer Error: {e}")
-        return
-
-    # 4. 描画 & 保存
-    try:
-        renderer.generate_html_new(results, daily_pass)
-        print("✅ HTML生成完了")
-    except Exception as e:
-        print(f"❌ Renderer Error: {e}")
-
-    # 5. 通知 (Discord)
-    # 朝6時00分〜15分の間だけ通知
-    if start_time.hour == 6 and 0 <= start_time.minute < 15:
-        print("LOG: 定時連絡の時間です")
+    analysis_result = analyze_demand(flights)
+    
+    # 4. HTML生成
+    render_html(analysis_result, daily_pass)
+    
+    # 5. 通知 (Discord) - 朝6時台のみ
+    bot = DiscordBot()
+    if start_time.hour == 6 and 0 <= start_time.minute < 20:
+        print("LOG: 定時連絡の時間です。Discordに通知を送ります。")
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
     else:
-        print("LOG: 定時連絡外のため通知スキップ")
+        print("LOG: 定時連絡外のため、Discord通知はスキップします。")
 
     print("END")
 
