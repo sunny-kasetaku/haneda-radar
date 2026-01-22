@@ -10,7 +10,7 @@
             // 簡易パスワードロック
             window.onload = function() {
                 const input = prompt("本日のパスワードを入力してください");
-                if (input !== "1235") {
+                if (input !== "4972") {
                     document.body.innerHTML = "<div class='p-10 text-center'>🔒 アクセス拒否<br>パスワードが違います</div>";
                 } else {
                     document.getElementById("main-content").style.display = "block";
@@ -22,7 +22,7 @@
         <div id="main-content" style="display:none;" class="max-w-md mx-auto p-4">
             
             <div class="bg-purple-100 p-4 rounded-xl shadow-md mb-4 text-center border border-gray-200">
-                <div class="text-xs text-gray-500 mb-1">⚠️ 範囲: 直近75分 | 実数: 18機</div>
+                <div class="text-xs text-gray-500 mb-1">⚠️ 範囲: 直近75分 | 実数: 22機</div>
                 <div class="text-3xl font-black text-gray-800 mb-1">🌈 S (超混雑)</div>
                 <div class="text-xs text-gray-400">🌈S:1000~ 🔥A:600~ ✅B:200~</div>
             </div>
@@ -31,27 +31,27 @@
                 
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">1号(T1南)</div>
-            <div class="text-2xl text-red-600 font-bold">900<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">1050<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">2号(T1北)</div>
-            <div class="text-2xl text-red-600 font-bold">900<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">1050<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">3号(T2)</div>
-            <div class="text-2xl text-green-600 font-bold">225<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">300<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">4号(T2)</div>
-            <div class="text-2xl text-green-600 font-bold">225<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">300<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">国際(T3)</div>
-            <div class="text-2xl text-red-600 font-bold">750<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">1000<span class="text-xs text-gray-400">人</span></div>
         </div>
         
             </div>
@@ -74,6 +74,13 @@
             <td class="py-2 px-2">21:25</td>
             <td class="py-2 px-2 font-bold">JL544</td>
             <td class="py-2 px-2 text-xs text-gray-600">Kushiro</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:35</td>
+            <td class="py-2 px-2 font-bold">JL192</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Komatsu</td>
             <td class="py-2 px-2 text-right">150名</td>
         </tr>
         
@@ -106,13 +113,6 @@
         </tr>
         
         <tr class="border-b">
-            <td class="py-2 px-2">20:25</td>
-            <td class="py-2 px-2 font-bold">JL296</td>
-            <td class="py-2 px-2 text-xs text-gray-600">Ube</td>
-            <td class="py-2 px-2 text-right">150名</td>
-        </tr>
-        
-        <tr class="border-b">
             <td class="py-2 px-2">20:56</td>
             <td class="py-2 px-2 font-bold">JL5792</td>
             <td class="py-2 px-2 text-xs text-gray-600">Shanghai Pudong International</td>
@@ -124,6 +124,13 @@
             <td class="py-2 px-2 font-bold">CZ7802</td>
             <td class="py-2 px-2 text-xs text-gray-600">Beijing Capital International</td>
             <td class="py-2 px-2 text-right">250名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:35</td>
+            <td class="py-2 px-2 font-bold">JL330</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Fukuoka</td>
+            <td class="py-2 px-2 text-right">150名</td>
         </tr>
         
         <tr class="border-b">
@@ -141,6 +148,13 @@
         </tr>
         
         <tr class="border-b">
+            <td class="py-2 px-2">21:33</td>
+            <td class="py-2 px-2 font-bold">UA7906</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Kuala Lumpur International Airport (klia)</td>
+            <td class="py-2 px-2 text-right">250名</td>
+        </tr>
+        
+        <tr class="border-b">
             <td class="py-2 px-2">21:30</td>
             <td class="py-2 px-2 font-bold">NH40</td>
             <td class="py-2 px-2 text-xs text-gray-600">Itami</td>
@@ -149,20 +163,20 @@
         
         <tr class="border-b">
             <td class="py-2 px-2">21:20</td>
-            <td class="py-2 px-2 font-bold">7G16</td>
+            <td class="py-2 px-2 font-bold">NH3816</td>
             <td class="py-2 px-2 text-xs text-gray-600">Ube</td>
             <td class="py-2 px-2 text-right">150名</td>
         </tr>
         
         <tr class="border-b">
-            <td class="py-2 px-2">21:00</td>
+            <td class="py-2 px-2">20:58</td>
             <td class="py-2 px-2 font-bold">NH640</td>
             <td class="py-2 px-2 text-xs text-gray-600">None</td>
             <td class="py-2 px-2 text-right">150名</td>
         </tr>
         
         <tr class="border-b">
-            <td class="py-2 px-2">20:33</td>
+            <td class="py-2 px-2">20:28</td>
             <td class="py-2 px-2 font-bold">JL652</td>
             <td class="py-2 px-2 text-xs text-gray-600">Kagoshima</td>
             <td class="py-2 px-2 text-right">150名</td>
@@ -190,9 +204,23 @@
         </tr>
         
         <tr class="border-b">
-            <td class="py-2 px-2">20:24</td>
+            <td class="py-2 px-2">20:25</td>
             <td class="py-2 px-2 font-bold">6J20</td>
             <td class="py-2 px-2 text-xs text-gray-600">Kumamoto</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:24</td>
+            <td class="py-2 px-2 font-bold">NH2420</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Kumamoto</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:35</td>
+            <td class="py-2 px-2 font-bold">AF8199</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Miyazaki</td>
             <td class="py-2 px-2 text-right">150名</td>
         </tr>
         
@@ -206,19 +234,19 @@
                 
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
             <div class="text-sm font-bold text-gray-600">[21:00〜]</div>
-            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 3400人)</span></div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 3650人)</span></div>
             <div class="text-xs text-gray-400">└ 🔥 激アツ・第2波</div>
         </div>
         
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
             <div class="text-sm font-bold text-gray-600">[22:00〜]</div>
-            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 4750人)</span></div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 5200人)</span></div>
             <div class="text-xs text-gray-400">└ 🔥 激アツ・第2波</div>
         </div>
         
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
             <div class="text-sm font-bold text-gray-600">[23:00〜]</div>
-            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 2400人)</span></div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 1850人)</span></div>
             <div class="text-xs text-gray-400">└ 🔥 激アツ・第2波</div>
         </div>
         
@@ -227,7 +255,7 @@
             <div class="text-center text-xs text-gray-400 mt-8 mb-10">
                 <div>最新情報に更新</div>
                 <div>画面の自動再読み込みまであと <span id="timer">60</span> 秒</div>
-                <div class="mt-2">最終データ取得: 20:47 | v8.5 Fixed</div>
+                <div class="mt-2">最終データ取得: 20:51 | v8.5 Fixed</div>
             </div>
         </div>
 
