@@ -1,16 +1,11 @@
 name: Run Haneda Radar
 
-# ▼ 書き込み権限を強制的に付与（これでPushエラーも消えます）
 permissions:
   contents: write
 
-# ▼ ボタン(workflow_dispatch) と 保存時(push) の両方で動く設定
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-      - master
 
 jobs:
   build:
@@ -21,27 +16,21 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
-        run: pip install requests
+      - run: pip install requests
 
-      - name: Run script
-        run: python main_v8.py
+      - run: python main_v8.py
 
-      - name: Commit and Push changes
-        run: |
+      - run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add index.html
-          git commit -m "Update flight data" || exit 0
+          git commit -m "Update data" || exit 0
           git push
 
-      - name: Show URL
-        run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
+      - run: echo "Access here: https://sunny-kasetaku.github.io/haneda-radar/"
