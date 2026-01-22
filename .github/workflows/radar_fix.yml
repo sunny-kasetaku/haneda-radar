@@ -26,11 +26,7 @@ jobs:
 
       - run: python main_v8.py
 
-      # ▼▼▼ 修正：ここをバラバラにして、エラーを回避しました ▼▼▼
-      - run: git config --local user.email "action@github.com"
-      - run: git config --local user.name "GitHub Action"
-      - run: git add index.html
-      - run: git commit -m "Update" || exit 0
-      - run: git push -f origin HEAD:main
+      # ▼▼▼ 修正：全部つなげて「1行」にしました。これでズレようがありません ▼▼▼
+      - run: git config --local user.email "action@github.com" && git config --local user.name "GitHub Action" && git add index.html && (git commit -m "Update" || echo "No changes") && git push -f origin HEAD:main
 
       - run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
