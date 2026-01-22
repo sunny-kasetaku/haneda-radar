@@ -1,14 +1,14 @@
+# renderer_new.py
+# ---------------------------------------------------------
+# HTML Generator (Fix: Exclude string keys from sum)
+# ---------------------------------------------------------
 import os
 from datetime import datetime, timedelta
 
-# ★引数を変更: prev_data ではなく daily_password を受け取るようにします
 def generate_html_new(demand_results, daily_password):
     
     flight_list = demand_results.get("flights", [])
     
-    # (中略：空港辞書やランク判定ロジックはそのまま...)
-    # ※以前のコードと同じ部分は省略せず、必要な箇所だけ修正して全体を出しますね
-
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -25,7 +25,10 @@ def generate_html_new(demand_results, daily_password):
     }
 
     # 1. ランク判定
-    total = sum(v for k, v in demand_results.items() if k not in ["forecast", "unique_count", "flights"])
+    # ★修正箇所： "update_time" を除外リストに追加しました
+    ignore_keys = ["forecast", "unique_count", "flights", "update_time"]
+    total = sum(v for k, v in demand_results.items() if k not in ignore_keys)
+    
     if total >= 600: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 300: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 100: r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
@@ -52,14 +55,16 @@ def generate_html_new(demand_results, daily_password):
         </div>
         """
 
-    # 3. テーブル生成 (JST Direct)
+    # 3. テーブル生成
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
-        if 'T' in raw_time:
+        # Tがある場合のみスライス、なければそのままか空白
+        if 'T' in raw_time and len(raw_time) >= 16:
             time_str = raw_time[11:16]
         else:
-            time_str = "---"
+            time_str = raw_time if raw_time else "---"
+            
         pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
         origin_code = f.get('origin', '')
         origin_name = AIRPORT_MAP.get(origin_code, origin_code)
@@ -89,12 +94,16 @@ def generate_html_new(demand_results, daily_password):
         </div>
         """
 
+    # 最終更新時刻（Analyzerから受け取ったものがあれば使う）
+    update_str = demand_results.get("update_time", datetime.now().strftime('%H:%M'))
+
     # 5. HTML組み立て
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>KASETACK Radar</title>
         <style>
             @keyframes flash {{ 0% {{ opacity: 0.6; }} 50% {{ opacity: 0.8; }} 100% {{ opacity: 1; }} }}
             body.loading {{ animation: flash 0.8s ease-out; }}
@@ -131,30 +140,22 @@ def generate_html_new(demand_results, daily_password):
             .footer {{ text-align:center; color:#666; font-size:11px; padding-bottom:30px; }}
         </style>
         <script>
-            // ★今日の正解パスワードを埋め込む
             const TODAY_PASS = "{daily_password}";
 
             function checkPass() {{
-                // ローカルストレージに保存されているパスワードを取得
                 const savedPass = localStorage.getItem("haneda_auth_pass_daily");
-                
-                // 「保存されたパス」と「今日の正解」が一致するか？
                 if (savedPass === TODAY_PASS) {{
-                    // 一致すればOK（今日すでに認証済み）
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                 }} else {{
-                    // 不一致（初めて または 日付が変わってパスが変わった）
                     const userLayout = prompt("【本日のパスワード】数字4桁を入力してください");
-                    
                     if (userLayout === TODAY_PASS) {{
-                        // 正解なら保存して表示
                         localStorage.setItem("haneda_auth_pass_daily", TODAY_PASS);
                         document.getElementById('main-content').style.display = 'block';
                         document.body.classList.add('loading');
                     }} else {{
                         alert("パスワードが違います。Discordを確認してください。");
-                        location.reload(); // 再読み込みしてやり直し
+                        location.reload();
                     }}
                 }}
             }}
@@ -197,12 +198,13 @@ def generate_html_new(demand_results, daily_password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v8.2 Daily-Pass
+                最終データ取得: {update_str} | v8.4 Daily-Pass
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
     </body></html>
     """
     
-    with open("index_test.html", "w", encoding="utf-8") as f:
+    # ★修正：本番用ファイル名 index.html に書き込み
+    with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
