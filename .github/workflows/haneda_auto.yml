@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # 1. 鍵を渡す (これで401エラー回避)
+    # ▼ ここが「鍵」を渡す設定です。これがないと401エラーになります！
     env:
       AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -28,7 +28,7 @@ jobs:
       - name: Run script
         run: python main_v8.py
 
-      # ▼▼▼ ここが重要！これがないと画面が更新されません ▼▼▼
+      # ▼ ここが「Web更新」設定です。これがないと画面が変わりません！
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
