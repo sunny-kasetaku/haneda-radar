@@ -1,0 +1,36 @@
+name: Run Haneda Radar Fix
+
+on:
+  workflow_dispatch:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - run: pip install requests
+
+      - run: python main_v8.py
+
+      - run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add index.html
+          git commit -m "Update" || exit 0
+          git push -f origin HEAD:main
+
+      - run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
