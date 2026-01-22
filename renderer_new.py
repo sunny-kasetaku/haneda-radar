@@ -28,13 +28,14 @@ def render_html(demand_results, password):
             return int(nums[0]) if nums else 0
         return 0
 
-    total = sum(to_int(demand_results.get(k, 0)) for k in ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"])
+    target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
+    total = sum(to_int(demand_results.get(k, 0)) for k in target_keys)
+    
     if total >= 600: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 300: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 100: r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
     else:              r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
-    target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
     pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
     max_val = max(pax_counts) if pax_counts else 0
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
@@ -66,7 +67,12 @@ def render_html(demand_results, password):
     forecast_html = ""
     for k in ["h1", "h2", "h3"]:
         item = f_data.get(k, {})
-        forecast_html += f'<div class="fc-row"><div class="fc-time">[{item.get('label','--:--')}]</div><div class="fc-main"><span class="fc-status">{item.get('status','-')}</span><span class="fc-pax">(推計 {item.get('pax',0)}人)</span></div><div class="fc-comment">└ {item.get('comment','-')}</div></div>'
+        # 修正: f-string内でのクォーテーション競合を避けるため、一度変数に出す
+        label = item.get('label', '--:--')
+        status = item.get('status', '-')
+        pax = item.get('pax', 0)
+        comment = item.get('comment', '-')
+        forecast_html += f'<div class="fc-row"><div class="fc-time">[{label}]</div><div class="fc-main"><span class="fc-status">{status}</span><span class="fc-pax">(推計 {pax}人)</span></div><div class="fc-comment">└ {comment}</div></div>'
 
     html_content = f"""
     <!DOCTYPE html>
@@ -150,7 +156,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v9.8 Restored
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v9.9 Final
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
@@ -158,3 +164,5 @@ def render_html(demand_results, password):
     """
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
+
+    print("✅ HTML生成完了")
