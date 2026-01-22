@@ -10,7 +10,7 @@
             // 簡易パスワードロック
             window.onload = function() {
                 const input = prompt("本日のパスワードを入力してください");
-                if (input !== "8298") {
+                if (input !== "1235") {
                     document.body.innerHTML = "<div class='p-10 text-center'>🔒 アクセス拒否<br>パスワードが違います</div>";
                 } else {
                     document.getElementById("main-content").style.display = "block";
@@ -21,9 +21,9 @@
     <body class="bg-gray-100 text-gray-800">
         <div id="main-content" style="display:none;" class="max-w-md mx-auto p-4">
             
-            <div class="bg-blue-50 p-4 rounded-xl shadow-md mb-4 text-center border border-gray-200">
-                <div class="text-xs text-gray-500 mb-1">⚠️ 範囲: 直近75分 | 実数: 0機</div>
-                <div class="text-3xl font-black text-gray-800 mb-1">🟢 閑散</div>
+            <div class="bg-purple-100 p-4 rounded-xl shadow-md mb-4 text-center border border-gray-200">
+                <div class="text-xs text-gray-500 mb-1">⚠️ 範囲: 直近75分 | 実数: 18機</div>
+                <div class="text-3xl font-black text-gray-800 mb-1">🌈 S (超混雑)</div>
                 <div class="text-xs text-gray-400">🌈S:1000~ 🔥A:600~ ✅B:200~</div>
             </div>
 
@@ -31,27 +31,27 @@
                 
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">1号(T1南)</div>
-            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">900<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">2号(T1北)</div>
-            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">900<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">3号(T2)</div>
-            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-green-600 font-bold">225<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">4号(T2)</div>
-            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-green-600 font-bold">225<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">国際(T3)</div>
-            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">750<span class="text-xs text-gray-400">人</span></div>
         </div>
         
             </div>
@@ -70,6 +70,132 @@
                         </thead>
                         <tbody>
                             
+        <tr class="border-b">
+            <td class="py-2 px-2">21:25</td>
+            <td class="py-2 px-2 font-bold">JL544</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Kushiro</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:20</td>
+            <td class="py-2 px-2 font-bold">JL698</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Miyazaki</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:15</td>
+            <td class="py-2 px-2 font-bold">JL524</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Chitose</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:50</td>
+            <td class="py-2 px-2 font-bold">JL242</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Okayama</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:40</td>
+            <td class="py-2 px-2 font-bold">JL158</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Misawa</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:25</td>
+            <td class="py-2 px-2 font-bold">JL296</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Ube</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:56</td>
+            <td class="py-2 px-2 font-bold">JL5792</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Shanghai Pudong International</td>
+            <td class="py-2 px-2 text-right">250名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:39</td>
+            <td class="py-2 px-2 font-bold">CZ7802</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Beijing Capital International</td>
+            <td class="py-2 px-2 text-right">250名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:20</td>
+            <td class="py-2 px-2 font-bold">JL138</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Itami</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:16</td>
+            <td class="py-2 px-2 font-bold">NH6256</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Singapore Changi</td>
+            <td class="py-2 px-2 text-right">250名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:30</td>
+            <td class="py-2 px-2 font-bold">NH40</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Itami</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:20</td>
+            <td class="py-2 px-2 font-bold">7G16</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Ube</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">21:00</td>
+            <td class="py-2 px-2 font-bold">NH640</td>
+            <td class="py-2 px-2 text-xs text-gray-600">None</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:33</td>
+            <td class="py-2 px-2 font-bold">JL652</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Kagoshima</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:28</td>
+            <td class="py-2 px-2 font-bold">JL134</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Itami</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:30</td>
+            <td class="py-2 px-2 font-bold">JL498</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Kochi</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:37</td>
+            <td class="py-2 px-2 font-bold">JL328</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Fukuoka</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">20:24</td>
+            <td class="py-2 px-2 font-bold">6J20</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Kumamoto</td>
+            <td class="py-2 px-2 text-right">150名</td>
+        </tr>
+        
                         </tbody>
                     </table>
                 </div>
@@ -80,20 +206,20 @@
                 
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
             <div class="text-sm font-bold text-gray-600">[21:00〜]</div>
-            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
-            <div class="text-xs text-gray-400">└ ⬇️ 撤収準備</div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 3400人)</span></div>
+            <div class="text-xs text-gray-400">└ 🔥 激アツ・第2波</div>
         </div>
         
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
             <div class="text-sm font-bold text-gray-600">[22:00〜]</div>
-            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
-            <div class="text-xs text-gray-400">└ ⬇️ 撤収準備</div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 4750人)</span></div>
+            <div class="text-xs text-gray-400">└ 🔥 激アツ・第2波</div>
         </div>
         
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
             <div class="text-sm font-bold text-gray-600">[23:00〜]</div>
-            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
-            <div class="text-xs text-gray-400">└ ⬇️ 撤収準備</div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 2400人)</span></div>
+            <div class="text-xs text-gray-400">└ 🔥 激アツ・第2波</div>
         </div>
         
             </div>
@@ -101,7 +227,7 @@
             <div class="text-center text-xs text-gray-400 mt-8 mb-10">
                 <div>最新情報に更新</div>
                 <div>画面の自動再読み込みまであと <span id="timer">60</span> 秒</div>
-                <div class="mt-2">最終データ取得: 20:44 | v8.5 Fixed</div>
+                <div class="mt-2">最終データ取得: 20:47 | v8.5 Fixed</div>
             </div>
         </div>
 
