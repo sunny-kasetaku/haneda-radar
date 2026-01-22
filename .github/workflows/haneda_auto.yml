@@ -1,13 +1,12 @@
 name: Run Haneda Radar
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # 👈 これが「スタートボタン」です！これがないとGASは動きません
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    # APIキー設定（そのまま）
     env:
       AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -36,6 +35,5 @@ jobs:
           git commit -m "Update flight data" || exit 0
           git push
 
-      # ▼▼▼ 修正：URL表示を復活させました！ ▼▼▼
       - name: Show URL
         run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
