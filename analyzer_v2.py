@@ -15,8 +15,8 @@ def analyze_demand(flights):
     pax_t2 = 0
     pax_t3 = 0
     
-    # 現在時刻
-    now = datetime.now()
+    # 現在時刻（GitHubサーバーはUTCなので、強制的にJST +9時間にする）
+    now = datetime.now() + timedelta(hours=9)
     
     # 集計対象の時間窓（過去30分 〜 未来45分）
     range_start = now - timedelta(minutes=30)
