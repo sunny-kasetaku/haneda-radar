@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # ▼ 【ここが最強の場所】ジョブ全体に鍵を適用します
+    # ▼ ここに「env」を戻しました。これで有料版のキーが通ります。
     env:
       AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -28,6 +28,7 @@ jobs:
       - name: Run script
         run: python main_v8.py
 
+      # ▼ 画面更新の機能も入っています
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
