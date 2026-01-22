@@ -7,11 +7,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # ▼ ここが「鍵」を渡す設定です。これがないと401エラーになります！
-    env:
-      AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -25,15 +20,19 @@ jobs:
         run: |
           pip install requests
 
+      # ▼▼▼ ここを変えました！ ▼▼▼
+      # 全体設定ではなく、このコマンドを実行する瞬間に直接鍵を渡します。
+      # これで絶対に「鍵忘れ」は起きません。
       - name: Run script
+        env:
+          AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python main_v8.py
 
-      # ▼ ここが「Web更新」設定です。これがないと画面が変わりません！
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add index.html
-          # 変更がなければエラーにせず終了、あればコミットしてPush
           git commit -m "Update flight data" || exit 0
           git push
