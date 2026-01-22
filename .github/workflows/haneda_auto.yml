@@ -1,11 +1,11 @@
 name: Run Haneda Radar
 
-permissions:
-  contents: write
-
 on:
   workflow_dispatch:
   push:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -16,9 +16,9 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
 
@@ -30,7 +30,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add index.html
-          git commit -m "Update data" || exit 0
-          git push
-
-      - run: echo "Access here: https://sunny-kasetaku.github.io/haneda-radar/"
+          git commit -m "Update" || exit 0
+          git push -f origin HEAD:main
