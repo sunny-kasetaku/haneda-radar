@@ -1,9 +1,16 @@
 name: Run Haneda Radar
 
-# ▼▼▼ 修正：ボタンを待たずに、保存(Push)したらすぐ動くようにしました ▼▼▼
+# ▼ 書き込み権限を強制的に付与（これでPushエラーも消えます）
+permissions:
+  contents: write
+
+# ▼ ボタン(workflow_dispatch) と 保存時(push) の両方で動く設定
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+      - master
 
 jobs:
   build:
@@ -15,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
