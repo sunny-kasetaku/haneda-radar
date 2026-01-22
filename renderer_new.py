@@ -1,10 +1,10 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
     
-    # 0. 空港コード辞書
+    # 0. おとといの辞書
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -20,6 +20,7 @@ def render_html(demand_results, password):
         "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
     }
 
+    # 数値変換
     def to_int(v):
         if isinstance(v, int): return v
         if isinstance(v, str):
@@ -28,16 +29,18 @@ def render_html(demand_results, password):
             return int(nums[0]) if nums else 0
         return 0
 
+    # 1. ランク判定
     target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
-    total = sum(to_int(demand_results.get(k, 0)) for k in target_keys)
+    pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
+    total = sum(pax_counts)
     
     if total >= 600: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 300: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 100: r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
     else:              r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
-    pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
-    max_val = max(pax_counts) if pax_counts else 0
+    # 2. ターミナルカード
+    max_val = max(pax_counts) if any(pax_counts) else -1
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
 
     cards_html = ""
@@ -49,31 +52,36 @@ def render_html(demand_results, password):
         disp_val = demand_results.get(name, "0")
         cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num">{disp_val}</div></div>'
 
+    # 3. フライトテーブル
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
         time_str = raw_time[11:16] if 'T' in raw_time else "---"
         pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
-        f_code = f.get('flight_iata') or f.get('flight_number') or "---"
-        origin_val = f.get('origin', '')
-        origin_name = origin_val
-        for code, ja_name in AIRPORT_MAP.items():
-            if code in origin_val or ja_name in origin_val:
-                origin_name = ja_name
+        
+        # 便名取得の強化
+        f_info = f.get('flight') or {}
+        f_code = f.get('flight_iata') or f_info.get('iata') or f_info.get('number') or "---"
+
+        # 出身日本語化の強化
+        origin_raw = f.get('origin', '')
+        origin_name = origin_raw
+        for code, ja in AIRPORT_MAP.items():
+            if code.lower() in origin_raw.lower() or ja in origin_raw:
+                origin_name = ja
                 break
+        
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
+    # 4. 需要予測
     f_data = demand_results.get("forecast", {})
     forecast_html = ""
     for k in ["h1", "h2", "h3"]:
         item = f_data.get(k, {})
-        # 修正: f-string内でのクォーテーション競合を避けるため、一度変数に出す
-        label = item.get('label', '--:--')
-        status = item.get('status', '-')
-        pax = item.get('pax', 0)
-        comment = item.get('comment', '-')
-        forecast_html += f'<div class="fc-row"><div class="fc-time">[{label}]</div><div class="fc-main"><span class="fc-status">{status}</span><span class="fc-pax">(推計 {pax}人)</span></div><div class="fc-comment">└ {comment}</div></div>'
+        l, s, p, cm = item.get('label','--:--'), item.get('status','-'), item.get('pax',0), item.get('comment','-')
+        forecast_html += f'<div class="fc-row"><div class="fc-time">[{l}]</div><div class="fc-main"><span class="fc-status">{s}</span><span class="fc-pax">(推計 {p}人)</span></div><div class="fc-comment">└ {cm}</div></div>'
 
+    # 5. HTML組み立て
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -148,21 +156,4 @@ def render_html(demand_results, password):
             <div class="forecast-box">{forecast_html}</div>
             <div class="cam-box">
                 <div class="cam-title">⚠️ 重要：最終判断の前に必ず確認</div>
-                <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-btn">🎥 乗り場ライブカメラ (外部サイト)</a>
-                <div class="disclaimer">
-                    ※本システムは航空機のデータのみに基づいています。実際の行列やタクシー待機台数は考慮していません。オンラインサロンでの現地報告も併せて確認してください。
-                </div>
-            </div>
-            <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
-            <div class="footer">
-                画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v9.9 Final
-            </div>
-        </div>
-        <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
-    </body></html>
-    """
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    print("✅ HTML生成完了")
+                <a href="https://www.
