@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # ▼ ここに「env」を戻しました。これで有料版のキーが通ります。
+    # APIキー設定（そのまま）
     env:
       AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -28,7 +28,6 @@ jobs:
       - name: Run script
         run: python main_v8.py
 
-      # ▼ 画面更新の機能も入っています
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
@@ -36,3 +35,7 @@ jobs:
           git add index.html
           git commit -m "Update flight data" || exit 0
           git push
+
+      # ▼▼▼ 修正：URL表示を復活させました！ ▼▼▼
+      - name: Show URL
+        run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
