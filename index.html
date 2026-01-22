@@ -11,7 +11,7 @@
             window.onload = function() {
                 // 入力値の前後の空白を自動で消す (.trim)
                 var input = (prompt("本日のパスワードを入力してください") || "").trim();
-                var correct = "0122";
+                var correct = "0123";
                 
                 // 日付一致 または マスターキー(0000) で許可
                 if (input !== correct && input !== "0000") {
@@ -45,17 +45,17 @@
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">3号(T2)</div>
-            <div class="text-2xl text-gray-500">75<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">4号(T2)</div>
-            <div class="text-2xl text-gray-500">75<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
         </div>
         
         <div class="bg-white p-4 rounded-lg shadow text-center">
             <div class="text-sm text-gray-500">国際(T3)</div>
-            <div class="text-2xl text-red-600 font-bold">1250<span class="text-xs text-gray-400">人</span></div>
+            <div class="text-2xl text-red-600 font-bold">1500<span class="text-xs text-gray-400">人</span></div>
         </div>
         
             </div>
@@ -75,6 +75,13 @@
                         <tbody>
                             
         <tr class="border-b">
+            <td class="py-2 px-2">00:42</td>
+            <td class="py-2 px-2 font-bold">W24820</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Tan Son Nhat International</td>
+            <td class="py-2 px-2 text-right">3</td>
+        </tr>
+        
+        <tr class="border-b">
             <td class="py-2 px-2">00:34</td>
             <td class="py-2 px-2 font-bold">MM808</td>
             <td class="py-2 px-2 text-xs text-gray-600">Seoul (Incheon)</td>
@@ -93,13 +100,6 @@
             <td class="py-2 px-2 font-bold">AA8343</td>
             <td class="py-2 px-2 text-xs text-gray-600">Ninoy Aquino International</td>
             <td class="py-2 px-2 text-right">3</td>
-        </tr>
-        
-        <tr class="border-b">
-            <td class="py-2 px-2">23:30</td>
-            <td class="py-2 px-2 font-bold">NH4744</td>
-            <td class="py-2 px-2 text-xs text-gray-600">Chitose</td>
-            <td class="py-2 px-2 text-right">2</td>
         </tr>
         
         <tr class="border-b">
@@ -125,13 +125,8 @@
                 <h3 class="font-bold text-gray-700 mb-2">📈 今後の需要予測</h3>
                 
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
-            <div class="text-sm font-bold text-gray-600">[00:00〜]</div>
-            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 1500人)</span></div>
-        </div>
-        
-        <div class="mb-3 border-l-4 border-blue-500 pl-3">
             <div class="text-sm font-bold text-gray-600">[01:00〜]</div>
-            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 1500人)</span></div>
         </div>
         
         <div class="mb-3 border-l-4 border-blue-500 pl-3">
@@ -139,10 +134,15 @@
             <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
         </div>
         
+        <div class="mb-3 border-l-4 border-blue-500 pl-3">
+            <div class="text-sm font-bold text-gray-600">[03:00〜]</div>
+            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
+        </div>
+        
             </div>
 
             <div class="text-center text-xs text-gray-400 mt-8 mb-10">
-                <div>最終データ取得: 23:52</div>
+                <div>最終データ取得: 00:01</div>
                 <div>v9.3 Stable</div>
             </div>
         </div>
