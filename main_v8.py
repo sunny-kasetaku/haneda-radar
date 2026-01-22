@@ -1,9 +1,7 @@
 import os
 import requests
 import json
-import random
 from datetime import datetime, timedelta
-# ▼ ここを修正しました（fetch_flights_v2 -> fetch_flight_data）
 from api_handler_v2 import fetch_flight_data
 from analyzer_v2 import analyze_demand
 from renderer_new import render_html
@@ -20,19 +18,17 @@ def main():
     start_time = datetime.utcnow() + timedelta(hours=9)
     print(f"START: {start_time.strftime('%Y-%m-%d %H:%M:%S')} (JST)")
 
-    # パスワード生成 (テスト運用中は日付固定でもOKですが、コード上はランダム版にしておきます)
-    # ※もし日付固定のままが良ければ daily_pass = start_time.strftime('%m%d') に戻してください
-    daily_pass = str(random.randint(1000, 9999))
-    print(f"LOG: 本日のパスワード生成 -> {daily_pass}")
+    # ▼ パスワードは「今日の日付(0122)」に固定
+    daily_pass = start_time.strftime('%m%d')
+    print(f"LOG: 本日のパスワード -> {daily_pass}")
 
-    # 2. データ取得
-    # ▼ ここも名前を合わせました
+    # 2. データ取得（ここは300件取ってきますが、画面には出しません）
     flights = fetch_flight_data(CONFIG.get("AVIATION_STACK_API_KEY"))
     
-    # 3. 分析
+    # 3. 分析（★ここで300件から「直近75分」などの条件で絞り込まれます）
     analysis_result = analyze_demand(flights)
     
-    # 4. HTML生成
+    # 4. HTML生成（絞り込まれた結果だけを表示します）
     render_html(analysis_result, daily_pass)
     
     # 5. 通知 (Discord) - 朝6時台のみ
