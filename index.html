@@ -64,7 +64,7 @@
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲: 直近75分 | 実数: 9機</div>
+            <div class="info-banner">⚠️ 範囲: 直近75分 | 実数: 12機</div>
             
             <div class="rank-card">
                 <div class="rank-display">🌈 S</div>
@@ -78,13 +78,13 @@
         <div class="t-card best-choice" >
             <div class="best-badge">🏆 BEST</div>
             <div style="color:#999;font-size:12px;">1号(T1南)</div>
-            <div class="t-num">525人</div>
+            <div class="t-num">675人</div>
         </div>
         
         <div class="t-card " >
             
             <div style="color:#999;font-size:12px;">2号(T1北)</div>
-            <div class="t-num">525人</div>
+            <div class="t-num">675人</div>
         </div>
         
         <div class="t-card " >
@@ -102,7 +102,7 @@
         <div class="t-card " style="grid-column: 1/3;">
             
             <div style="color:#999;font-size:12px;">国際(T3)</div>
-            <div class="t-num">0人</div>
+            <div class="t-num">250人</div>
         </div>
         </div>
 
@@ -110,6 +110,13 @@
             <table class="flight-table">
                 <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>
                 <tbody>
+        <tr>
+            <td>20:40</td>
+            <td style='color:gold;'>JL158</td>
+            <td>三沢</td>
+            <td>150名</td>
+        </tr>
+        
         <tr>
             <td>20:25</td>
             <td style='color:gold;'>JL296</td>
@@ -132,9 +139,23 @@
         </tr>
         
         <tr>
-            <td>20:33</td>
+            <td>20:39</td>
+            <td style='color:gold;'>CZ7802</td>
+            <td>北京</td>
+            <td>250名</td>
+        </tr>
+        
+        <tr>
+            <td>20:29</td>
             <td style='color:gold;'>JL652</td>
             <td>鹿児島</td>
+            <td>150名</td>
+        </tr>
+        
+        <tr>
+            <td>20:40</td>
+            <td style='color:gold;'>JL134</td>
+            <td>伊丹</td>
             <td>150名</td>
         </tr>
         
@@ -146,7 +167,7 @@
         </tr>
         
         <tr>
-            <td>20:30</td>
+            <td>20:37</td>
             <td style='color:gold;'>JL328</td>
             <td>福岡</td>
             <td>150名</td>
@@ -179,19 +200,10 @@
             <div class="forecast-box">
                 
         <div class="fc-row">
-            <div class="fc-time">[20:00〜]</div>
-            <div class="fc-main">
-                <span class="fc-status">🚀 超高</span>
-                <span class="fc-pax">(推計 1900人)</span>
-            </div>
-            <div class="fc-comment">└ 🔥 激アツ・第2波</div>
-        </div>
-        
-        <div class="fc-row">
             <div class="fc-time">[21:00〜]</div>
             <div class="fc-main">
                 <span class="fc-status">🚀 超高</span>
-                <span class="fc-pax">(推計 3950人)</span>
+                <span class="fc-pax">(推計 2450人)</span>
             </div>
             <div class="fc-comment">└ 🔥 激アツ・第2波</div>
         </div>
@@ -200,7 +212,16 @@
             <div class="fc-time">[22:00〜]</div>
             <div class="fc-main">
                 <span class="fc-status">🚀 超高</span>
-                <span class="fc-pax">(推計 4800人)</span>
+                <span class="fc-pax">(推計 3850人)</span>
+            </div>
+            <div class="fc-comment">└ 🔥 激アツ・第2波</div>
+        </div>
+        
+        <div class="fc-row">
+            <div class="fc-time">[23:00〜]</div>
+            <div class="fc-main">
+                <span class="fc-status">🚀 超高</span>
+                <span class="fc-pax">(推計 4350人)</span>
             </div>
             <div class="fc-comment">└ 🔥 激アツ・第2波</div>
         </div>
@@ -218,7 +239,7 @@
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br>
-                最終データ取得: 19:51 | v8.4 Daily-Pass
+                最終データ取得: 20:01 | v8.4 Daily-Pass
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); },1000);</script>
