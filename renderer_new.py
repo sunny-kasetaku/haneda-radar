@@ -74,6 +74,7 @@ def render_html(data, password):
         """
 
     # HTML生成（パスワードロック付き）
+    # ▼▼▼ 修正箇所：ここだけ変えました（判定ロジック強化） ▼▼▼
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -83,11 +84,15 @@ def render_html(data, password):
         <title>羽田タクシー需要予測</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
-            // パスワードロック (0122などの日付)
+            // パスワードロック (修正版: 空白除去・0000対応)
             window.onload = function() {{
-                const input = prompt("本日のパスワードを入力してください");
-                if (input !== "{password}") {{
-                    document.body.innerHTML = "<div class='p-10 text-center'>🔒 アクセス拒否<br>パスワードが違います</div>";
+                // 入力値の前後の空白を自動で消す (.trim)
+                var input = (prompt("本日のパスワードを入力してください") || "").trim();
+                var correct = "{password}";
+                
+                // 日付一致 または マスターキー(0000) で許可
+                if (input !== correct && input !== "0000") {{
+                    document.body.innerHTML = "<div class='p-10 text-center'>🔒 アクセス拒否<br>パスワードが違います<br><span class='text-xs text-gray-400'>(判定値: " + input + ")</span></div>";
                 }} else {{
                     document.getElementById("main-content").style.display = "block";
                 }}
@@ -139,6 +144,7 @@ def render_html(data, password):
     </body>
     </html>
     """
+    # ▲▲▲ 修正ここまで ▲▲▲
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
