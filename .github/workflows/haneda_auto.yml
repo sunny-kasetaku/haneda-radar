@@ -1,75 +1,39 @@
-name: Haneda Radar Auto Update
+name: Run Haneda Radar
 
 on:
-  workflow_dispatch:         # 手動実行ボタン
-  # schedule:                # ★テストが成功したら、ここのコメントアウト(#)を外して自動化します
-  #   - cron: '*/10 * * * *' # 10分ごとに実行
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_dispatch: # 手動実行 & GASからの実行用
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+
+    # 1. 鍵を渡す (これで401エラー回避)
+    env:
+      AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install requests
 
-      # --- [修正箇所：金庫の鍵をプログラムに渡す設定] ---
-      - name: Run Haneda Radar
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          SITE_URL: ${{ secrets.SITE_URL }}
-          # ▼▼▼ ここに新しい鍵を追加しました！ ▼▼▼
-          AVIATIONSTACK_API_KEY: ${{ secrets.AVIATIONSTACK_API_KEY }}
-        
-        # ▼▼▼ ファイル名を main_v8.py に合わせました ▼▼▼
-        # ※もしPythonファイル名を haneda_radar.py のままにしているなら、ここを戻してください
+      - name: Run script
         run: python main_v8.py
 
-      # --- [保存ステップ：生成されたファイルをリポジトリに残す] ---
+      # ▼▼▼ ここが重要！これがないと画面が更新されません ▼▼▼
       - name: Commit and Push changes
         run: |
-          git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
-          # 必要なファイルだけを追加
-          git add index.html secret.json
-          # もしログなども残すならここに追加
-          if git diff --staged --quiet; then
-            echo "No changes"
-          else
-            git commit -m "Auto backup: $(date +'%Y-%m-%d %H:%M:%S')"
-            git pull --rebase origin main
-            git push
-          fi
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          git config --local user.name "GitHub Action"
+          git add index.html
+          # 変更がなければエラーにせず終了、あればコミットしてPush
+          git commit -m "Update flight data" || exit 0
+          git push
