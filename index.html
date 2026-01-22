@@ -1,0 +1,144 @@
+
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>羽田タクシー需要予測</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            // パスワードロック (修正版: 空白除去・0000対応)
+            window.onload = function() {
+                // 入力値の前後の空白を自動で消す (.trim)
+                var input = (prompt("本日のパスワードを入力してください") || "").trim();
+                var correct = "0123";
+                
+                // 日付一致 または マスターキー(0000) で許可
+                if (input !== correct && input !== "0000") {
+                    document.body.innerHTML = "<div class='p-10 text-center'>🔒 アクセス拒否<br>パスワードが違います<br><span class='text-xs text-gray-400'>(判定値: " + input + ")</span></div>";
+                } else {
+                    document.getElementById("main-content").style.display = "block";
+                }
+            }
+        </script>
+    </head>
+    <body class="bg-gray-100 text-gray-800">
+        <div id="main-content" style="display:none;" class="max-w-md mx-auto p-4">
+            
+            <div class="bg-purple-100 p-4 rounded-xl shadow-md mb-4 text-center border border-gray-200">
+                <div class="text-xs text-gray-500 mb-1">⚠️ 範囲: 直近75分 | 対象: 5機</div>
+                <div class="text-3xl font-black text-gray-800 mb-1">🌈 S (超混雑)</div>
+                <div class="text-xs text-gray-400">Updates Automatically</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">1号(T1南)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">2号(T1北)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">3号(T2)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">4号(T2)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">国際(T3)</div>
+            <div class="text-2xl text-red-600 font-bold">1250<span class="text-xs text-gray-400">人</span></div>
+        </div>
+        
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+                <h3 class="font-bold text-gray-700 mb-2 border-b pb-2">✈️ 直近の到着便 (条件合致のみ)</h3>
+                <div class="overflow-y-auto max-h-96">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-500 bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-2 py-1">時刻</th>
+                                <th class="px-2 py-1">便名</th>
+                                <th class="px-2 py-1">発地</th>
+                                <th class="px-2 py-1 text-right">T</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+        <tr class="border-b">
+            <td class="py-2 px-2">00:51</td>
+            <td class="py-2 px-2 font-bold">NH9757</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Shanghai Pudong International</td>
+            <td class="py-2 px-2 text-right">3</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">00:42</td>
+            <td class="py-2 px-2 font-bold">W24820</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Tan Son Nhat International</td>
+            <td class="py-2 px-2 text-right">3</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">00:30</td>
+            <td class="py-2 px-2 font-bold">MM808</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Seoul (Incheon)</td>
+            <td class="py-2 px-2 text-right">3</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">00:19</td>
+            <td class="py-2 px-2 font-bold">QR4850</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Doha International</td>
+            <td class="py-2 px-2 text-right">3</td>
+        </tr>
+        
+        <tr class="border-b">
+            <td class="py-2 px-2">00:19</td>
+            <td class="py-2 px-2 font-bold">UO628</td>
+            <td class="py-2 px-2 text-xs text-gray-600">Hong Kong International</td>
+            <td class="py-2 px-2 text-right">3</td>
+        </tr>
+        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+                <h3 class="font-bold text-gray-700 mb-2">📈 今後の需要予測</h3>
+                
+        <div class="mb-3 border-l-4 border-blue-500 pl-3">
+            <div class="text-sm font-bold text-gray-600">[01:00〜]</div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 1500人)</span></div>
+        </div>
+        
+        <div class="mb-3 border-l-4 border-blue-500 pl-3">
+            <div class="text-sm font-bold text-gray-600">[02:00〜]</div>
+            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
+        </div>
+        
+        <div class="mb-3 border-l-4 border-blue-500 pl-3">
+            <div class="text-sm font-bold text-gray-600">[03:00〜]</div>
+            <div class="text-lg">🚀 超高 <span class="text-sm text-gray-500">(推計 500人)</span></div>
+        </div>
+        
+            </div>
+
+            <div class="text-center text-xs text-gray-400 mt-8 mb-10">
+                <div>最終データ取得: 00:15</div>
+                <div>v9.3 Stable</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    

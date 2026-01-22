@@ -1,0 +1,67 @@
+import time
+from datetime import datetime, timezone, timedelta
+from api_handler import fetch_flights
+from analyzer import analyze_demand
+
+JST = timezone(timedelta(hours=9))
+
+def display_report(demand_results):
+    print("\n" + "="*65)
+    print(f" 🚕 KASETACK 羽田需要レーダー ({datetime.now(JST).strftime('%H:%M:%S')} 現在)")
+    print("    〜 今から1時間以内に乗り場に現れる「確実な需要」 〜")
+    print("="*65)
+    
+    stand_order = ["1号 (T1/JAL系)", "2号 (T2/ANA系)", "3号 (T3/国際)", "4号 (T2/国際)", "国際 (T3/全体)"]
+    for stand in stand_order:
+        count = demand_results.get(stand, 0)
+        if count >= 150: status = "🚀 【激アツ】即・実車の可能性大！"
+        elif count >= 80: status = "🔥 【GO】1時間以内に実車濃厚"
+        elif count >= 30: status = "👀 【微妙】少し待ち時間が出るかも"
+        else: status = "⚠️ 【STAY】今は他へ行くのが賢明"
+        print(f"【{stand}】 {str(count).rjust(4)} 人  >> {status}")
+    print("="*65)
+
+def main():
+    print("📡 システム起動中... 羽田の空をスキャンしています。")
+    
+    while True:
+        flights = fetch_flights()
+        if flights:
+            now = datetime.now(JST)
+            print(f"\n🔍 【データ解析】最新 {len(flights)} 件を精査中...")
+            
+            # 全データの時間範囲を確認
+            all_times = []
+            relevant_flights = []
+            for f in flights:
+                try:
+                    t_str = f['arrival_time'].replace('Z', '+00:00')
+                    t_jst = datetime.fromisoformat(t_str).astimezone(JST)
+                    all_times.append(t_jst)
+                    # 前後3時間以内の重要便
+                    if now - timedelta(hours=3) <= t_jst <= now + timedelta(hours=3):
+                        relevant_flights.append((f, t_jst))
+                except: continue
+            
+            if all_times:
+                print(f"📊 データ範囲: {min(all_times).strftime('%m/%d %H:%M')} 〜 {max(all_times).strftime('%m/%d %H:%M')}")
+            
+            print("直近の重要便（乗り場への影響大）:")
+            relevant_flights.sort(key=lambda x: x[1], reverse=True)
+            if not relevant_flights:
+                print("  (現在、判定時刻に該当する便がリスト内にありません)")
+            else:
+                for f, t in relevant_flights[:10]:
+                    print(f"  ✈️ {f['flight_iata'].ljust(7)} | 到着:{t.strftime('%H:%M')} | T:{str(f['terminal']).ljust(2)} | {f['airline']}")
+            print("-" * 65)
+
+            results = analyze_demand(flights)
+            display_report(results)
+        else:
+            print("⚠️ データを取得できませんでした。")
+
+        print(f"\n🔄 5分後に自動更新します...")
+        time.sleep(300)
+
+if __name__ == "__main__":
+    main()
