@@ -1,8 +1,9 @@
 name: Run Haneda Radar
 
-# ▼▼▼ ここが最重要！これが「ボタン」の正体です ▼▼▼
+# ▼▼▼ 修正：ボタンを待たずに、保存(Push)したらすぐ動くようにしました ▼▼▼
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   build:
@@ -22,8 +23,7 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: |
-          pip install requests
+        run: pip install requests
 
       - name: Run script
         run: python main_v8.py
