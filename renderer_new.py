@@ -59,11 +59,9 @@ def render_html(demand_results, password):
         time_str = raw_time[11:16] if 'T' in raw_time else "---"
         pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
         
-        # 便名取得の強化
         f_info = f.get('flight') or {}
         f_code = f.get('flight_iata') or f_info.get('iata') or f_info.get('number') or "---"
 
-        # 出身日本語化の強化
         origin_raw = f.get('origin', '')
         origin_name = origin_raw
         for code, ja in AIRPORT_MAP.items():
@@ -81,7 +79,7 @@ def render_html(demand_results, password):
         l, s, p, cm = item.get('label','--:--'), item.get('status','-'), item.get('pax',0), item.get('comment','-')
         forecast_html += f'<div class="fc-row"><div class="fc-time">[{l}]</div><div class="fc-main"><span class="fc-status">{s}</span><span class="fc-pax">(推計 {p}人)</span></div><div class="fc-comment">└ {cm}</div></div>'
 
-    # 5. HTML組み立て
+    # 5. HTML組み立て (最後を確実に閉じる)
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -156,4 +154,20 @@ def render_html(demand_results, password):
             <div class="forecast-box">{forecast_html}</div>
             <div class="cam-box">
                 <div class="cam-title">⚠️ 重要：最終判断の前に必ず確認</div>
-                <a href="https://www.
+                <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-btn">🎥 乗り場ライブカメラ (外部サイト)</a>
+                <div class="disclaimer">
+                    ※本システムは航空機のデータのみに基づいています。実際の行列やタクシー待機台数は考慮していません。オンラインサロンでの現地報告も併せて確認してください。
+                </div>
+            </div>
+            <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
+            <div class="footer">
+                画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v10.1 Stable
+            </div>
+        </div>
+        <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
+    </body></html>
+    """
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print("✅ HTML生成完了")
