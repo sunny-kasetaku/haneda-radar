@@ -2,246 +2,122 @@
     <!DOCTYPE html>
     <html lang="ja">
     <head>
-        <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>KASETACK Radar</title>
-        <style>
-            @keyframes flash { 0% { opacity: 0.6; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-            body.loading { animation: flash 0.8s ease-out; }
-            body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }
-            #main-content { display:none; width:100%; max-width:480px; }
-            
-            .info-banner { border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
-            .rank-card { background: #222; border: 2px solid #444; border-radius: 25px; padding: 20px; text-align: center; margin-bottom: 15px; }
-            .rank-display { font-size: 80px; font-weight: bold; color: #FFD700; line-height: 1; }
-            .rank-sub { font-size: 20px; font-weight: bold; margin-top:5px; }
-            .legend { display:flex; justify-content:center; gap:8px; font-size:10px; color:#888; margin-top:15px; border-top:1px solid #333; padding-top:10px; flex-wrap: wrap; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-            .t-card { background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }
-            .best-choice { border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.2); }
-            .best-badge { position: absolute; top: -8px; right: -5px; background: #FFD700; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }
-            .t-num { font-size: 32px; font-weight: bold; margin-top:5px; }
-            .section-title { color: gold; font-weight: bold; font-size: 14px; margin: 0 0 5px 0; border-left: 4px solid gold; padding-left: 10px; }
-            .flight-table { width: 100%; font-size: 13px; border-collapse: collapse; background: #111; border-radius:10px; overflow:hidden; margin-bottom: 25px; }
-            .flight-table th { color:gold; padding:10px; border-bottom:1px solid #333; text-align:center; }
-            .flight-table td { padding: 10px; border-bottom: 1px solid #222; text-align: center; }
-            .forecast-box { background: #111; border: 1px solid #444; border-radius: 15px; padding: 15px; margin-bottom: 20px; }
-            .fc-row { border-bottom: 1px dashed #333; padding: 10px 0; }
-            .fc-row:last-child { border-bottom: none; }
-            .fc-time { font-size: 14px; color: #FFD700; font-weight: bold; margin-bottom: 4px; }
-            .fc-main { font-size: 16px; margin-bottom: 2px; }
-            .fc-status { font-weight: bold; color: #fff; margin-right: 5px; }
-            .fc-pax { color: #00FF00; font-weight: bold; }
-            .fc-comment { font-size: 12px; color: #888; margin-left: 10px; }
-            .cam-box { background:#111; border:1px solid #444; border-radius:15px; padding:15px; margin-bottom:20px; text-align:center; }
-            .cam-title { color:#FFD700; font-weight:bold; font-size:14px; margin-bottom:10px; }
-            .cam-btn { display: block; padding: 12px; background: #FFD700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; margin-bottom:10px; }
-            .disclaimer { font-size: 10px; color: #888; text-align: left; line-height: 1.4; }
-            .update-btn { background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }
-            .footer { text-align:center; color:#666; font-size:11px; padding-bottom:30px; }
-        </style>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>羽田タクシー需要予測</title>
+        <script src="https://cdn.tailwindcss.com"></script>
         <script>
-            const TODAY_PASS = "0122";
-
-            function checkPass() {
-                const savedPass = localStorage.getItem("haneda_auth_pass_daily");
-                if (savedPass === TODAY_PASS) {
-                    document.getElementById('main-content').style.display = 'block';
-                    document.body.classList.add('loading');
+            // 簡易パスワードロック
+            window.onload = function() {
+                const input = prompt("本日のパスワードを入力してください");
+                if (input !== "1102") {
+                    document.body.innerHTML = "<div class='p-10 text-center'>🔒 アクセス拒否<br>パスワードが違います</div>";
                 } else {
-                    const userLayout = prompt("【本日のパスワード】数字4桁を入力してください");
-                    if (userLayout === TODAY_PASS) {
-                        localStorage.setItem("haneda_auth_pass_daily", TODAY_PASS);
-                        document.getElementById('main-content').style.display = 'block';
-                        document.body.classList.add('loading');
-                    } else {
-                        alert("パスワードが違います。Discordを確認してください。");
-                        location.reload();
-                    }
+                    document.getElementById("main-content").style.display = "block";
                 }
             }
-            window.onload = checkPass;
         </script>
     </head>
-    <body>
-        <div id="main-content">
-            <div class="info-banner">⚠️ 範囲: 直近75分 | 実数: 12機</div>
+    <body class="bg-gray-100 text-gray-800">
+        <div id="main-content" style="display:none;" class="max-w-md mx-auto p-4">
             
-            <div class="rank-card">
-                <div class="rank-display">🌈 S</div>
-                <div class="rank-sub">【最高】 需要爆発</div>
-                <div class="legend">
-                    <span>🌈S:600~</span> <span>🔥A:300~</span> <span>✅B:100~</span> <span>⚠️C:1~</span>
-                </div>
+            <div class="bg-blue-50 p-4 rounded-xl shadow-md mb-4 text-center border border-gray-200">
+                <div class="text-xs text-gray-500 mb-1">⚠️ 範囲: 直近75分 | 実数: 0機</div>
+                <div class="text-3xl font-black text-gray-800 mb-1">🟢 閑散</div>
+                <div class="text-xs text-gray-400">🌈S:1000~ 🔥A:600~ ✅B:200~</div>
             </div>
 
-            <div class="grid">
-        <div class="t-card best-choice" >
-            <div class="best-badge">🏆 BEST</div>
-            <div style="color:#999;font-size:12px;">1号(T1南)</div>
-            <div class="t-num">675人</div>
-        </div>
-        
-        <div class="t-card " >
-            
-            <div style="color:#999;font-size:12px;">2号(T1北)</div>
-            <div class="t-num">675人</div>
-        </div>
-        
-        <div class="t-card " >
-            
-            <div style="color:#999;font-size:12px;">3号(T2)</div>
-            <div class="t-num">150人</div>
-        </div>
-        
-        <div class="t-card " >
-            
-            <div style="color:#999;font-size:12px;">4号(T2)</div>
-            <div class="t-num">150人</div>
-        </div>
-        
-        <div class="t-card " style="grid-column: 1/3;">
-            
-            <div style="color:#999;font-size:12px;">国際(T3)</div>
-            <div class="t-num">250人</div>
-        </div>
-        </div>
-
-            <div class="section-title">✈️ 分析の根拠</div>
-            <table class="flight-table">
-                <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>
-                <tbody>
-        <tr>
-            <td>20:40</td>
-            <td style='color:gold;'>JL158</td>
-            <td>三沢</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:25</td>
-            <td style='color:gold;'>JL296</td>
-            <td>山口宇部</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:20</td>
-            <td style='color:gold;'>JL178</td>
-            <td>山形</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>19:35</td>
-            <td style='color:gold;'>JL190</td>
-            <td>小松</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:39</td>
-            <td style='color:gold;'>CZ7802</td>
-            <td>北京</td>
-            <td>250名</td>
-        </tr>
-        
-        <tr>
-            <td>20:29</td>
-            <td style='color:gold;'>JL652</td>
-            <td>鹿児島</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:40</td>
-            <td style='color:gold;'>JL134</td>
-            <td>伊丹</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:30</td>
-            <td style='color:gold;'>JL498</td>
-            <td>高知</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:37</td>
-            <td style='color:gold;'>JL328</td>
-            <td>福岡</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:15</td>
-            <td style='color:gold;'>JL286</td>
-            <td>IZO</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:29</td>
-            <td style='color:gold;'>6J20</td>
-            <td>熊本</td>
-            <td>150名</td>
-        </tr>
-        
-        <tr>
-            <td>20:16</td>
-            <td style='color:gold;'>NH286</td>
-            <td>徳島</td>
-            <td>150名</td>
-        </tr>
-        </tbody>
-            </table>
-
-            <div class="section-title">📈 今後の需要予測 (3時間先)</div>
-            <div class="forecast-box">
+            <div class="grid grid-cols-2 gap-3 mb-6">
                 
-        <div class="fc-row">
-            <div class="fc-time">[21:00〜]</div>
-            <div class="fc-main">
-                <span class="fc-status">🚀 超高</span>
-                <span class="fc-pax">(推計 2450人)</span>
-            </div>
-            <div class="fc-comment">└ 🔥 激アツ・第2波</div>
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">1号(T1南)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
         </div>
         
-        <div class="fc-row">
-            <div class="fc-time">[22:00〜]</div>
-            <div class="fc-main">
-                <span class="fc-status">🚀 超高</span>
-                <span class="fc-pax">(推計 3850人)</span>
-            </div>
-            <div class="fc-comment">└ 🔥 激アツ・第2波</div>
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">2号(T1北)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
         </div>
         
-        <div class="fc-row">
-            <div class="fc-time">[23:00〜]</div>
-            <div class="fc-main">
-                <span class="fc-status">🚀 超高</span>
-                <span class="fc-pax">(推計 4350人)</span>
-            </div>
-            <div class="fc-comment">└ 🔥 激アツ・第2波</div>
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">3号(T2)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">4号(T2)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <div class="text-sm text-gray-500">国際(T3)</div>
+            <div class="text-2xl text-gray-500">0<span class="text-xs text-gray-400">人</span></div>
         </div>
         
             </div>
 
-            <div class="cam-box">
-                <div class="cam-title">⚠️ 重要：最終判断の前に必ず確認</div>
-                <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-btn">🎥 乗り場ライブカメラ (外部サイト)</a>
-                <div class="disclaimer">
-                    ※本システムは航空機のデータのみに基づいています。実際の行列やタクシー待機台数は考慮していません。オンラインサロンでの現地報告も併せて確認してください。
+            <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+                <h3 class="font-bold text-gray-700 mb-2 border-b pb-2">✈️ 直近の到着便 (遅延含む)</h3>
+                <div class="overflow-y-auto max-h-64">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-500 bg-gray-50">
+                            <tr>
+                                <th class="px-2 py-1">時刻</th>
+                                <th class="px-2 py-1">便名</th>
+                                <th class="px-2 py-1">発地</th>
+                                <th class="px-2 py-1 text-right">人数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
-            <div class="footer">
-                画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br>
-                最終データ取得: 20:04 | v8.4 Daily-Pass
+            <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+                <h3 class="font-bold text-gray-700 mb-2">📈 今後の需要予測 (3時間先)</h3>
+                
+        <div class="mb-3 border-l-4 border-blue-500 pl-3">
+            <div class="text-sm font-bold text-gray-600">[21:00〜]</div>
+            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
+            <div class="text-xs text-gray-400">└ ⬇️ 撤収準備</div>
+        </div>
+        
+        <div class="mb-3 border-l-4 border-blue-500 pl-3">
+            <div class="text-sm font-bold text-gray-600">[22:00〜]</div>
+            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
+            <div class="text-xs text-gray-400">└ ⬇️ 撤収準備</div>
+        </div>
+        
+        <div class="mb-3 border-l-4 border-blue-500 pl-3">
+            <div class="text-sm font-bold text-gray-600">[23:00〜]</div>
+            <div class="text-lg">👀 低 <span class="text-sm text-gray-500">(推計 0人)</span></div>
+            <div class="text-xs text-gray-400">└ ⬇️ 撤収準備</div>
+        </div>
+        
+            </div>
+
+            <div class="text-center text-xs text-gray-400 mt-8 mb-10">
+                <div>最新情報に更新</div>
+                <div>画面の自動再読み込みまであと <span id="timer">60</span> 秒</div>
+                <div class="mt-2">最終データ取得: 20:21 | v8.5 Fixed</div>
             </div>
         </div>
-        <script>let sec=60; setInterval(()=>{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); },1000);</script>
-    </body></html>
+
+        <script>
+            // 60秒カウントダウンタイマー
+            let timeLeft = 60;
+            const timerElement = document.getElementById('timer');
+            setInterval(() => {
+                if (timeLeft <= 0) {
+                    location.reload(); 
+                } else {
+                    timerElement.textContent = timeLeft;
+                    timeLeft--;
+                }
+            }, 1000);
+        </script>
+    </body>
+    </html>
     
