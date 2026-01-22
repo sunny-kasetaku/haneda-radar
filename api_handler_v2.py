@@ -1,89 +1,87 @@
-# ==========================================
-# Project: KASETACK - api_handler_v2.py (Fixed)
-# ==========================================
 import requests
+import json
 import time
-from config import CONFIG
 
-# APIキーの取得
-ACCESS_KEY = CONFIG.get("AVIATIONSTACK_KEY") or CONFIG.get("API_KEY")
-
-def fetch_flights_v2(target_airport="HND", pages=3):
+def fetch_flight_data(api_key):
     """
-    指定されたページ数（1ページ100件）分、繰り返しAPIを叩いてデータを取得する。
-    有料版(HTTPS)対応済み。
+    AviationStack APIからデータを全件取得し、
+    遅延便も含めて正しく抽出する（ページネーション対応版）
     """
-    if not ACCESS_KEY:
-        print("⚠️ エラー: APIキーが見つかりません。config.pyを確認してください。")
-        return []
+    base_url = "http://api.aviationstack.com/v1/flights"
+    
+    # 取得したいステータス（delayedも重要）
+    params = {
+        'access_key': api_key,
+        'arr_iata': 'HND',
+        'flight_status': 'active,scheduled,landed,estimated,delayed',
+        'limit': 100,  # 1回の最大取得数
+        'offset': 0
+    }
 
-    # ★修正1: 有料版なので HTTPS に変更
-    url = "https://api.aviationstack.com/v1/flights"
+    print(f"📡 APIリクエスト開始...")
     
     all_flights = []
-    seen_flight_numbers = set() # 重複チェック用
-
-    for i in range(pages):
-        offset = i * 100
-        print(f"📡 APIリクエスト中... (Page {i+1}, Offset {offset})")
+    
+    # --- ページネーション（ループ処理） ---
+    # 最大3ページ（300件）まで取れば十分カバーできます
+    for i in range(3):
+        params['offset'] = i * 100
+        print(f"   -> Page {i+1} 取得中 (Offset {params['offset']})...")
         
-        params = {
-            'access_key': ACCESS_KEY,
-            'arr_iata': target_airport,
-            'limit': 100,
-            'offset': offset
-            # ★修正2: 'landed'指定を削除。
-            # これを消すことで、到着済みだけでなく「これから来る便(scheduled)」も取得でき、
-            # Analyzerで未来の需要予測ができるようになります。
-        }
-
         try:
-            # タイムアウトを少し長めに設定
-            response = requests.get(url, params=params, timeout=20)
+            response = requests.get(base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
             
-            if response.status_code != 200:
-                print(f"❌ APIエラー(Page {i+1}): {response.status_code}")
-                # エラー詳細を表示
-                print(response.text)
+            raw_data = data.get('data', [])
+            if not raw_data:
+                break # データが尽きたら終了
+            
+            # 抽出処理
+            for f in raw_data:
+                info = extract_flight_info(f)
+                if info:
+                    all_flights.append(info)
+            
+            # 取得数が100未満なら、もう次のページはないので終了
+            if len(raw_data) < 100:
                 break
                 
-            raw_data = response.json()
-            
-            # API側のエラーチェック
-            if 'error' in raw_data:
-                print(f"❌ API Key Error: {raw_data['error']}")
-                break
-
-            data_list = raw_data.get('data', [])
-            print(f"   -> 取得数: {len(data_list)}件")
-
-            for flight in data_list:
-                f_num = flight.get('flight', {}).get('iata')
-                
-                # 重複の排除（同じ便を二重に数えない）
-                if f_num and f_num not in seen_flight_numbers:
-                    seen_flight_numbers.add(f_num)
-                    
-                    arrival = flight.get('arrival', {})
-                    # 時刻の取得（Analyzerが期待するキーを作成）
-                    a_time = arrival.get('actual') or arrival.get('estimated') or arrival.get('scheduled') or ""
-                    
-                    # ★ここが重要！Analyzer用にデータを「翻訳」している部分
-                    all_flights.append({
-                        'flight_iata': f_num or "??",
-                        'airline': flight.get('airline', {}).get('name') or "Unknown",
-                        'arrival_time': a_time,
-                        'terminal': arrival.get('terminal'),
-                        'origin': flight.get('departure', {}).get('iata'), 
-                        'pax': flight.get('pax') or 150 
-                    })
-            
-            # 連射防止（優しさ）
-            time.sleep(1)
-
         except Exception as e:
-            print(f"⚠️ 通信エラー(Page {i+1}): {e}")
+            print(f"❌ API Error (Page {i+1}): {e}")
             break
+            
+        # API制限への配慮（少し待機）
+        time.sleep(0.5)
 
     print(f"✅ 合計取得数: {len(all_flights)}件")
     return all_flights
+
+def extract_flight_info(flight):
+    arr = flight.get('arrival', {})
+    airline = flight.get('airline', {})
+    dep = flight.get('departure', {})
+    
+    # ★ここが最重要：実際の到着時刻を優先採用する
+    # 1. estimated (最新の見込み) -> 遅延時はこれが未来の時間になる
+    # 2. actual (到着済み)
+    # 3. scheduled (定刻)
+    arrival_time = arr.get('estimated') or arr.get('actual') or arr.get('scheduled')
+    
+    if not arrival_time:
+        return None
+
+    # ターミナル
+    term = arr.get('terminal')
+    if term is None:
+        term = "Intl" # 国際線とみなす
+
+    return {
+        "flight_number": f"{airline.get('iata', '??')}{flight.get('flight', {}).get('number', '??')}",
+        "airline": airline.get('name', 'Unknown'),
+        "origin": dep.get('airport', 'Unknown'),
+        "origin_iata": dep.get('iata', 'UNK'),
+        "terminal": str(term),
+        "arrival_time": arrival_time,
+        "status": flight.get('flight_status', 'unknown')
+    }
