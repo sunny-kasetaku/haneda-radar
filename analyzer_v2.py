@@ -1,118 +1,89 @@
-from datetime import datetime, timedelta
+# ==========================================
+# Project: KASETACK - api_handler_v2.py (Fixed)
+# ==========================================
+import requests
+import time
+from config import CONFIG
 
-def analyze_demand(flights):
+# APIキーの取得
+ACCESS_KEY = CONFIG.get("AVIATIONSTACK_KEY") or CONFIG.get("API_KEY")
+
+def fetch_flights_v2(target_airport="HND", pages=3):
     """
-    重複排除 ＆ 実戦的時間窓フィルタリング（-30分 〜 +45分）
-    【修正】入力データを「UTC」とみなして+9時間する処理を廃止。
-           APIの数字をそのまま「日本時間」として扱い、現在時刻と比較する。
+    指定されたページ数（1ページ100件）分、繰り返しAPIを叩いてデータを取得する。
+    有料版(HTTPS)対応済み。
     """
-    
-    # 1. バケツの初期化
-    pax_t1 = 0
-    pax_t2 = 0
-    pax_t3 = 0
-    
-    # 時間計算の基準（JST同士で比較するため、timezone.utcを使わずネイティブな日時で比較）
-    now = datetime.now()
-    
-    # ★実戦仕様：集計対象の時間窓設定
-    # 過去30分 〜 未来45分
-    range_start = now - timedelta(minutes=30)
-    range_end = now + timedelta(minutes=45)
-    
-    # 3時間予測用バケツ
-    forecast = {
-        "h1": {"label": (now + timedelta(hours=1)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
-        "h2": {"label": (now + timedelta(hours=2)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""},
-        "h3": {"label": (now + timedelta(hours=3)).strftime("%H:00〜"), "pax": 0, "status": "", "comment": ""}
-    }
+    if not ACCESS_KEY:
+        print("⚠️ エラー: APIキーが見つかりません。config.pyを確認してください。")
+        return []
 
-    seen_vessels = set()
-    unique_flights = []
+    # ★修正1: 有料版なので HTTPS に変更
+    url = "https://api.aviationstack.com/v1/flights"
+    
+    all_flights = []
+    seen_flight_numbers = set() # 重複チェック用
 
-    for f in flights:
-        # --- A. 重複排除 ---
-        t_str = str(f.get('arrival_time', ''))
-        origin = f.get('origin', 'UNK')
-        vessel_key = f"{t_str[:16]}_{origin}"
-
-        if vessel_key in seen_vessels:
-            continue 
-        seen_vessels.add(vessel_key)
+    for i in range(pages):
+        offset = i * 100
+        print(f"📡 APIリクエスト中... (Page {i+1}, Offset {offset})")
         
-        # --- B. 機材サイズ推計 ---
-        airline = str(f.get('airline', '')).upper()
-        term = str(f.get('terminal', ''))
-        
-        if '3' in term or 'I' in term:
-            pax = 250
-        elif any(x in airline for x in ["WINGS", "J-AIR", "HAC", "AMX", "ORC", "IBEX", "COMMUTER"]):
-            pax = 50
-        else:
-            pax = 150
+        params = {
+            'access_key': ACCESS_KEY,
+            'arr_iata': target_airport,
+            'limit': 100,
+            'offset': offset
+            # ★修正2: 'landed'指定を削除。
+            # これを消すことで、到着済みだけでなく「これから来る便(scheduled)」も取得でき、
+            # Analyzerで未来の需要予測ができるようになります。
+        }
 
-        f['pax_estimated'] = pax
-        
-        # --- C. 時間解析と厳密な振り分け ---
         try:
-            # 【修正箇所】
-            # 以前: datetime.fromisoformat(t_str.replace('Z', '+00:00')) -> UTC扱い
-            # 今回: 単純に文字列から日時を復元し、そのまま比較する（APIはJSTを返している前提）
-            if 'T' in t_str:
-                flight_time_str = t_str[:16] # "2023-10-27T16:55" までを取得
-                flight_time = datetime.strptime(flight_time_str, "%Y-%m-%dT%H:%M")
-            else:
-                continue
-
-            # 【重要】時間窓チェック (-30分 〜 +45分)
-            # flight_time(16:55) vs now(01:40) -> 範囲外！ -> 消える（正しい挙動）
-            # もし本番で flight_time(01:40) が来れば -> 範囲内！ -> 表示される
-            if range_start <= flight_time <= range_end:
-                unique_flights.append(f)
+            # タイムアウトを少し長めに設定
+            response = requests.get(url, params=params, timeout=20)
+            
+            if response.status_code != 200:
+                print(f"❌ APIエラー(Page {i+1}): {response.status_code}")
+                # エラー詳細を表示
+                print(response.text)
+                break
                 
-                if '1' in term:
-                    pax_t1 += pax
-                elif '2' in term:
-                    pax_t2 += pax
-                else:
-                    pax_t3 += pax
+            raw_data = response.json()
+            
+            # API側のエラーチェック
+            if 'error' in raw_data:
+                print(f"❌ API Key Error: {raw_data['error']}")
+                break
 
-            # --- D. 3時間予測（未来判定） ---
-            # 差分（時間）を計算
-            diff_hours = (flight_time - now).total_seconds() / 3600
+            data_list = raw_data.get('data', [])
+            print(f"   -> 取得数: {len(data_list)}件")
 
-            if 0 <= diff_hours < 1:
-                forecast["h1"]["pax"] += pax
-            elif 1 <= diff_hours < 2:
-                forecast["h2"]["pax"] += pax
-            elif 2 <= diff_hours < 3:
-                forecast["h3"]["pax"] += pax
+            for flight in data_list:
+                f_num = flight.get('flight', {}).get('iata')
+                
+                # 重複の排除（同じ便を二重に数えない）
+                if f_num and f_num not in seen_flight_numbers:
+                    seen_flight_numbers.add(f_num)
+                    
+                    arrival = flight.get('arrival', {})
+                    # 時刻の取得（Analyzerが期待するキーを作成）
+                    a_time = arrival.get('actual') or arrival.get('estimated') or arrival.get('scheduled') or ""
+                    
+                    # ★ここが重要！Analyzer用にデータを「翻訳」している部分
+                    all_flights.append({
+                        'flight_iata': f_num or "??",
+                        'airline': flight.get('airline', {}).get('name') or "Unknown",
+                        'arrival_time': a_time,
+                        'terminal': arrival.get('terminal'),
+                        'origin': flight.get('departure', {}).get('iata'), 
+                        'pax': flight.get('pax') or 150 
+                    })
+            
+            # 連射防止（優しさ）
+            time.sleep(1)
 
         except Exception as e:
-            # 日付解析エラー等の場合はスキップ
-            pass
+            print(f"⚠️ 通信エラー(Page {i+1}): {e}")
+            break
 
-    # 3. 予測ステータス判定
-    for k in ["h1", "h2", "h3"]:
-        val = forecast[k]["pax"]
-        if val >= 400:
-            forecast[k]["status"] = "🚀 超高"
-            forecast[k]["comment"] = "🔥 激アツ・第2波"
-        elif val >= 200:
-            forecast[k]["status"] = "⚠️ 中"
-            forecast[k]["comment"] = "➡️ 需要継続"
-        else:
-            forecast[k]["status"] = "👀 低"
-            forecast[k]["comment"] = "⬇️ 撤収準備"
-
-    # 4. 最終結果
-    return {
-        "1号(T1南)": int(pax_t1 * 0.5),
-        "2号(T1北)": int(pax_t1 * 0.5),
-        "3号(T2)":   int(pax_t2 * 0.5),
-        "4号(T2)":   int(pax_t2 * 0.5),
-        "国際(T3)":  pax_t3,
-        "forecast": forecast,
-        "unique_count": len(unique_flights),
-        "flights": unique_flights
-    }
+    print(f"✅ 合計取得数: {len(all_flights)}件")
+    return all_flights
