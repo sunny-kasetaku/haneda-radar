@@ -4,17 +4,17 @@ import time
 
 def fetch_flight_data(api_key):
     """
-    AviationStack APIからデータを取得（ページネーション対応）
+    AviationStack APIからデータを取得
+    API側のフィルタを使わず、全データを取得してからPythonで処理する（400エラー回避）
     """
-    # ★ 有料版(Basic)なので https にします（セキュリティ向上）
-    base_url = "https://api.aviationstack.com/v1/flights"
+    # 念のため http に戻します（有料版でも http は通るため、最も確実な方を選びます）
+    base_url = "http://api.aviationstack.com/v1/flights"
     
-    # 修正箇所：flight_status から無効な値(estimated, delayed)を削除
-    # これで 400 Bad Request が消えます
+    # ▼ 修正箇所：flight_status を削除しました。
+    # arr_iata=HND (羽田到着) だけを指定する一番シンプルなリクエストにします。
     params = {
         'access_key': api_key,
         'arr_iata': 'HND',
-        'flight_status': 'active,scheduled,landed', 
         'limit': 100,
         'offset': 0
     }
@@ -23,14 +23,14 @@ def fetch_flight_data(api_key):
     
     all_flights = []
     
-    # 最大3ページ（300件）取得
+    # 3ページ分（300件）取得して、遅延便やマイナー便も全部拾います
     for i in range(3):
         params['offset'] = i * 100
         print(f"   -> Page {i+1} 取得中 (Offset {params['offset']})...")
         
         try:
             response = requests.get(base_url, params=params)
-            response.raise_for_status() # ここでエラーなら例外へ
+            response.raise_for_status()
             data = response.json()
             
             raw_data = data.get('data', [])
@@ -46,9 +46,14 @@ def fetch_flight_data(api_key):
                 break
                 
         except Exception as e:
-            # 万が一エラーが出ても、それまでに取れたデータがあればよしとする
             print(f"❌ API Error (Page {i+1}): {e}")
-            break
+            # エラーが出ても、そこまでに取れたデータがあれば続行させる
+            if len(all_flights) > 0:
+                print("⚠️ 部分的なデータ取得で続行します")
+                break
+            else:
+                # 1件も取れなければ終了
+                break
             
         time.sleep(0.2)
 
@@ -60,8 +65,10 @@ def extract_flight_info(flight):
     airline = flight.get('airline', {})
     dep = flight.get('departure', {})
     
-    # ★ここが「遅延対応」の肝です
-    # estimated（見込み時刻）があれば、定刻より優先して採用します
+    # statusフィルタを外したので、ここで「キャンセルされた便」などは除外しても良いですが、
+    # 遅延便(active)などを漏らさないよう、とりあえず全部通してAnalyzerに任せます。
+
+    # 到着時刻の取得優先度
     arrival_time = arr.get('estimated') or arr.get('actual') or arr.get('scheduled')
     
     if not arrival_time:
