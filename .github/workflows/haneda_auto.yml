@@ -1,11 +1,16 @@
 name: Run Haneda Radar
 
 on:
-  workflow_dispatch: # 手動実行 & GASからの実行用
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # ▼ 【ここが最強の場所】ジョブ全体に鍵を適用します
+    env:
+      AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
     steps:
       - name: Checkout code
@@ -20,13 +25,7 @@ jobs:
         run: |
           pip install requests
 
-      # ▼▼▼ ここを変えました！ ▼▼▼
-      # 全体設定ではなく、このコマンドを実行する瞬間に直接鍵を渡します。
-      # これで絶対に「鍵忘れ」は起きません。
       - name: Run script
-        env:
-          AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python main_v8.py
 
       - name: Commit and Push changes
