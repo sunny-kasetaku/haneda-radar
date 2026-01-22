@@ -32,3 +32,6 @@ jobs:
           git add index.html
           git commit -m "Update" || exit 0
           git push -f origin HEAD:main
+
+      # ▼▼▼ URL表示を復活させました ▼▼▼
+      - run: echo "🚀 Access here: https://sunny-kasetaku.github.io/haneda-radar/"
