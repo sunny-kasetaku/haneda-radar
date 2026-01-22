@@ -26,6 +26,7 @@ jobs:
 
       - run: python main_v8.py
 
+      # ▼▼▼ ここがエラーだった場所です（スペースを調整済み） ▼▼▼
       - run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
