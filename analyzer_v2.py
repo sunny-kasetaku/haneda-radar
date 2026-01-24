@@ -1,12 +1,12 @@
-# analyzer_v2.py (過去完了フィルター搭載・最終版)
+# analyzer_v2.py (超厳格・着陸済みのみカウント版)
 from datetime import datetime, timedelta
 
 def analyze_demand(flights):
     pax_t1 = pax_t2 = pax_t3 = 0
     now = datetime.now() + timedelta(hours=9)
-    # 表示範囲: 到着済みも少し見たいが、ゴーストは消したい
-    range_start = now - timedelta(minutes=30)
-    range_end = now + timedelta(minutes=45)
+    # 表示範囲: 過去30分〜未来0分（未来の予定は一切信じない）
+    range_start = now - timedelta(minutes=60) 
+    range_end = now + timedelta(minutes=5) 
     
     forecast = {"h1": {"pax": 0}, "h2": {"pax": 0}, "h3": {"pax": 0}}
     seen_vessels = []
@@ -15,12 +15,12 @@ def analyze_demand(flights):
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
         origin = f.get('origin_iata', 'UNK')
-        status = str(f.get('status', '')).lower()
-        if 'T' not in t_str: continue
+        status = str(f.get('status', '')).lower() # APIのステータス
         
+        if 'T' not in t_str: continue
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         
-        # 1. 重複排除 (時間ズレ対策)
+        # 1. 重複排除 (念のため維持)
         is_duplicate = False
         for seen_time, seen_origin in seen_vessels:
             if seen_origin == origin and abs((f_time - seen_time).total_seconds()) < 900:
@@ -29,21 +29,11 @@ def analyze_demand(flights):
         if is_duplicate: continue
         seen_vessels.append((f_time, origin))
 
-        # 2. 【最強】過去ゴースト＆未来ゴーストのダブル排除
-        
-        # A. 未来のゴースト対策 (35分ルール)
-        # まだ着いていないのに「予定」のまま直前まで来ているやつは消す
-        if f_time > now:
-            if (status == 'scheduled' or status == 'unknown'):
-                if (f_time - now).total_seconds() / 60 < 35:
-                    continue 
-
-        # B. 過去のゴースト対策 (新機能)
-        # 到着時間を過ぎているのに、ステータスが「landed」になっていないやつは
-        # APIが更新を放棄したゴースト便なので消す
-        if f_time <= now:
-            if status != 'landed':
-                continue
+        # 2. 【超厳格フィルター】「着陸済み」以外は全て無視
+        # active(飛行中)すら信じない。landed(着陸)のみをカウント。
+        # ※ただし、国際線など一部データのために active は拾うなら下記を調整
+        if status != 'landed' and status != 'active':
+            continue
 
         # 3. 人数計算
         airline = str(f.get('airline', '')).upper()
@@ -51,13 +41,15 @@ def analyze_demand(flights):
         pax = 250 if any(x in term for x in ['3', 'I', 'Intl']) else 150
         f['pax_estimated'] = pax
 
+        # 4. 集計（現在時刻周辺の実績のみ）
         if range_start <= f_time <= range_end:
             unique_flights.append(f)
             if '1' in term: pax_t1 += pax
             elif '2' in term: pax_t2 += pax
             else: pax_t3 += pax
 
-        # 4. 予測集計
+        # 予測用（ここも厳しいままでいくなら実績ベースにはできないが、
+        # 未来予測だけはAPIのScheduledを使わざるを得ない。ただし厳し目に間引く）
         diff_h = (f_time - now).total_seconds() / 3600
         if 0 <= diff_h < 1: forecast["h1"]["pax"] += pax
         elif 1 <= diff_h < 2: forecast["h2"]["pax"] += pax
