@@ -5,7 +5,7 @@ def analyze_demand(flights):
     now = datetime.now() + timedelta(hours=9)
     
     # ---------------------------------------------------------
-    # 1. 生存率 & 絶対数チェック
+    # 1. 異常検知 (欠航が多いかどうかのチェック)
     # ---------------------------------------------------------
     check_start = now - timedelta(minutes=90)
     past_planned = 0
@@ -21,14 +21,17 @@ def analyze_demand(flights):
         if flight_num in seen_stats: continue
         seen_stats.add(flight_num)
         
+        # 統計チェック
         if check_start <= f_time <= now:
             past_planned += 1
             status = str(f.get('status', '')).lower()
+            # 「欠航」マークがついていなければ、到着したとみなす（性善説）
             if status not in ['cancelled', 'diverted']:
                 past_landed += 1
 
-    # 絶対数チェック (10機未満は異常)
+    # 絶対数チェック (10機未満なら異常事態とみなす)
     is_low_volume = (8 <= now.hour <= 23) and (past_landed < 10)
+    
     if is_low_volume:
         survival_rate = 0.0
     elif past_planned > 5:
@@ -38,9 +41,9 @@ def analyze_demand(flights):
         survival_rate = 1.0
 
     # ---------------------------------------------------------
-    # 2. リスト作成（ここが修正点）
+    # 2. リスト作成 (ANA・国際線 強制救出ロジック)
     # ---------------------------------------------------------
-    # 範囲：過去60分 〜 未来30分（少し未来も拾う）
+    # 範囲：過去60分 〜 未来30分
     range_start = now - timedelta(minutes=60)
     range_end = now + timedelta(minutes=30)
     
@@ -59,6 +62,8 @@ def analyze_demand(flights):
         f['parsed_time'] = f_time
         
         f_num = f.get('flight_number', 'UNK')
+        
+        # 単純な便名重複チェックのみ（時間や場所での削除はしない）
         if f_num in processed_flight_numbers: continue
         processed_flight_numbers.add(f_num)
         
@@ -68,17 +73,18 @@ def analyze_demand(flights):
         is_intl = any(x in term for x in ['3', 'I', 'Intl'])
         pax_base = 250 if is_intl else 150
         
-        # --- A. 現在の実数（到着扱い） ---
-        # 範囲内 かつ、欠航でなく、時間が「カットオフ（未来20分）」より前なら採用
+        # --- A. 現在の実数（救出） ---
         if range_start <= f_time <= range_end:
+            # 欠航以外はすべて拾う
             if status in ['cancelled', 'diverted']:
                 continue
             
-            # ここがANA救出の鍵
+            # 時間チェックのみで通過させる（Scheduledでも入れる）
             if f_time <= arrival_cutoff:
                 f['pax_estimated'] = pax_base
                 candidates.append(f)
                 
+                # 集計
                 if is_intl: pax_t3 += pax_base
                 elif '1' in term: pax_t1 += pax_base
                 elif '2' in term: pax_t2 += pax_base
@@ -86,18 +92,16 @@ def analyze_demand(flights):
                 continue # 実数に入れたら予測には入れない
 
         # --- B. 未来の予測 ---
-        # 実数に入らなかったものは予測へ
         if f_time > now:
             diff_h = (f_time - now).total_seconds() / 3600
             if 0 <= diff_h < 1: forecast_data["h1"] += pax_base
             elif 1 <= diff_h < 2: forecast_data["h2"] += pax_base
             elif 2 <= diff_h < 3: forecast_data["h3"] += pax_base
 
-    # ---------------------------------------------------------
-    # 3. ソート & 表示
-    # ---------------------------------------------------------
+    # ソート
     candidates.sort(key=lambda x: x['parsed_time'])
     
+    # 予測データの作成
     final_forecast = {}
     is_disaster_mode = (survival_rate < 0.5)
 
