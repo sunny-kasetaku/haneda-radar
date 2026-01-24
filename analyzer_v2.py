@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 def analyze_demand(flights):
     pax_t1 = pax_t2 = pax_t3 = 0
-    # APIは日本時間(JST)で返してくるため、基準もJSTにする
+    # APIはJSTで返してくるため基準もJST
     now = datetime.utcnow() + timedelta(hours=9)
     
     # ---------------------------------------------------------
@@ -11,15 +11,13 @@ def analyze_demand(flights):
     check_start = now - timedelta(minutes=90)
     past_planned = 0
     past_landed = 0
-    seen_unique_flights = set() # 統計用の重複排除セット
+    seen_unique_flights = set()
     
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
         if 'T' not in t_str: continue
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         
-        # 【重複排除キー】 時間_出発地 (例: "18:30_CTS")
-        # これでコードシェア便(JL514とHA5000など)を1機としてカウントできる
         origin_key = f.get('origin_iata', 'UNK')
         unique_key = f"{t_str}_{origin_key}"
         
@@ -38,16 +36,17 @@ def analyze_demand(flights):
     # ---------------------------------------------------------
     # 2. リスト作成
     # ---------------------------------------------------------
-    # 範囲：過去60分 〜 未来60分
-    range_start = now - timedelta(minutes=60)
-    range_end = now + timedelta(minutes=60)
+    # 【修正】範囲を「過去40分 〜 未来20分」に短縮
+    # これで「もう客がいない便」や「まだ遠い便」を除外してスッキリさせる
+    range_start = now - timedelta(minutes=40)
+    range_end = now + timedelta(minutes=20)
     
-    # リスト表示リミット
-    arrival_cutoff = now + timedelta(minutes=60)
+    # 実数カウントのリミット（未来20分まで）
+    arrival_cutoff = now + timedelta(minutes=20)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
     candidates = []
-    processed_keys = set() # リスト作成用の重複排除セット
+    processed_keys = set()
     
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
@@ -55,7 +54,7 @@ def analyze_demand(flights):
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         f['parsed_time'] = f_time
         
-        # 【ここが修正点】便名(JLxxx)ではなく、「時間+場所」で重複チェック
+        # 重複排除キー（時間_出発地）
         origin_key = f.get('origin_iata', 'UNK')
         unique_key = f"{t_str}_{origin_key}"
         
@@ -73,7 +72,7 @@ def analyze_demand(flights):
             if status in ['cancelled', 'diverted']:
                 continue
             
-            # ActiveでもScheduledでも、時間が来ていれば採用
+            # 時間範囲内（未来20分以内）なら採用
             if f_time <= arrival_cutoff:
                 f['pax_estimated'] = pax_base
                 candidates.append(f)
