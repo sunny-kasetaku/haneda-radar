@@ -1,9 +1,10 @@
-# analyzer_v2.py (信頼度判定フィルター実装版)
+# analyzer_v2.py (過去完了フィルター搭載・最終版)
 from datetime import datetime, timedelta
 
 def analyze_demand(flights):
     pax_t1 = pax_t2 = pax_t3 = 0
     now = datetime.now() + timedelta(hours=9)
+    # 表示範囲: 到着済みも少し見たいが、ゴーストは消したい
     range_start = now - timedelta(minutes=30)
     range_end = now + timedelta(minutes=45)
     
@@ -19,28 +20,35 @@ def analyze_demand(flights):
         
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         
-        # 1. 重複排除 (JAL等の重複対策)
+        # 1. 重複排除 (時間ズレ対策)
         is_duplicate = False
         for seen_time, seen_origin in seen_vessels:
-            if seen_origin == origin and abs((f_time - seen_time).total_seconds()) < 600:
+            if seen_origin == origin and abs((f_time - seen_time).total_seconds()) < 900:
                 is_duplicate = True
                 break
         if is_duplicate: continue
         seen_vessels.append((f_time, origin))
 
-        # 2. 【核心】「怪しい予定便」の排除ロジック
-        # 到着25分前になっても status が "scheduled" のままの便は、
-        # 実際には飛んでいない「ゴースト便（欠航反映漏れ）」とみなして除外する。
-        if status == 'scheduled' or status == 'unknown':
-            diff_to_arrival = (f_time - now).total_seconds() / 60
-            if diff_to_arrival < 25: 
-                continue # リストにも含めず、集計からも外す
+        # 2. 【最強】過去ゴースト＆未来ゴーストのダブル排除
+        
+        # A. 未来のゴースト対策 (35分ルール)
+        # まだ着いていないのに「予定」のまま直前まで来ているやつは消す
+        if f_time > now:
+            if (status == 'scheduled' or status == 'unknown'):
+                if (f_time - now).total_seconds() / 60 < 35:
+                    continue 
+
+        # B. 過去のゴースト対策 (新機能)
+        # 到着時間を過ぎているのに、ステータスが「landed」になっていないやつは
+        # APIが更新を放棄したゴースト便なので消す
+        if f_time <= now:
+            if status != 'landed':
+                continue
 
         # 3. 人数計算
         airline = str(f.get('airline', '')).upper()
         term = str(f.get('terminal', ''))
         pax = 250 if any(x in term for x in ['3', 'I', 'Intl']) else 150
-        
         f['pax_estimated'] = pax
 
         if range_start <= f_time <= range_end:
@@ -55,7 +63,6 @@ def analyze_demand(flights):
         elif 1 <= diff_h < 2: forecast["h2"]["pax"] += pax
         elif 2 <= diff_h < 3: forecast["h3"]["pax"] += pax
 
-    # 5. 結果のまとめ
     return {
         "1号(T1南)": int(pax_t1 * 0.5), "2号(T1北)": int(pax_t1 * 0.5),
         "3号(T2)": int(pax_t2 * 0.5), "4号(T2)": int(pax_t2 * 0.5),
