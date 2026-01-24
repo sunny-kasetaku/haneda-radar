@@ -1,4 +1,4 @@
-# analyzer_v2.py (ANA救出・ソート・国際線対応・完全版)
+# analyzer_v2.py (余計な推測廃止・便名完全一致のみ重複削除版)
 from datetime import datetime, timedelta
 
 def analyze_demand(flights):
@@ -15,13 +15,13 @@ def analyze_demand(flights):
     
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
-        origin = f.get('origin_iata', 'UNK')
+        flight_num = f.get('flight_number', 'UNK') # 便名で管理
         if 'T' not in t_str: continue
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         
-        v_key = f"{t_str[:16]}_{origin}"
-        if v_key in seen_stats: continue
-        seen_stats.add(v_key)
+        # 統計用：同じ便名は1回しかカウントしない
+        if flight_num in seen_stats: continue
+        seen_stats.add(flight_num)
         
         if check_start <= f_time <= now:
             past_planned += 1
@@ -39,24 +39,38 @@ def analyze_demand(flights):
         survival_rate = 1.0
 
     # ---------------------------------------------------------
-    # 2. データの整理と選別
+    # 2. リスト作成（余計な重複判定を削除）
     # ---------------------------------------------------------
     range_start = now - timedelta(minutes=40)
     range_end = now + timedelta(minutes=5)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
-    candidates = [] 
+    candidates = []
     
+    # 既にリストに入れた便名を記録するセット
+    processed_flight_numbers = set()
+    
+    # まずAPIの生データを解析
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
         if 'T' not in t_str: continue
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
-        f['parsed_time'] = f_time 
+        f['parsed_time'] = f_time
+        
+        # 便名を取得（例：JL912）
+        f_num = f.get('flight_number', 'UNK')
+        
+        # ★ここが修正点★
+        # 「便名」が既にあったらスキップ。無ければ登録。
+        # これだけで二重カウントは防げる。時間や場所での推測削除はしない。
+        if f_num in processed_flight_numbers:
+            continue
+        processed_flight_numbers.add(f_num)
         
         status = str(f.get('status', '')).lower()
         term = str(f.get('terminal', ''))
         
-        # 国際線判定
+        # 国際線判定（人数計算用）
         is_intl = any(x in term for x in ['3', 'I', 'Intl'])
         pax_base = 250 if is_intl else 150
         
@@ -64,8 +78,13 @@ def analyze_demand(flights):
         if range_start <= f_time <= range_end:
             if status == 'landed':
                 f['pax_estimated'] = pax_base
-                f['is_intl'] = is_intl
                 candidates.append(f)
+                
+                # 集計
+                if is_intl: pax_t3 += pax_base # T3/IntlタグがあればT3へ
+                elif '1' in term: pax_t1 += pax_base
+                elif '2' in term: pax_t2 += pax_base
+                else: pax_t3 += pax_base # 不明なら国際枠へ(安全策)
 
         # 未来の予測
         if f_time > now:
@@ -75,64 +94,10 @@ def analyze_demand(flights):
             elif 2 <= diff_h < 3: forecast_data["h3"] += pax_base
 
     # ---------------------------------------------------------
-    # 3. ソートと重複排除 (修正点：ターミナル違いは残す！)
+    # 3. ソートして完了
     # ---------------------------------------------------------
     candidates.sort(key=lambda x: x['parsed_time'])
     
-    unique_flights = []
-    # seen_vessels には (time, origin, is_intl, terminal) を記録
-    seen_vessels = [] 
-    
-    for f in candidates:
-        f_time = f['parsed_time']
-        origin = f.get('origin_iata', 'UNK')
-        is_intl = f['is_intl']
-        current_term = str(f.get('terminal', ''))
-        
-        is_duplicate = False
-        dup_idx = -1
-        
-        for i, (s_time, s_origin, s_is_intl, s_term) in enumerate(seen_vessels):
-            # 時間と場所が被っているか？
-            if s_origin == origin and abs((f_time - s_time).total_seconds()) < 900:
-                
-                # ★ここが修正ポイント★
-                # 「T1(JAL)」と「T2(ANA)」なら、時間と場所が被っても別物なので消さない！
-                # ただし、同じターミナル同士(T2のANAとT2のADOなど)はコードシェアなので消す
-                
-                # 両方ともターミナル情報を持っていて、かつ違う場合
-                if ('1' in s_term and '2' in current_term) or \
-                   ('2' in s_term and '1' in current_term):
-                    continue # 重複じゃない！次へ
-                
-                # ここに来たら「同じターミナル」か「ターミナル不明」なので重複とみなす
-                is_duplicate = True
-                dup_idx = i
-                break
-        
-        if is_duplicate:
-            # 重複時は、より「国際線」っぽい方を残す
-            if is_intl and not seen_vessels[dup_idx][2]:
-                del unique_flights[dup_idx]
-                del seen_vessels[dup_idx]
-                pass # 入れ替え実行
-            else:
-                continue # 今回のは捨てる
-
-        # リストに追加
-        unique_flights.append(f)
-        seen_vessels.append((f_time, origin, is_intl, current_term))
-        
-        # 集計
-        pax = f['pax_estimated']
-        if is_intl: pax_t3 += pax
-        elif '1' in current_term: pax_t1 += pax
-        elif '2' in current_term: pax_t2 += pax
-        else: pax_t3 += pax
-
-    # 念のため再ソート
-    unique_flights.sort(key=lambda x: x['parsed_time'])
-
     # ---------------------------------------------------------
     # 4. 予測表示
     # ---------------------------------------------------------
@@ -155,6 +120,6 @@ def analyze_demand(flights):
         "3号(T2)": int(pax_t2 * 0.5), "4号(T2)": int(pax_t2 * 0.5),
         "国際(T3)": pax_t3, 
         "forecast": final_forecast,
-        "unique_count": len(unique_flights), 
-        "flights": unique_flights
+        "unique_count": len(candidates), 
+        "flights": candidates
     }
