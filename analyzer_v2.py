@@ -1,4 +1,3 @@
-# analyzer_v2.py (最終決定版：過去の予定は全て到着とみなす・強制救出版)
 from datetime import datetime, timedelta
 
 def analyze_demand(flights):
@@ -6,7 +5,7 @@ def analyze_demand(flights):
     now = datetime.now() + timedelta(hours=9)
     
     # ---------------------------------------------------------
-    # 1. 生存率 & 絶対数チェック (異常検知)
+    # 1. 生存率 & 絶対数チェック
     # ---------------------------------------------------------
     check_start = now - timedelta(minutes=90)
     past_planned = 0
@@ -22,18 +21,14 @@ def analyze_demand(flights):
         if flight_num in seen_stats: continue
         seen_stats.add(flight_num)
         
-        # 過去90分のデータ統計
         if check_start <= f_time <= now:
             past_planned += 1
             status = str(f.get('status', '')).lower()
-            # 統計上も、キャンセルマークがついてなければ「到着」とみなす
             if status not in ['cancelled', 'diverted']:
                 past_landed += 1
 
-    # 絶対数チェック
-    # (判定を甘くしたので、閾値も少し調整してバランスを取る)
+    # 絶対数チェック (10機未満は異常)
     is_low_volume = (8 <= now.hour <= 23) and (past_landed < 10)
-    
     if is_low_volume:
         survival_rate = 0.0
     elif past_planned > 5:
@@ -43,11 +38,15 @@ def analyze_demand(flights):
         survival_rate = 1.0
 
     # ---------------------------------------------------------
-    # 2. リスト作成（ここが修正の肝）
+    # 2. リスト作成（ここが修正点）
     # ---------------------------------------------------------
-    # 範囲を少し広げて「60分」にして、17:00付近の便も逃さないようにする
+    # 範囲：過去60分 〜 未来30分（少し未来も拾う）
     range_start = now - timedelta(minutes=60)
-    range_end = now + timedelta(minutes=5)
+    range_end = now + timedelta(minutes=30)
+    
+    # 「到着済み」とみなす限界ライン（現在時刻 + 20分）
+    # APIが「17:20着予定」と言っていても、現在17:00なら「もう来る」とみなして実数に入れる
+    arrival_cutoff = now + timedelta(minutes=20)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
     candidates = []
@@ -60,38 +59,34 @@ def analyze_demand(flights):
         f['parsed_time'] = f_time
         
         f_num = f.get('flight_number', 'UNK')
-        
-        # 便名重複チェック（完全一致のみ弾く。余計な推測削除はしない）
         if f_num in processed_flight_numbers: continue
         processed_flight_numbers.add(f_num)
         
         status = str(f.get('status', '')).lower()
         term = str(f.get('terminal', ''))
         
-        # 国際線判定
         is_intl = any(x in term for x in ['3', 'I', 'Intl'])
         pax_base = 250 if is_intl else 150
         
-        # --- 現在の実数 ---
+        # --- A. 現在の実数（到着扱い） ---
+        # 範囲内 かつ、欠航でなく、時間が「カットオフ（未来20分）」より前なら採用
         if range_start <= f_time <= range_end:
-            # ★最重要ポイント★
-            # 「欠航(cancelled)」以外なら、時間が過ぎていれば全て拾う
-            # APIの Active や Scheduled のまま放置されている便を救出するため
             if status in ['cancelled', 'diverted']:
                 continue
             
-            # 時間チェックのみで通過させる
-            if f_time <= now:
+            # ここがANA救出の鍵
+            if f_time <= arrival_cutoff:
                 f['pax_estimated'] = pax_base
                 candidates.append(f)
                 
-                # 集計処理
                 if is_intl: pax_t3 += pax_base
                 elif '1' in term: pax_t1 += pax_base
                 elif '2' in term: pax_t2 += pax_base
                 else: pax_t3 += pax_base
+                continue # 実数に入れたら予測には入れない
 
-        # --- 未来の予測 ---
+        # --- B. 未来の予測 ---
+        # 実数に入らなかったものは予測へ
         if f_time > now:
             diff_h = (f_time - now).total_seconds() / 3600
             if 0 <= diff_h < 1: forecast_data["h1"] += pax_base
