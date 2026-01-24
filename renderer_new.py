@@ -1,9 +1,11 @@
+# renderer_new.py (最終修正版：辞書追加・表示修正)
 import os
 from datetime import datetime
 
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
-    # 辞書強化版
+    
+    # 辞書強化版 (奄美、女満別などを追加)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -11,6 +13,7 @@ def render_html(demand_results, password):
         "ISG":"石垣", "MMY":"宮古", "IWK":"岩国", "UBJ":"山口宇部", "TKS":"徳島",
         "AOJ":"青森", "MSJ":"三沢", "OIT":"大分", "AXT":"秋田", "GAJ":"山形",
         "OKJ":"岡山", "NGS":"長崎", "AKJ":"旭川", "OBO":"帯広", "SHM":"南紀白浜",
+        "ASJ":"奄美", "MMB":"女満別", "IZO":"出雲", "UBJ":"山口宇部", "KUH":"釧路",
         "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", "SFO":"サンフランシスコ", 
         "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", "HEL":"ヘルシンキ", 
         "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", "BKK":"ﾊﾞﾝｺｸ", 
@@ -32,6 +35,7 @@ def render_html(demand_results, password):
     pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
     total = sum(pax_counts)
     
+    # ランク判定
     if total >= 600: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 300: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 100: r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
@@ -65,6 +69,7 @@ def render_html(demand_results, password):
         item = f_data.get(k, {})
         forecast_html += f'<div class="fc-row"><div class="fc-time">[{item.get("label")}]</div><div class="fc-main"><span class="fc-status">{item.get("status")}</span><span class="fc-pax">(推計 {item.get("pax")}人)</span></div><div class="fc-comment">└ {item.get("comment")}</div></div>'
 
+    # 直近の範囲表記をロジックに合わせて「40分」に修正
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -123,7 +128,7 @@ def render_html(demand_results, password):
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲: 直近75分 | 実数: {demand_results.get('unique_count')}機</div>
+            <div class="info-banner">⚠️ 範囲: 直近40分 | 実数: {demand_results.get('unique_count')}機</div>
             <div class="rank-card">
                 <div class="rank-display">{sym} {r}</div>
                 <div class="rank-sub">{st}</div>
@@ -148,7 +153,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.3 Final Fix
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.4 Final Polish
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
