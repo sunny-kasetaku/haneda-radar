@@ -5,7 +5,11 @@ from datetime import datetime
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
     
-    # 辞書完全版 (重複削除・整理済み)
+    # ★ アナライザーから設定値を受け取る（なければデフォルト40/20）
+    val_past = demand_results.get("setting_past", 40)
+    val_future = demand_results.get("setting_future", 20)
+
+    # 辞書完全版
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -28,13 +32,9 @@ def render_html(demand_results, password):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
 
-    # 英語名が来た場合の予備変換 (部分一致など)
     def translate_origin(origin_iata, origin_name):
-        # まずIATAコードで検索
         if origin_iata in AIRPORT_MAP:
             return AIRPORT_MAP[origin_iata]
-        
-        # 辞書にない場合、英語名から推測
         name = str(origin_name)
         if "Hachijo" in name: return "八丈島"
         if "Shonai" in name: return "庄内"
@@ -42,7 +42,6 @@ def render_html(demand_results, password):
         if "Istanbul" in name: return "イスタンブール"
         if "Seattle" in name: return "シアトル"
         if "Sydney" in name: return "シドニー"
-        
         return name
 
     def to_int(v):
@@ -56,7 +55,7 @@ def render_html(demand_results, password):
     pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
     total = sum(pax_counts)
     
-    # ランク基準 (S:2000人以上)
+    # ランク基準
     if total >= 2000: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 1000: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 500:  r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
@@ -80,12 +79,9 @@ def render_html(demand_results, password):
         time_str = raw_time[11:16] if 'T' in raw_time else "---"
         pax_disp = f"{f.get('pax_estimated')}名"
         f_code = f.get('flight_number', '---')
-        
-        # 翻訳処理
         origin_iata = f.get('origin_iata', '')
         raw_origin = f.get('origin', origin_iata)
         origin_name = translate_origin(origin_iata, raw_origin)
-        
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
     f_data = demand_results.get("forecast", {})
@@ -94,6 +90,7 @@ def render_html(demand_results, password):
         item = f_data.get(k, {})
         forecast_html += f'<div class="fc-row"><div class="fc-time">[{item.get("label")}]</div><div class="fc-main"><span class="fc-status">{item.get("status")}</span><span class="fc-pax">(推計 {item.get("pax")}人)</span></div><div class="fc-comment">└ {item.get("comment")}</div></div>'
 
+    # ★ ここで変数を埋め込む (Automatic Display)
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -152,7 +149,7 @@ def render_html(demand_results, password):
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲: 直近40分 | 実数: {demand_results.get('unique_count')}機</div>
+            <div class="info-banner">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: {demand_results.get('unique_count')}機</div>
             <div class="rank-card">
                 <div class="rank-display">{sym} {r}</div>
                 <div class="rank-sub">{st}</div>
@@ -177,7 +174,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.3 Fixed
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.5 Variable Sync
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
