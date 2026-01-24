@@ -124,15 +124,15 @@ def render_html(demand_results, password):
             .fc-comment {{ font-size: 12px; color: #888; margin-left: 10px; }}
             .cam-box {{ background:#111; border:1px solid #444; border-radius:15px; padding:15px; margin-bottom:20px; text-align:center; }}
             .cam-title {{ color:#FFD700; font-weight:bold; font-size:14px; margin-bottom:10px; }}
-            .cam-btn {{ display: block; padding: 12px; margin-bottom: 10px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; color: #000; }}
+            .cam-btn {{ display: block; padding: 12px; margin-bottom: 5px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; color: #000; }}
             .taxi-btn {{ background: #FFD700; }}
             .train-btn {{ background: #00BFFF; }}
-            .strategy-box {{ text-align: left; background: #1A1A1A; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }}
-            .st-item {{ margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #ddd; }}
-            .st-item:last-child {{ margin-bottom: 0; }}
+            .sub-btn-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }}
             .disclaimer {{ font-size: 12px; color: #999; text-align: left; line-height: 1.5; border-top: 1px solid #444; padding-top: 10px; margin-top: 15px; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }}
             .footer {{ text-align:center; color:#666; font-size:11px; padding-bottom:30px; }}
+            .strategy-box {{ text-align: left; background: #1A1A1A; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }}
+            .st-item {{ margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #ddd; }}
         </style>
         <script>
             function checkPass() {{
@@ -169,36 +169,41 @@ def render_html(demand_results, password):
             <div class="forecast-box">{forecast_html}</div>
             <div class="cam-box">
                 <div class="cam-title">💡 勝つための戦略チェック</div>
-                <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-btn taxi-btn">🎥 タクシー乗り場の行列を確認</a>
-                <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn">🚃 電車・モノレールの運行状況</a>
+                
+                <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
+
+                <div class="sub-btn-row">
+                    <a href="https://transit.yahoo.co.jp/diainfo/62/0" target="_blank" class="cam-btn train-btn">🔴 京急線</a>
+                    <a href="https://transit.yahoo.co.jp/diainfo/173/0" target="_blank" class="cam-btn train-btn">🚝 モノレール</a>
+                </div>
+
+                <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn" style="background:#444; color:#fff;">🚃 JR・関東全域 (山手線など)</a>
                 
                 <div class="strategy-box">
                     <div class="st-item">
                         <span style="color:#00FF00; font-weight:bold;">✅ 需給バランス:</span><br>
-                        需要（客数）に対し供給（タクシー・電車）が足りているか？電車遅延時は需要急増のチャンスです。
+                        需要（客数）に対し供給（タクシー・電車）が足りているか？
                     </div>
                     <div class="st-item">
-                        <span style="color:#FFD700; font-weight:bold;">🌙 日付またぎ（終電前後）:</span><br>
-                        23時以降は電車での帰宅が困難になるため、長距離・高単価の需要が爆発する傾向があります。
+                        <span style="color:#FFD700; font-weight:bold;">🌙 日付またぎ（終電）:</span><br>
+                        23時以降は電車での帰宅が困難になり、長距離需要が爆発する傾向があります。
                     </div>
                     <div class="st-item">
-                        <span style="color:#00BFFF; font-weight:bold;">🤝 チームで勝つ:</span><br>
-                        「カセタク」Discordでの情報共有も判断材料に。<br>
-                        羽田をギャンブルにせず、情報と勝率で勝ちに行きましょう。
+                        <span style="color:#00BFFF; font-weight:bold;">🤝 チーム戦:</span><br>
+                        Discordでの情報共有も判断材料に。情報と確率で勝ちに行きましょう。
                     </div>
                 </div>
 
                 <div class="disclaimer">
                     【免責事項】<br>
-                    ※本システムは航空機データに基づいた推計値であり、正確性を保証するものではありません。<br>
-                    ※実際の行列や交通機関の運行状況により需要は変動します。<br>
+                    ※本システムは推計値であり、正確性を保証するものではありません。<br>
                     <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
                 </div>
             </div>
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.8 Complete Strategy
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.11 Multi-Link
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
