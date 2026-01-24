@@ -1,12 +1,14 @@
-name: FinalFix
+name: Haneda Radar Final
+
 on:
   workflow_dispatch:
   push:
+    branches: [ main ]
 
 permissions:
   contents: write
-  pages: write      # 追加：Pagesへの書き込み権限
-  id-token: write   # 追加：認証用
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -16,18 +18,16 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
       - run: pip install requests
-      - run: python main_v8.py  # index.htmlを生成
-
-      # 最新の index.html を公開用の荷物としてまとめる
+      - run: python main_v8.py
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'  # 今いる場所のファイルをアップロード
+          path: '.'
 
   deploy:
     needs: build
@@ -38,4 +38,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4  # ここで直接Webサイトを上書き公開する
+        uses: actions/deploy-pages@v4
