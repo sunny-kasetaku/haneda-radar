@@ -3,19 +3,21 @@ from datetime import datetime
 
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
+    # 辞書強化版
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
         "KCZ":"高知", "TAK":"高松", "KMJ":"熊本", "KMI":"宮崎", "KOJ":"鹿児島",
         "ISG":"石垣", "MMY":"宮古", "IWK":"岩国", "UBJ":"山口宇部", "TKS":"徳島",
         "AOJ":"青森", "MSJ":"三沢", "OIT":"大分", "AXT":"秋田", "GAJ":"山形",
-        "OKJ":"岡山", "NGS":"長崎", "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", 
-        "SFO":"サンフランシスコ", "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", 
-        "HEL":"ヘルシンキ", "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", 
-        "BKK":"ﾊﾞﾝｺｸ", "KUL":"ｸｱﾗﾙﾝﾌﾟｰﾙ", "CGK":"ｼﾞｬｶﾙﾀ", "MNL":"マニラ", 
-        "SGN":"ホーチミン", "HAN":"ハノイ", "HKG":"香港", "TPE":"台北(桃園)", 
-        "TSA":"台北(松山)", "ICN":"ソウル(仁川)", "GMP":"ソウル(金浦)", 
-        "PEK":"北京", "PVG":"上海(浦東)", "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
+        "OKJ":"岡山", "NGS":"長崎", "AKJ":"旭川", "OBO":"帯広", "SHM":"南紀白浜",
+        "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", "SFO":"サンフランシスコ", 
+        "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", "HEL":"ヘルシンキ", 
+        "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", "BKK":"ﾊﾞﾝｺｸ", 
+        "KUL":"ｸｱﾗﾙﾝﾌﾟｰﾙ", "CGK":"ｼﾞｬｶﾙﾀ", "MNL":"マニラ", "SGN":"ホーチミン", 
+        "HAN":"ハノイ", "HKG":"香港", "TPE":"台北(桃園)", "TSA":"台北(松山)", 
+        "ICN":"ソウル(仁川)", "GMP":"ソウル(金浦)", "PEK":"北京", "PVG":"上海(浦東)", 
+        "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
     }
 
     def to_int(v):
@@ -146,7 +148,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.2 Precision
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.3 Final Fix
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
