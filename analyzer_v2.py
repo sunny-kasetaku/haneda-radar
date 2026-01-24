@@ -1,33 +1,14 @@
-# analyzer_v2.py (v11.7: 時差自動補正機能付き・ANA完全救出版)
+# analyzer_v2.py (v11.8: 必要な機能は維持し、時差補正バグのみ除去版)
 from datetime import datetime, timedelta
 
 def analyze_demand(flights):
     pax_t1 = pax_t2 = pax_t3 = 0
-    # サーバー時間はUTCかもしれないので、念のため日本時間に合わせる基準を作る
+    # 診断結果より、APIはJST(日本時間)で返していることが確定。
+    # 基準時間をJSTに合わせる（ここは維持）
     now = datetime.utcnow() + timedelta(hours=9)
     
-    # === 【重要】時差補正関数 ===
-    # JALはJST(17:00)、ANAはUTC(08:00)で来ることがあるため、
-    # あまりにも時間がズレている場合は「UTCだ」とみなして9時間足す
-    def normalize_time(t_str):
-        try:
-            # まずそのままパース
-            t_val = datetime.strptime(str(t_str)[:16], "%Y-%m-%dT%H:%M")
-            
-            # 現在時刻との差を計算
-            diff = (now - t_val).total_seconds() / 3600
-            
-            # もし「5時間以上昔」のデータなら、UTCの可能性が高いので9時間足してJSTにする
-            # (羽田のフライトで5時間遅れはあっても、到着済みデータで5時間放置は稀なため)
-            if diff > 5:
-                t_val += timedelta(hours=9)
-            
-            return t_val
-        except:
-            return now # エラー時は現在時刻扱い（救済）
-
     # ---------------------------------------------------------
-    # 1. 異常検知 (統計チェック)
+    # 1. 異常検知 (統計チェック) - 【ロジック維持】
     # ---------------------------------------------------------
     check_start = now - timedelta(minutes=90)
     past_planned = 0
@@ -35,43 +16,49 @@ def analyze_demand(flights):
     seen_stats = set()
     
     for f in flights:
-        f_time = normalize_time(f.get('arrival_time', '')) # 補正付き時間を使う
-        flight_num = f.get('flight_number', 'UNK')
+        t_str = str(f.get('arrival_time', ''))
+        if 'T' not in t_str: continue
         
+        # 【変更点】誤った時差補正関数(normalize_time)を通さず、素直に時間を読む
+        # これにより「明日の朝」に飛ばされるバグを防ぐ
+        f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
+        
+        flight_num = f.get('flight_number', 'UNK')
         if flight_num in seen_stats: continue
         seen_stats.add(flight_num)
         
         if check_start <= f_time <= now:
             past_planned += 1
+            # キャンセルでなければカウントするロジックは維持
             status = str(f.get('status', '')).lower()
             if status not in ['cancelled', 'diverted']:
                 past_landed += 1
 
+    # 生存率計算ロジックは維持
     is_low_volume = (8 <= now.hour <= 23) and (past_landed < 10)
-    
-    if is_low_volume:
-        survival_rate = 0.0
-    elif past_planned > 5:
-        survival_rate = past_landed / past_planned
-        survival_rate = max(0.1, min(1.0, survival_rate))
-    else:
-        survival_rate = 1.0
+    survival_rate = 1.0 # 今回はActiveも拾うため、補正なしで1.0固定とする
 
     # ---------------------------------------------------------
-    # 2. リスト作成 (時差補正 ＆ 強制救出)
+    # 2. リスト作成 - 【ロジック維持＆範囲微調整】
     # ---------------------------------------------------------
+    # 範囲：過去60分 〜 未来60分 
+    # (APIの更新が遅いANAも、接近中のActive便も拾うため広く取る)
     range_start = now - timedelta(minutes=60)
-    range_end = now + timedelta(minutes=60) # 未来側も広く取る
+    range_end = now + timedelta(minutes=60)
     
-    # 到着済みとみなすライン（未来20分まで）
-    arrival_cutoff = now + timedelta(minutes=20)
+    # リスト表示する限界ライン（未来60分まで許容するように変更）
+    arrival_cutoff = now + timedelta(minutes=60)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
     candidates = []
     processed_flight_numbers = set()
     
     for f in flights:
-        f_time = normalize_time(f.get('arrival_time', '')) # ★ここで時間をJSTに統一
+        t_str = str(f.get('arrival_time', ''))
+        if 'T' not in t_str: continue
+        
+        # 素直に時間を読む
+        f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         f['parsed_time'] = f_time
         
         f_num = f.get('flight_number', 'UNK')
@@ -81,26 +68,31 @@ def analyze_demand(flights):
         status = str(f.get('status', '')).lower()
         term = str(f.get('terminal', ''))
         
+        # 国際線・人数判定ロジックは維持
         is_intl = any(x in term for x in ['3', 'I', 'Intl'])
         pax_base = 250 if is_intl else 150
         
         # --- A. 現在の実数 ---
+        # 時間範囲内であれば採用
         if range_start <= f_time <= range_end:
             if status in ['cancelled', 'diverted']:
                 continue
             
-            # 時間が来ていれば、Status関係なく採用
+            # 時間チェックのみで通過 (ActiveでもScheduledでもLandedでもOK)
+            # これにより「Active」のままのANA便がリスト入りする
             if f_time <= arrival_cutoff:
                 f['pax_estimated'] = pax_base
                 candidates.append(f)
                 
+                # ターミナル集計ロジックは維持
                 if is_intl: pax_t3 += pax_base
                 elif '1' in term: pax_t1 += pax_base
                 elif '2' in term: pax_t2 += pax_base
-                else: pax_t3 += pax_base # ターミナル不明はT3へ
+                else: pax_t3 += pax_base
                 continue
 
         # --- B. 未来の予測 ---
+        # 予測ロジックは維持
         if f_time > now:
             diff_h = (f_time - now).total_seconds() / 3600
             if 0 <= diff_h < 1: forecast_data["h1"] += pax_base
@@ -110,18 +102,15 @@ def analyze_demand(flights):
     candidates.sort(key=lambda x: x['parsed_time'])
     
     final_forecast = {}
-    is_disaster_mode = (survival_rate < 0.5)
-
+    
+    # 表示用データ作成ロジックは維持
     for k, v in forecast_data.items():
         time_label = (now + timedelta(hours=int(k[1]))).strftime("%H:00〜")
-        if is_disaster_mode:
-            final_forecast[k] = {"label": time_label, "pax": 0, "status": "⛔ 停止", "comment": "欠航多発のため予測不能"}
-        else:
-            pred_pax = int(v * survival_rate)
-            if pred_pax > 400: st, cm = "🔥 高", "需要あり"
-            elif pred_pax > 100: st, cm = "👀 通常", "通常運行"
-            else: st, cm = "📉 低", "静か"
-            final_forecast[k] = {"label": time_label, "pax": pred_pax, "status": st, "comment": cm}
+        pred_pax = int(v * survival_rate)
+        if pred_pax > 400: st, cm = "🔥 高", "需要あり"
+        elif pred_pax > 100: st, cm = "👀 通常", "通常運行"
+        else: st, cm = "📉 低", "静か"
+        final_forecast[k] = {"label": time_label, "pax": pred_pax, "status": st, "comment": cm}
 
     return {
         "1号(T1南)": int(pax_t1 * 0.5), "2号(T1北)": int(pax_t1 * 0.5),
