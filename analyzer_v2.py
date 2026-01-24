@@ -1,4 +1,4 @@
-# analyzer_v2.py (余計な推測廃止・便名完全一致のみ重複削除版)
+# analyzer_v2.py (最終決定版：過去の予定は全て到着とみなす・強制救出版)
 from datetime import datetime, timedelta
 
 def analyze_demand(flights):
@@ -6,7 +6,7 @@ def analyze_demand(flights):
     now = datetime.now() + timedelta(hours=9)
     
     # ---------------------------------------------------------
-    # 1. 生存率 & 絶対数チェック
+    # 1. 生存率 & 絶対数チェック (異常検知)
     # ---------------------------------------------------------
     check_start = now - timedelta(minutes=90)
     past_planned = 0
@@ -15,21 +15,25 @@ def analyze_demand(flights):
     
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
-        flight_num = f.get('flight_number', 'UNK') # 便名で管理
+        flight_num = f.get('flight_number', 'UNK')
         if 'T' not in t_str: continue
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         
-        # 統計用：同じ便名は1回しかカウントしない
         if flight_num in seen_stats: continue
         seen_stats.add(flight_num)
         
+        # 過去90分のデータ統計
         if check_start <= f_time <= now:
             past_planned += 1
-            if str(f.get('status', '')).lower() == 'landed':
+            status = str(f.get('status', '')).lower()
+            # 統計上も、キャンセルマークがついてなければ「到着」とみなす
+            if status not in ['cancelled', 'diverted']:
                 past_landed += 1
 
     # 絶対数チェック
-    is_low_volume = (8 <= now.hour <= 23) and (past_landed < 15)
+    # (判定を甘くしたので、閾値も少し調整してバランスを取る)
+    is_low_volume = (8 <= now.hour <= 23) and (past_landed < 10)
+    
     if is_low_volume:
         survival_rate = 0.0
     elif past_planned > 5:
@@ -39,54 +43,54 @@ def analyze_demand(flights):
         survival_rate = 1.0
 
     # ---------------------------------------------------------
-    # 2. リスト作成（余計な重複判定を削除）
+    # 2. リスト作成（ここが修正の肝）
     # ---------------------------------------------------------
     range_start = now - timedelta(minutes=40)
     range_end = now + timedelta(minutes=5)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
     candidates = []
-    
-    # 既にリストに入れた便名を記録するセット
     processed_flight_numbers = set()
     
-    # まずAPIの生データを解析
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
         if 'T' not in t_str: continue
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         f['parsed_time'] = f_time
         
-        # 便名を取得（例：JL912）
         f_num = f.get('flight_number', 'UNK')
         
-        # ★ここが修正点★
-        # 「便名」が既にあったらスキップ。無ければ登録。
-        # これだけで二重カウントは防げる。時間や場所での推測削除はしない。
-        if f_num in processed_flight_numbers:
-            continue
+        # 便名重複チェック（完全一致のみ弾く。余計な推測削除はしない）
+        if f_num in processed_flight_numbers: continue
         processed_flight_numbers.add(f_num)
         
         status = str(f.get('status', '')).lower()
         term = str(f.get('terminal', ''))
         
-        # 国際線判定（人数計算用）
+        # 国際線判定
         is_intl = any(x in term for x in ['3', 'I', 'Intl'])
         pax_base = 250 if is_intl else 150
         
-        # 現在の実数
+        # --- 現在の実数 ---
         if range_start <= f_time <= range_end:
-            if status == 'landed':
+            # ★最重要ポイント★
+            # 「欠航(cancelled)」以外なら、時間が過ぎていれば全て拾う
+            # APIの Active や Scheduled のまま放置されている便を救出するため
+            if status in ['cancelled', 'diverted']:
+                continue
+            
+            # 時間チェックのみで通過させる
+            if f_time <= now:
                 f['pax_estimated'] = pax_base
                 candidates.append(f)
                 
-                # 集計
-                if is_intl: pax_t3 += pax_base # T3/IntlタグがあればT3へ
+                # 集計処理
+                if is_intl: pax_t3 += pax_base
                 elif '1' in term: pax_t1 += pax_base
                 elif '2' in term: pax_t2 += pax_base
-                else: pax_t3 += pax_base # 不明なら国際枠へ(安全策)
+                else: pax_t3 += pax_base
 
-        # 未来の予測
+        # --- 未来の予測 ---
         if f_time > now:
             diff_h = (f_time - now).total_seconds() / 3600
             if 0 <= diff_h < 1: forecast_data["h1"] += pax_base
@@ -94,13 +98,10 @@ def analyze_demand(flights):
             elif 2 <= diff_h < 3: forecast_data["h3"] += pax_base
 
     # ---------------------------------------------------------
-    # 3. ソートして完了
+    # 3. ソート & 表示
     # ---------------------------------------------------------
     candidates.sort(key=lambda x: x['parsed_time'])
     
-    # ---------------------------------------------------------
-    # 4. 予測表示
-    # ---------------------------------------------------------
     final_forecast = {}
     is_disaster_mode = (survival_rate < 0.5)
 
