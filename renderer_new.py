@@ -4,7 +4,7 @@ from datetime import datetime
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
     
-    # 辞書強化版
+    # 辞書強化版 (下地島・シドニー・イスタンブール等追加)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -14,6 +14,7 @@ def render_html(demand_results, password):
         "OKJ":"岡山", "NGS":"長崎", "AKJ":"旭川", "OBO":"帯広", "SHM":"南紀白浜",
         "ASJ":"奄美", "MMB":"女満別", "IZO":"出雲", "KUH":"釧路", "KKJ":"北九州",
         "TTJ":"鳥取", "UKB":"神戸", "HSG":"佐賀", "NTQ":"能登", "HNA":"花巻",
+        "SHI":"下地島", "SYD":"シドニー", "IST":"イスタンブール",
         "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", "SFO":"サンフランシスコ", 
         "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", "HEL":"ヘルシンキ", 
         "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", "BKK":"ﾊﾞﾝｺｸ", 
@@ -35,10 +36,15 @@ def render_html(demand_results, password):
     pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
     total = sum(pax_counts)
     
-    if total >= 600: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
-    elif total >= 300: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
-    elif total >= 100: r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
-    else:              r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
+    # 【修正】ランク基準の見直し (ANA復活に伴い母数が増えたため閾値を上げる)
+    # S: 2000人以上 (超混雑)
+    # A: 1000人以上 (混雑)
+    # B: 500人以上  (通常)
+    # C: 500人未満  (閑散)
+    if total >= 2000: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
+    elif total >= 1000: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
+    elif total >= 500:  r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
+    else:               r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
     max_val = max(pax_counts) if any(pax_counts) else -1
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
@@ -59,6 +65,7 @@ def render_html(demand_results, password):
         pax_disp = f"{f.get('pax_estimated')}名"
         f_code = f.get('flight_number', '---')
         origin_iata = f.get('origin_iata', '')
+        # 辞書になければ origin 名をそのまま使う
         origin_name = AIRPORT_MAP.get(origin_iata, f.get('origin', origin_iata))
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
@@ -130,7 +137,7 @@ def render_html(demand_results, password):
             <div class="rank-card">
                 <div class="rank-display">{sym} {r}</div>
                 <div class="rank-sub">{st}</div>
-                <div class="legend"><span>🌈S:600~</span> <span>🔥A:300~</span> <span>✅B:100~</span> <span>⚠️C:1~</span></div>
+                <div class="legend"><span>🌈S:2000~</span> <span>🔥A:1000~</span> <span>✅B:500~</span> <span>⚠️C:1~</span></div>
             </div>
             <div class="grid">{cards_html}</div>
             <div class="section-title">✈️ 分析の根拠</div>
@@ -151,7 +158,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.0 Final Fix
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.1 Rank Adjusted
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
