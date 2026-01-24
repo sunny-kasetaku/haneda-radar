@@ -1,0 +1,25 @@
+name: 🔍 Run Debug Diagnosis
+
+on:
+  workflow_dispatch:  # これが「手動実行ボタン」を有効にする魔法の言葉です
+
+jobs:
+  run-diagnosis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Run Debug Script
+        env:
+          AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
+        run: python debug_check.py
