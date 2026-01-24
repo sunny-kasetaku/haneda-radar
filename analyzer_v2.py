@@ -2,9 +2,16 @@ from datetime import datetime, timedelta
 
 def analyze_demand(flights):
     pax_t1 = pax_t2 = pax_t3 = 0
-    # APIはJSTで返してくるため基準もJST
     now = datetime.utcnow() + timedelta(hours=9)
     
+    # ==========================================
+    # ⚙️ 設定：集計範囲の変数化
+    # ここに数字を入れるだけで、ロジックも表示も全部変わります
+    # ==========================================
+    MINUTES_PAST = 40    # 過去何分まで遡るか
+    MINUTES_FUTURE = 20  # 未来何分まで見るか
+    # ==========================================
+
     # ---------------------------------------------------------
     # 1. 異常検知
     # ---------------------------------------------------------
@@ -36,13 +43,12 @@ def analyze_demand(flights):
     # ---------------------------------------------------------
     # 2. リスト作成
     # ---------------------------------------------------------
-    # 【修正】範囲を「過去40分 〜 未来20分」に短縮
-    # これで「もう客がいない便」や「まだ遠い便」を除外してスッキリさせる
-    range_start = now - timedelta(minutes=40)
-    range_end = now + timedelta(minutes=20)
+    # ★ 変数を使って範囲を決める（自動連動）
+    range_start = now - timedelta(minutes=MINUTES_PAST)
+    range_end = now + timedelta(minutes=MINUTES_FUTURE)
     
-    # 実数カウントのリミット（未来20分まで）
-    arrival_cutoff = now + timedelta(minutes=20)
+    # ★ 変数を使って足切りラインを決める
+    arrival_cutoff = now + timedelta(minutes=MINUTES_FUTURE)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
     candidates = []
@@ -54,7 +60,6 @@ def analyze_demand(flights):
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         f['parsed_time'] = f_time
         
-        # 重複排除キー（時間_出発地）
         origin_key = f.get('origin_iata', 'UNK')
         unique_key = f"{t_str}_{origin_key}"
         
@@ -72,7 +77,6 @@ def analyze_demand(flights):
             if status in ['cancelled', 'diverted']:
                 continue
             
-            # 時間範囲内（未来20分以内）なら採用
             if f_time <= arrival_cutoff:
                 f['pax_estimated'] = pax_base
                 candidates.append(f)
@@ -108,5 +112,8 @@ def analyze_demand(flights):
         "国際(T3)": pax_t3, 
         "forecast": final_forecast,
         "unique_count": len(candidates), 
-        "flights": candidates
+        "flights": candidates,
+        # ★ ここで「設定値」も一緒に渡す
+        "setting_past": MINUTES_PAST,
+        "setting_future": MINUTES_FUTURE
     }
