@@ -4,7 +4,6 @@ from datetime import datetime
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
     
-    # おとといの辞書 (完全維持)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -20,6 +19,7 @@ def render_html(demand_results, password):
         "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
     }
 
+    # (中略：to_int, ランク判定, ターミナルカード生成部分は現状維持)
     def to_int(v):
         if isinstance(v, int): return v
         if isinstance(v, str):
@@ -49,38 +49,28 @@ def render_html(demand_results, password):
         disp_val = demand_results.get(name, "0")
         cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num">{disp_val}</div></div>'
 
+    # フライトテーブルの日本語化
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
         time_str = raw_time[11:16] if 'T' in raw_time else "---"
         pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
-        f_info = f.get('flight') or {}
-        f_code = f.get('flight_iata') or f_info.get('iata') or f_info.get('number') or "---"
-
-        # 出身の日本語化 (強化版ロジック)
-        origin_raw = f.get('origin', '')
-        origin_name = origin_raw
-        for code, ja in AIRPORT_MAP.items():
-            # IATAコードが一致するか、英名の中に日本語名のキーワードが含まれるか判定
-            if code.lower() in origin_raw.lower() or ja in origin_raw or (len(ja) >= 2 and ja[:2] in origin_raw):
-                origin_name = ja
-                break
+        f_code = f.get('flight_number', '---')
+        
+        # 日本語化: コード(origin_iata)を優先して引く
+        origin_iata = f.get('origin_iata', '')
+        origin_name = AIRPORT_MAP.get(origin_iata, f.get('origin', 'Unknown'))
         
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
-    f_data = demand_results.get("forecast", {})
-    forecast_html = ""
-    for k in ["h1", "h2", "h3"]:
-        item = f_data.get(k, {})
-        l_v, s_v, p_v, c_v = item.get('label','--:--'), item.get('status','-'), item.get('pax',0), item.get('comment','-')
-        forecast_html += f'<div class="fc-row"><div class="fc-time">[{l_v}]</div><div class="fc-main"><span class="fc-status">{s_v}</span><span class="fc-pax">(推計 {p_v}人)</span></div><div class="fc-comment">└ {c_v}</div></div>'
-
+    # HTML出力 (免責事項を更新)
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+            /* (スタイル設定は現状維持) */
             @keyframes flash {{ 0% {{ opacity: 0.6; }} 50% {{ opacity: 0.8; }} 100% {{ opacity: 1; }} }}
             body.loading {{ animation: flash 0.8s ease-out; }}
             body {{ background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
@@ -110,7 +100,7 @@ def render_html(demand_results, password):
             .cam-box {{ background:#111; border:1px solid #444; border-radius:15px; padding:15px; margin-bottom:20px; text-align:center; }}
             .cam-title {{ color:#FFD700; font-weight:bold; font-size:14px; margin-bottom:10px; }}
             .cam-btn {{ display: block; padding: 12px; background: #FFD700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; margin-bottom:10px; }}
-            .disclaimer {{ font-size: 14px; color: #eee; text-align: left; line-height: 1.6; border-top: 1px solid #444; padding-top: 10px; }}
+            .disclaimer {{ font-size: 13px; color: #ccc; text-align: left; line-height: 1.5; border-top: 1px solid #444; padding-top: 10px; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }}
             .footer {{ text-align:center; color:#666; font-size:11px; padding-bottom:30px; }}
         </style>
@@ -146,19 +136,21 @@ def render_html(demand_results, password):
                 <tbody>{table_rows}</tbody>
             </table>
             <div class="section-title">📈 今後の需要予測 (3時間先)</div>
-            <div class="forecast-box">{forecast_html}</div>
+            <div class="forecast-box">
+                {forecast_html}
+            </div>
             <div class="cam-box">
                 <div class="cam-title">⚠️ 重要：最終判断の前に必ず確認</div>
                 <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-btn">🎥 乗り場ライブカメラ (外部サイト)</a>
                 <div class="disclaimer">
-                    ※本システムは航空機のデータのみに基づいています。実際の行列やタクシー待機台数は考慮していません。オンラインサロンでの現地報告も併せて確認してください。<br>
-                    <strong>【重要】最終的な判断はご自身で行ってください。</strong>
+                    ※本システムは航空機データのみに基づいています。実際の行列やタクシー待機台数は考慮していません。<br>
+                    ※鉄道・バス等の公共交通機関の運行状況によっても需要は変動します。最終的な判断はご自身で行ってください。
                 </div>
             </div>
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v10.3 Stable
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.0 All-In-One
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
