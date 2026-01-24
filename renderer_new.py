@@ -4,7 +4,7 @@ from datetime import datetime
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
     
-    # 辞書強化版 (プロデューサーのリストにある空港を網羅)
+    # 辞書強化版 (北九州・鳥取・能登などを追加)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -59,7 +59,6 @@ def render_html(demand_results, password):
         pax_disp = f"{f.get('pax_estimated')}名"
         f_code = f.get('flight_number', '---')
         origin_iata = f.get('origin_iata', '')
-        # 辞書になければ origin 名をそのまま使う
         origin_name = AIRPORT_MAP.get(origin_iata, f.get('origin', origin_iata))
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
@@ -152,7 +151,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.5 Final Rescue
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.6 Official Truth
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
