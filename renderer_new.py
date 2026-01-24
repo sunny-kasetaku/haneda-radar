@@ -5,7 +5,7 @@ from datetime import datetime
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
     
-    # ★ アナライザーから設定値を受け取る（なければデフォルト40/20）
+    # アナライザーから設定値を受け取る
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
@@ -90,7 +90,6 @@ def render_html(demand_results, password):
         item = f_data.get(k, {})
         forecast_html += f'<div class="fc-row"><div class="fc-time">[{item.get("label")}]</div><div class="fc-main"><span class="fc-status">{item.get("status")}</span><span class="fc-pax">(推計 {item.get("pax")}人)</span></div><div class="fc-comment">└ {item.get("comment")}</div></div>'
 
-    # ★ ここで変数を埋め込む (Automatic Display)
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -125,8 +124,13 @@ def render_html(demand_results, password):
             .fc-comment {{ font-size: 12px; color: #888; margin-left: 10px; }}
             .cam-box {{ background:#111; border:1px solid #444; border-radius:15px; padding:15px; margin-bottom:20px; text-align:center; }}
             .cam-title {{ color:#FFD700; font-weight:bold; font-size:14px; margin-bottom:10px; }}
-            .cam-btn {{ display: block; padding: 12px; background: #FFD700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; margin-bottom:10px; }}
-            .disclaimer {{ font-size: 13px; color: #ccc; text-align: left; line-height: 1.5; border-top: 1px solid #444; padding-top: 10px; }}
+            .cam-btn {{ display: block; padding: 12px; margin-bottom: 10px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; color: #000; }}
+            .taxi-btn {{ background: #FFD700; }}
+            .train-btn {{ background: #00BFFF; }}
+            .strategy-box {{ text-align: left; background: #1A1A1A; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }}
+            .st-item {{ margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #ddd; }}
+            .st-item:last-child {{ margin-bottom: 0; }}
+            .disclaimer {{ font-size: 12px; color: #999; text-align: left; line-height: 1.5; border-top: 1px solid #444; padding-top: 10px; margin-top: 15px; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }}
             .footer {{ text-align:center; color:#666; font-size:11px; padding-bottom:30px; }}
         </style>
@@ -164,17 +168,37 @@ def render_html(demand_results, password):
             <div class="section-title">📈 今後の需要予測 (3時間先)</div>
             <div class="forecast-box">{forecast_html}</div>
             <div class="cam-box">
-                <div class="cam-title">⚠️ 重要：最終判断の前に必ず確認</div>
-                <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-btn">🎥 乗り場ライブカメラ (外部サイト)</a>
+                <div class="cam-title">💡 勝つための戦略チェック</div>
+                <a href="https://www.youtube.com/results?search_query=羽田空港+ライブカメラ" target="_blank" class="cam-btn taxi-btn">🎥 タクシー乗り場の行列を確認</a>
+                <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn">🚃 電車・モノレールの運行状況</a>
+                
+                <div class="strategy-box">
+                    <div class="st-item">
+                        <span style="color:#00FF00; font-weight:bold;">✅ 需給バランス:</span><br>
+                        需要（客数）に対し供給（タクシー・電車）が足りているか？電車遅延時は需要急増のチャンスです。
+                    </div>
+                    <div class="st-item">
+                        <span style="color:#FFD700; font-weight:bold;">🌙 日付またぎ（終電前後）:</span><br>
+                        23時以降は電車での帰宅が困難になるため、長距離・高単価の需要が爆発する傾向があります。
+                    </div>
+                    <div class="st-item">
+                        <span style="color:#00BFFF; font-weight:bold;">🤝 チームで勝つ:</span><br>
+                        「カセタク」Discordでの情報共有も判断材料に。<br>
+                        羽田をギャンブルにせず、情報と勝率で勝ちに行きましょう。
+                    </div>
+                </div>
+
                 <div class="disclaimer">
-                    ※本システムは航空機データのみに基づいています。実際の行列やタクシー待機台数は考慮していません。<br>
-                    ※鉄道・バス等の公共交通機関の運行状況によっても需要は変動します。最終的な判断はご自身で行ってください。
+                    【免責事項】<br>
+                    ※本システムは航空機データに基づいた推計値であり、正確性を保証するものではありません。<br>
+                    ※実際の行列や交通機関の運行状況により需要は変動します。<br>
+                    <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
                 </div>
             </div>
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.5 Variable Sync
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.8 Complete Strategy
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
