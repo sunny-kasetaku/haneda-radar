@@ -1,85 +1,90 @@
 import os
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# 設定（メインプログラムと同じ環境変数を使います）
 API_KEY = os.environ.get("AVIATION_STACK_API_KEY")
 
 def run_diagnosis():
-    print("=== 🔍 API生データ診断ツール (ANA & 国際線捜索) ===")
+    print("=== 🔍 API生データ診断ツール v2 (エラー修正＆今日限定版) ===")
     
     if not API_KEY:
-        print("❌ エラー: APIキーが見つかりません。環境変数を設定してください。")
+        print("❌ エラー: APIキーがありません。")
         return
 
     url = "http://api.aviationstack.com/v1/flights"
-    params = {
-        'access_key': API_KEY,
-        'arr_iata': 'HND',  # 羽田空港到着便
-        'limit': 100        # 直近100件を取得
-    }
+    
+    # 【重要】明日のデータ邪魔なので、「active(飛行中)」と「landed(着陸)」に絞って取得する
+    # 2回に分けて取得して結合します
+    target_statuses = ['active', 'landed']
+    all_flights = []
 
-    print("📡 APIにデータを問い合わせ中...")
-    try:
-        response = requests.get(url, params=params)
-        data = response.json()
-    except Exception as e:
-        print(f"❌ 通信エラー: {e}")
-        return
+    for status in target_statuses:
+        print(f"📡 API問い合わせ中 (Status: {status})...")
+        params = {
+            'access_key': API_KEY,
+            'arr_iata': 'HND',
+            'limit': 100,
+            'flight_status': status  # ★ここ重要！「予定(scheduled)」を除外して実数だけ取る
+        }
+        try:
+            res = requests.get(url, params=params)
+            data = res.json()
+            if 'data' in data:
+                all_flights.extend(data['data'])
+        except Exception as e:
+            print(f"❌ 通信エラー ({status}): {e}")
 
-    if 'data' not in data:
-        print("❌ データが取得できませんでした。")
-        print(f"レスポンス: {data}")
-        return
+    print(f"\n✅ 取得完了: 合計 {len(all_flights)} 件の【飛行中・着陸済み】データを確保しました。\n")
 
-    flights = data['data']
-    print(f"✅ 取得成功: 全 {len(flights)} 件のデータを取得しました。\n")
-
-    print("--- 【ANA (NH) / 全日空 便の解析】 ---")
+    print("--- 🔍 ANA (NH) / 全日空 便の捜索 ---")
     ana_count = 0
-    for f in flights:
-        airline = f.get('airline', {}).get('name', 'Unknown')
-        flight_num = f.get('flight', {}).get('iata', 'UNK')
+    
+    # JST現在時刻（比較用）
+    now_jst = datetime.utcnow() + timedelta(hours=9)
+    print(f"🕒 現在の日本時間: {now_jst.strftime('%Y-%m-%d %H:%M')}")
+
+    for f in all_flights:
+        # エラー回避：航空会社名がないデータは「Unknown」として扱う
+        airline_obj = f.get('airline') or {}
+        airline_name = airline_obj.get('name') or "Unknown"
         
-        # ANA便を探す ("All Nippon" または "ANA")
-        if 'All Nippon' in airline or 'ANA' in airline:
+        flight_obj = f.get('flight') or {}
+        flight_num = flight_obj.get('iata') or "UNK"
+        
+        # ANA便を探す
+        if 'All Nippon' in airline_name or 'ANA' in airline_name:
             ana_count += 1
             status = f.get('flight_status', 'unknown')
             
-            # 生の時刻データを取得
-            arrival = f.get('arrival', {})
-            scheduled = arrival.get('scheduled', '---')
-            estimated = arrival.get('estimated', '---')
-            actual = arrival.get('actual', '---')
+            arrival = f.get('arrival') or {}
             terminal = arrival.get('terminal', '---')
             
-            print(f"✈️ 便名: {flight_num}")
-            print(f"   Status    : {status}")
-            print(f"   Terminal  : {terminal}")
-            print(f"   Scheduled : {scheduled}") # ここが重要！09:00ならUTC、18:00ならJST
-            print(f"   Actual    : {actual}")
+            # 生の時間を取得
+            # APIは通常UTCで返してくる
+            scheduled_utc = arrival.get('scheduled', '---')
+            actual_utc = arrival.get('actual') or arrival.get('estimated', '---')
+
+            print(f"✈️ {flight_num} | Sts: {status} | T: {terminal}")
+            print(f"   UTC Time : {scheduled_utc} (Actual: {actual_utc})")
+            
+            # 時差チェック
+            try:
+                # 文字列を日付に変換
+                dt_utc = datetime.strptime(scheduled_utc[:19], "%Y-%m-%dT%H:%M:%S")
+                # +9時間してJSTにする
+                dt_jst = dt_utc + timedelta(hours=9)
+                print(f"   JST 換算 : {dt_jst.strftime('%m/%d %H:%M')}")
+            except:
+                pass
+                
             print("-" * 40)
 
     if ana_count == 0:
-        print("⚠️ 警告: 取得した100件の中に ANA便 が1つもありませんでした。")
+        print("⚠️ 警告: 'active' または 'landed' の中に ANA便 が1つもありませんでした。")
+        print("可能性: APIが ANAのステータスを更新しておらず、全て 'scheduled' のまま放置されている可能性があります。")
     else:
         print(f"➡ ANA便は {ana_count} 件見つかりました。")
-
-    print("\n--- 【国際線ターミナル (T3) の解析】 ---")
-    t3_count = 0
-    for f in flights:
-        arrival = f.get('arrival', {})
-        terminal = str(arrival.get('terminal', ''))
-        
-        if '3' in terminal or 'Intl' in terminal:
-            t3_count += 1
-            flight_num = f.get('flight', {}).get('iata', 'UNK')
-            scheduled = arrival.get('scheduled', '---')
-            print(f"🌏 便名: {flight_num} (T3) | Scheduled: {scheduled}")
-            
-    if t3_count == 0:
-        print("⚠️ 警告: T3(国際線) が1つもありませんでした。")
 
     print("\n=== 診断終了 ===")
 
