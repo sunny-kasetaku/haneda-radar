@@ -1,90 +1,83 @@
-# analyzer_v2.py (v11.8: 必要な機能は維持し、時差補正バグのみ除去版)
 from datetime import datetime, timedelta
 
 def analyze_demand(flights):
     pax_t1 = pax_t2 = pax_t3 = 0
-    # 診断結果より、APIはJST(日本時間)で返していることが確定。
-    # 基準時間をJSTに合わせる（ここは維持）
+    # APIは日本時間(JST)で返してくるため、基準もJSTにする
     now = datetime.utcnow() + timedelta(hours=9)
     
     # ---------------------------------------------------------
-    # 1. 異常検知 (統計チェック) - 【ロジック維持】
+    # 1. 異常検知
     # ---------------------------------------------------------
     check_start = now - timedelta(minutes=90)
     past_planned = 0
     past_landed = 0
-    seen_stats = set()
+    seen_unique_flights = set() # 統計用の重複排除セット
     
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
         if 'T' not in t_str: continue
-        
-        # 【変更点】誤った時差補正関数(normalize_time)を通さず、素直に時間を読む
-        # これにより「明日の朝」に飛ばされるバグを防ぐ
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         
-        flight_num = f.get('flight_number', 'UNK')
-        if flight_num in seen_stats: continue
-        seen_stats.add(flight_num)
+        # 【重複排除キー】 時間_出発地 (例: "18:30_CTS")
+        # これでコードシェア便(JL514とHA5000など)を1機としてカウントできる
+        origin_key = f.get('origin_iata', 'UNK')
+        unique_key = f"{t_str}_{origin_key}"
+        
+        if unique_key in seen_unique_flights: continue
+        seen_unique_flights.add(unique_key)
         
         if check_start <= f_time <= now:
             past_planned += 1
-            # キャンセルでなければカウントするロジックは維持
             status = str(f.get('status', '')).lower()
             if status not in ['cancelled', 'diverted']:
                 past_landed += 1
 
-    # 生存率計算ロジックは維持
     is_low_volume = (8 <= now.hour <= 23) and (past_landed < 10)
-    survival_rate = 1.0 # 今回はActiveも拾うため、補正なしで1.0固定とする
+    survival_rate = 1.0
 
     # ---------------------------------------------------------
-    # 2. リスト作成 - 【ロジック維持＆範囲微調整】
+    # 2. リスト作成
     # ---------------------------------------------------------
-    # 範囲：過去60分 〜 未来60分 
-    # (APIの更新が遅いANAも、接近中のActive便も拾うため広く取る)
+    # 範囲：過去60分 〜 未来60分
     range_start = now - timedelta(minutes=60)
     range_end = now + timedelta(minutes=60)
     
-    # リスト表示する限界ライン（未来60分まで許容するように変更）
+    # リスト表示リミット
     arrival_cutoff = now + timedelta(minutes=60)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
     candidates = []
-    processed_flight_numbers = set()
+    processed_keys = set() # リスト作成用の重複排除セット
     
     for f in flights:
         t_str = str(f.get('arrival_time', ''))
         if 'T' not in t_str: continue
-        
-        # 素直に時間を読む
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         f['parsed_time'] = f_time
         
-        f_num = f.get('flight_number', 'UNK')
-        if f_num in processed_flight_numbers: continue
-        processed_flight_numbers.add(f_num)
+        # 【ここが修正点】便名(JLxxx)ではなく、「時間+場所」で重複チェック
+        origin_key = f.get('origin_iata', 'UNK')
+        unique_key = f"{t_str}_{origin_key}"
+        
+        if unique_key in processed_keys: continue
+        processed_keys.add(unique_key)
         
         status = str(f.get('status', '')).lower()
         term = str(f.get('terminal', ''))
         
-        # 国際線・人数判定ロジックは維持
         is_intl = any(x in term for x in ['3', 'I', 'Intl'])
         pax_base = 250 if is_intl else 150
         
         # --- A. 現在の実数 ---
-        # 時間範囲内であれば採用
         if range_start <= f_time <= range_end:
             if status in ['cancelled', 'diverted']:
                 continue
             
-            # 時間チェックのみで通過 (ActiveでもScheduledでもLandedでもOK)
-            # これにより「Active」のままのANA便がリスト入りする
+            # ActiveでもScheduledでも、時間が来ていれば採用
             if f_time <= arrival_cutoff:
                 f['pax_estimated'] = pax_base
                 candidates.append(f)
                 
-                # ターミナル集計ロジックは維持
                 if is_intl: pax_t3 += pax_base
                 elif '1' in term: pax_t1 += pax_base
                 elif '2' in term: pax_t2 += pax_base
@@ -92,7 +85,6 @@ def analyze_demand(flights):
                 continue
 
         # --- B. 未来の予測 ---
-        # 予測ロジックは維持
         if f_time > now:
             diff_h = (f_time - now).total_seconds() / 3600
             if 0 <= diff_h < 1: forecast_data["h1"] += pax_base
@@ -103,7 +95,6 @@ def analyze_demand(flights):
     
     final_forecast = {}
     
-    # 表示用データ作成ロジックは維持
     for k, v in forecast_data.items():
         time_label = (now + timedelta(hours=int(k[1]))).strftime("%H:00〜")
         pred_pax = int(v * survival_rate)
