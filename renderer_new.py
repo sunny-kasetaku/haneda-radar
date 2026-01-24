@@ -3,31 +3,29 @@ from datetime import datetime
 
 def render_html(demand_results, password):
     flight_list = demand_results.get("flights", [])
-    
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
         "KCZ":"高知", "TAK":"高松", "KMJ":"熊本", "KMI":"宮崎", "KOJ":"鹿児島",
         "ISG":"石垣", "MMY":"宮古", "IWK":"岩国", "UBJ":"山口宇部", "TKS":"徳島",
         "AOJ":"青森", "MSJ":"三沢", "OIT":"大分", "AXT":"秋田", "GAJ":"山形",
-        "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", "SFO":"サンフランシスコ",
-        "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", "HEL":"ヘルシンキ",
-        "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", "BKK":"ﾊﾞﾝｺｸ",
-        "KUL":"ｸｱﾗﾙﾝﾌﾟｰﾙ", "CGK":"ｼﾞｬｶﾙﾀ", "MNL":"マニラ", "SGN":"ホーチミン",
-        "HAN":"ハノイ", "HKG":"香港", "TPE":"台北(桃園)", "TSA":"台北(松山)",
-        "ICN":"ソウル(仁川)", "GMP":"ソウル(金浦)", "PEK":"北京", "PVG":"上海(浦東)",
-        "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
+        "OKJ":"岡山", "NGS":"長崎", "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", 
+        "SFO":"サンフランシスコ", "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", 
+        "HEL":"ヘルシンキ", "DXB":"ドバイ", "DOH":"ドーハ", "SIN":"ｼﾝｶﾞﾎﾟｰﾙ", 
+        "BKK":"ﾊﾞﾝｺｸ", "KUL":"ｸｱﾗﾙﾝﾌﾟｰﾙ", "CGK":"ｼﾞｬｶﾙﾀ", "MNL":"マニラ", 
+        "SGN":"ホーチミン", "HAN":"ハノイ", "HKG":"香港", "TPE":"台北(桃園)", 
+        "TSA":"台北(松山)", "ICN":"ソウル(仁川)", "GMP":"ソウル(金浦)", 
+        "PEK":"北京", "PVG":"上海(浦東)", "SHA":"上海(虹橋)", "DLC":"大連", "CAN":"広州"
     }
 
     def to_int(v):
         if isinstance(v, int): return v
-        if isinstance(v, str):
+        try:
             import re
-            nums = re.findall(r'\d+', v)
+            nums = re.findall(r'\d+', str(v))
             return int(nums[0]) if nums else 0
-        return 0
+        except: return 0
 
-    # 1. ランク判定
     target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
     pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
     total = sum(pax_counts)
@@ -37,7 +35,6 @@ def render_html(demand_results, password):
     elif total >= 100: r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
     else:              r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
-    # 2. ターミナルカード
     max_val = max(pax_counts) if any(pax_counts) else -1
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
 
@@ -50,29 +47,22 @@ def render_html(demand_results, password):
         disp_val = demand_results.get(name, "0")
         cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num">{disp_val}</div></div>'
 
-    # 3. フライトテーブル
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
         time_str = raw_time[11:16] if 'T' in raw_time else "---"
-        pax_disp = f"{f.get('pax_estimated')}名" if f.get('pax_estimated') else "---"
+        pax_disp = f"{f.get('pax_estimated')}名"
         f_code = f.get('flight_number', '---')
         origin_iata = f.get('origin_iata', '')
         origin_name = AIRPORT_MAP.get(origin_iata, f.get('origin', 'Unknown'))
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
-    # 4. 需要予測 (ここが NameError の原因でした)
     f_data = demand_results.get("forecast", {})
     forecast_html = ""
     for k in ["h1", "h2", "h3"]:
         item = f_data.get(k, {})
-        l_v = item.get('label','--:--')
-        s_v = item.get('status','-')
-        p_v = item.get('pax', 0)
-        c_v = item.get('comment','-')
-        forecast_html += f'<div class="fc-row"><div class="fc-time">[{l_v}]</div><div class="fc-main"><span class="fc-status">{s_v}</span><span class="fc-pax">(推計 {p_v}人)</span></div><div class="fc-comment">└ {c_v}</div></div>'
+        forecast_html += f'<div class="fc-row"><div class="fc-time">[{item.get("label")}]</div><div class="fc-main"><span class="fc-status">{item.get("status")}</span><span class="fc-pax">(推計 {item.get("pax")}人)</span></div><div class="fc-comment">└ {item.get("comment")}</div></div>'
 
-    # 5. HTML本体
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -156,7 +146,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.0 All-In-One
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v11.2 Precision
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
