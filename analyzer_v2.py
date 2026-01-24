@@ -45,7 +45,8 @@ def analyze_demand(flights):
     # ---------------------------------------------------------
     # 2. リスト作成（ここが修正の肝）
     # ---------------------------------------------------------
-    range_start = now - timedelta(minutes=40)
+    # 範囲を少し広げて「60分」にして、17:00付近の便も逃さないようにする
+    range_start = now - timedelta(minutes=60)
     range_end = now + timedelta(minutes=5)
     
     forecast_data = {"h1": 0, "h2": 0, "h3": 0}
