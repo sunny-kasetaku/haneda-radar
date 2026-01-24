@@ -19,7 +19,7 @@ def analyze_demand(flights):
         
         f_time = datetime.strptime(t_str[:16], "%Y-%m-%dT%H:%M")
         
-        # 1. 重複排除 (時間と場所で判定)
+        # 1. 重複排除 (JAL等の重複対策)
         is_duplicate = False
         for seen_time, seen_origin in seen_vessels:
             if seen_origin == origin and abs((f_time - seen_time).total_seconds()) < 600:
