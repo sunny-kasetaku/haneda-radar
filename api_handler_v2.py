@@ -4,65 +4,55 @@ import sys
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    AviationStackからデータを取得する。
-    date_str が指定されていればその日付のデータを、なければ当日のデータを取得。
+    AviationStackからデータを取得する（超・省エネ版）。
+    ステータスを指定せず、1回の通信で「active」「landed」「scheduled」すべてを一括取得する。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
-    # 【修正点】'scheduled' を追加！
-    # これで「まだactiveになっていない便」や「データ反映が遅い便」も漏らさず拾います。
-    target_statuses = ['active', 'landed', 'scheduled']
+    # パラメータ設定
+    # flight_statusを指定しない = APIの仕様ですべてのステータスが返ってくる
+    # これにより 1回の通信で「到着済み」も「予定」も「飛行中」も全部取れます。
+    params = {
+        'access_key': api_key,
+        'arr_iata': 'HND',  # 羽田到着
+        'limit': 100        # 直近100件
+    }
     
-    all_flights = []
+    if date_str:
+        params['flight_date'] = date_str
     
-    for status in target_statuses:
-        params = {
-            'access_key': api_key,
-            'arr_iata': 'HND',
-            'limit': 100,
-            'flight_status': status
-        }
+    try:
+        # ここでリクエスト（通信は1回だけ！）
+        response = requests.get(base_url, params=params, timeout=10)
+        data = response.json()
+        raw_data = data.get('data', [])
         
-        # 日付指定がある場合はパラメータに追加
-        if date_str:
-            params['flight_date'] = date_str
+        all_flights = []
+        for f in raw_data:
+            info = extract_flight_info(f)
+            if info:
+                all_flights.append(info)
         
-        try:
-            response = requests.get(base_url, params=params, timeout=10)
-            data = response.json()
-            raw_data = data.get('data', [])
-            
-            for f in raw_data:
-                info = extract_flight_info(f)
-                if info:
-                    all_flights.append(info)
-            
-            # APIへの負荷軽減
-            time.sleep(0.1)
-            
-        except Exception as e:
-            print(f"Error fetching {status} flights: {e}", file=sys.stderr)
-            pass
+        return all_flights
 
-    return all_flights
+    except Exception as e:
+        print(f"Error fetching flights: {e}", file=sys.stderr)
+        return []
 
 def extract_flight_info(flight):
-    """
-    APIの生データから必要な情報を抽出し、ターミナル判定を行う関数
-    """
     arr = flight.get('arrival', {})
     airline = flight.get('airline', {})
     flight_data = flight.get('flight', {})
     dep = flight.get('departure', {})
     
+    # 到着時刻の特定
     arrival_time = arr.get('estimated') or arr.get('actual') or arr.get('scheduled')
     if not arrival_time: return None
 
-    # ターミナル判定ロジック
+    # ターミナル判定
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
     
-    # ターミナル情報がない場合の推測ロジック
     if term is None:
         if len(f_num_str) >= 4:
             term = "1"
