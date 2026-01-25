@@ -19,9 +19,7 @@ def main():
     # ==========================================
     # 🔑 1. パスワード生成ロジック (深夜対応版)
     # ==========================================
-    # 【変更点】
-    # 00:00 〜 05:59 までは「前日の日付」を使ってパスワードを作るように変更。
-    # これで夜勤中のドライバーは朝6時まで同じパスワードでログインし続けられます。
+    # 00:00 〜 05:59 までは「前日の日付」を使ってパスワードを作る。
     if now.hour < 6:
         pass_date = now - timedelta(days=1)
     else:
@@ -32,28 +30,36 @@ def main():
     print(f"PASS: {daily_pass} (Base Date: {pass_date.strftime('%Y-%m-%d')})")
 
     # ==========================================
-    # ✈️ 2. データ取得ロジック (日またぎ対応版)
+    # ✈️ 2. データ取得ロジック (完全日またぎ対応版)
     # ==========================================
     api_key = CONFIG.get("AVIATION_STACK_API_KEY")
     
-    # (A) 今日のデータを取得 (既存維持)
+    # (A) 今日のデータを取得 (ベース)
     flights_raw = fetch_flight_data(api_key)
     print(f"LOG: Fetched Today's Data: {len(flights_raw)} records")
 
-    # (B) 【追加点】深夜(00:00〜03:59)なら、昨日のデータも取りに行く
-    # 国際線などは「出発日」で管理されるため、日付をまたぐと今日のデータに出てこない対策。
-    # これで深夜の「国際線ゼロ」バグが直ります。
+    # (B) 日またぎ補完ロジック
+    # パターン1: 深夜(00:00〜03:59) -> 「昨日」のデータも取る (到着が遅れた便など)
     if 0 <= now.hour < 4:
-        yesterday_str = (now - timedelta(days=1)).strftime('%Y-%m-%d')
-        print(f"LOG: Midnight detected. Fetching yesterday's data ({yesterday_str})...")
+        target_date = now - timedelta(days=1)
+        date_str = target_date.strftime('%Y-%m-%d')
+        print(f"LOG: Midnight detected. Fetching YESTERDAY'S data ({date_str})...")
         
-        # 日付指定で追加取得 (api_handler_v2の改修が必要)
-        flights_yesterday = fetch_flight_data(api_key, date_str=yesterday_str)
-        flights_raw.extend(flights_yesterday)
-        print(f"LOG: Added Yesterday's Data: +{len(flights_yesterday)} records")
+        flights_sub = fetch_flight_data(api_key, date_str=date_str)
+        flights_raw.extend(flights_sub)
+        print(f"LOG: Added Yesterday's Data: +{len(flights_sub)} records")
 
-    # 3. 鉄壁の旅客便フィルター (既存維持)
-    # ※ここ重要：Cargo除外ロジックはそのまま残しています
+    # パターン2: 深夜手前(23:00〜23:59) -> 「明日」のデータも取る (0時過ぎの到着便用)
+    elif now.hour >= 23:
+        target_date = now + timedelta(days=1)
+        date_str = target_date.strftime('%Y-%m-%d')
+        print(f"LOG: Late night detected. Fetching TOMORROW'S data ({date_str})...")
+        
+        flights_sub = fetch_flight_data(api_key, date_str=date_str)
+        flights_raw.extend(flights_sub)
+        print(f"LOG: Added Tomorrow's Data: +{len(flights_sub)} records")
+
+    # 3. 鉄壁の旅客便フィルター
     flights = []
     for f in flights_raw:
         if f.get('status') == 'cancelled': continue
@@ -68,14 +74,12 @@ def main():
 
     print(f"LOG: Total Merged {len(flights_raw)} -> Passenger Only {len(flights)}")
 
-    # 4. 分析 & HTML生成 (既存維持)
+    # 4. 分析 & HTML生成
     analysis_result = analyze_demand(flights)
     render_html(analysis_result, daily_pass)
     
     # 5. Discord通知 (朝6時台のみ)
     bot = DiscordBot()
-    
-    # 【維持】二重投稿防止ロジック (< 8分) はそのまま残しています
     if now.hour == 6 and 0 <= now.minute < 8:
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
 
