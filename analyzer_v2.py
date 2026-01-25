@@ -32,12 +32,14 @@ def analyze_demand(flights):
             continue
 
         # 【重複対策 / コードシェア排除】
-        # 「便名」ではなく「到着時刻」と「出発地」で同一機体を判定します。
-        # これにより、VJ820とW24820などが同じものとして扱われ、ダブりが消えます。
+        # 「便名」ではなく「到着時刻」と「出発地」で同一機体を判定
         dep = f.get('departure', {})
+        # depがNoneの場合の対策
+        if not dep: dep = {}
+            
         origin_code = dep.get('iata') or dep.get('airport') or "UNK"
         
-        # ユニークキー: "2026-01-26T01:05:00_SGN" のような形式になる
+        # ユニークキー: "2026-01-26T01:05:00_SGN"
         unique_key = f"{dt_str}_{origin_code}"
 
         if unique_key in seen_flights:
@@ -73,9 +75,10 @@ def analyze_demand(flights):
     for f in filtered_flights:
         t_str = str(f.get('terminal', ''))
         
-        # 【エラー対策】航空会社名が空(None)でも落ちないように保護
-        airline_data = f.get('airline') or {}
-        airline = str(airline_data.get('name', '')).lower()
+        # 【修正箇所: エラーの原因を修正】
+        # api_handlerですでに文字列になっているため、辞書として扱わず、そのまま文字列として取得
+        # None対策も含めて str() で囲む
+        airline = str(f.get('airline', '')).lower()
         
         pax = f.get('pax_estimated', 0)
         
