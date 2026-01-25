@@ -25,9 +25,8 @@ def analyze_demand(flights):
             dt_str = arr_time_str[:19] 
             f_dt = datetime.strptime(dt_str, '%Y-%m-%dT%H:%M:%S')
             
-            # 【修正完了】
-            # APIがすでに日本時間を返しているため、+9時間の加算を削除しました。
-            # これで「昼の15時」が「深夜0時」に化けるバグが消えます。
+            # 【JST修正済み】
+            # APIがすでに日本時間を返しているため、+9時間の加算は不要。
             f_dt_jst = f_dt 
         except:
             continue
@@ -65,7 +64,11 @@ def analyze_demand(flights):
     
     for f in filtered_flights:
         t_str = str(f.get('terminal', ''))
-        airline = f.get('airline', '').lower()
+        
+        # 【修正箇所】ここがクラッシュ原因でした
+        # 航空会社名が None(空) の場合に備えて、str() で強制的に文字列化します
+        airline = str(f.get('airline', '')).lower()
+        
         pax = f.get('pax_estimated', 0)
         
         if t_str == '3':
