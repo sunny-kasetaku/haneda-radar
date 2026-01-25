@@ -173,8 +173,8 @@ def render_html(demand_results, password):
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
 
                 <div class="sub-btn-row">
-                    <a href="https://transit.yahoo.co.jp/diainfo/59/0" target="_blank" class="cam-btn train-btn">🔴 京急線</a>
-                    <a href="https://transit.yahoo.co.jp/diainfo/133/0" target="_blank" class="cam-btn train-btn">🚝 モノレール</a>
+                    <a href="https://transit.yahoo.co.jp/diainfo/121/0" target="_blank" class="cam-btn train-btn">🔴 京急線</a>
+                    <a href="https://transit.yahoo.co.jp/diainfo/154/0" target="_blank" class="cam-btn train-btn">🚝 モノレール</a>
                 </div>
 
                 <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn" style="background:#444; color:#fff;">🚃 JR・関東全域 (山手線など)</a>
@@ -203,7 +203,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.13 Link Fixed
+                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.14 Real ID Fix
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
