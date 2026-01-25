@@ -1,7 +1,7 @@
 import os
 import random
 from datetime import datetime, timedelta
-# ▼ ここは api_handler_v2 のままでOKです
+# api_handler_v2 (中身は最新のv3ロジック) を使用
 from api_handler_v2 import fetch_flight_data  
 from analyzer_v2 import analyze_demand
 from renderer_new import render_html
@@ -13,11 +13,14 @@ CONFIG = {
 }
 
 def main():
-    # 日本時間 (JST)
+    # 1. 現在時刻を「日本時間 (JST)」で確定させる
+    # ここが全ての基準になります。
     now = datetime.utcnow() + timedelta(hours=9)
+    today_str = now.strftime('%Y-%m-%d') # 例: "2026-01-26"
+    
     print(f"--- START: {now.strftime('%Y-%m-%d %H:%M:%S')} (JST) ---")
 
-    # 1. パスワード生成 (0-6時は前日ベース)
+    # 2. パスワード生成 (0-6時は前日ベース)
     if now.hour < 6:
         pass_date = now - timedelta(days=1)
     else:
@@ -26,28 +29,30 @@ def main():
     daily_pass = f"{random.randint(0, 9999):04d}"
     print(f"PASS: {daily_pass}")
 
-    # 2. データ取得 (超省エネモード)
+    # 3. データ取得
     api_key = CONFIG.get("AVIATION_STACK_API_KEY")
     
-    # (A) 今日の分を取得 (これ1回で active/landed/scheduled 全て入る)
-    flights_raw = fetch_flight_data(api_key)
+    # 【修正点】
+    # API任せにせず、「今日の日付(2026-01-26)」を明示的に指定して叩く。
+    # これでUTC(昨日)のデータが返ってくる事故を防ぎます。
+    print(f"LOG: Force fetching data for DATE: {today_str} (JST)...")
+    flights_raw = fetch_flight_data(api_key, date_str=today_str)
     print(f"LOG: Fetched Today's Data: {len(flights_raw)} records")
 
-    # (B) 日またぎ補完 (深夜0時〜4時の間だけ、昨日のデータも1回だけ取る)
-    # ※23時台の「明日」取得は、今日のデータにscheduledが含まれるので不要になりました。
+    # 日またぎ補完 (深夜0時〜4時の間だけ、昨日のデータも追加で拾う)
+    # これがないと「過去60分」の判定で、日付をまたいだ直後の便が消えてしまうため必須。
     if 0 <= now.hour < 4:
         target_date = now - timedelta(days=1)
-        date_str = target_date.strftime('%Y-%m-%d')
-        print(f"LOG: Midnight detected. Fetching YESTERDAY'S data ({date_str})...")
+        yesterday_str = target_date.strftime('%Y-%m-%d')
+        print(f"LOG: Midnight detected. Also fetching YESTERDAY ({yesterday_str})...")
         
-        flights_sub = fetch_flight_data(api_key, date_str=date_str)
+        flights_sub = fetch_flight_data(api_key, date_str=yesterday_str)
         flights_raw.extend(flights_sub)
         print(f"LOG: Added Yesterday's Data: +{len(flights_sub)} records")
 
-    # 3. 旅客便フィルター (Cargoやキャンセルを除外)
+    # 4. 旅客便フィルター (Cargoやキャンセルを除外)
     flights = []
     for f in flights_raw:
-        # キャンセルはAPIで除外できないのでここで弾く
         if f.get('status') == 'cancelled': continue
         
         airline = str(f.get('airline', '')).lower()
@@ -60,11 +65,11 @@ def main():
 
     print(f"LOG: Total Merged {len(flights_raw)} -> Passenger Only {len(flights)}")
 
-    # 4. 分析 & HTML生成
+    # 5. 分析 & HTML生成
     analysis_result = analyze_demand(flights)
     render_html(analysis_result, daily_pass)
     
-    # 5. Discord通知 (朝6時台のみ)
+    # 6. Discord通知 (朝6時台のみ)
     bot = DiscordBot()
     if now.hour == 6 and 0 <= now.minute < 8:
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
