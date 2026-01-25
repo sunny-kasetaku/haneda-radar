@@ -12,19 +12,48 @@ CONFIG = {
 }
 
 def main():
+    # 日本時間 (JST)
     now = datetime.utcnow() + timedelta(hours=9)
     print(f"--- START: {now.strftime('%Y-%m-%d %H:%M:%S')} (JST) ---")
 
-    # 1. パスワード生成 (日付連動ランダム) - 【維持】
-    random.seed(now.strftime('%Y%m%d'))
+    # ==========================================
+    # 🔑 1. パスワード生成ロジック (深夜対応版)
+    # ==========================================
+    # 【変更点】
+    # 00:00 〜 05:59 までは「前日の日付」を使ってパスワードを作るように変更。
+    # これで夜勤中のドライバーは朝6時まで同じパスワードでログインし続けられます。
+    if now.hour < 6:
+        pass_date = now - timedelta(days=1)
+    else:
+        pass_date = now
+        
+    random.seed(pass_date.strftime('%Y%m%d'))
     daily_pass = f"{random.randint(0, 9999):04d}"
-    print(f"PASS: {daily_pass}")
+    print(f"PASS: {daily_pass} (Base Date: {pass_date.strftime('%Y-%m-%d')})")
 
-    # 2. データ取得 - 【維持】
+    # ==========================================
+    # ✈️ 2. データ取得ロジック (日またぎ対応版)
+    # ==========================================
     api_key = CONFIG.get("AVIATION_STACK_API_KEY")
-    flights_raw = fetch_flight_data(api_key)
     
-    # 3. 鉄壁の旅客便フィルター - 【維持】
+    # (A) 今日のデータを取得 (既存維持)
+    flights_raw = fetch_flight_data(api_key)
+    print(f"LOG: Fetched Today's Data: {len(flights_raw)} records")
+
+    # (B) 【追加点】深夜(00:00〜03:59)なら、昨日のデータも取りに行く
+    # 国際線などは「出発日」で管理されるため、日付をまたぐと今日のデータに出てこない対策。
+    # これで深夜の「国際線ゼロ」バグが直ります。
+    if 0 <= now.hour < 4:
+        yesterday_str = (now - timedelta(days=1)).strftime('%Y-%m-%d')
+        print(f"LOG: Midnight detected. Fetching yesterday's data ({yesterday_str})...")
+        
+        # 日付指定で追加取得 (api_handler_v2の改修が必要)
+        flights_yesterday = fetch_flight_data(api_key, date_str=yesterday_str)
+        flights_raw.extend(flights_yesterday)
+        print(f"LOG: Added Yesterday's Data: +{len(flights_yesterday)} records")
+
+    # 3. 鉄壁の旅客便フィルター (既存維持)
+    # ※ここ重要：Cargo除外ロジックはそのまま残しています
     flights = []
     for f in flights_raw:
         if f.get('status') == 'cancelled': continue
@@ -37,19 +66,16 @@ def main():
         
         flights.append(f)
 
-    print(f"LOG: Total {len(flights_raw)} -> Passenger Only {len(flights)}")
+    print(f"LOG: Total Merged {len(flights_raw)} -> Passenger Only {len(flights)}")
 
-    # 4. 分析 & HTML生成 - 【維持】
+    # 4. 分析 & HTML生成 (既存維持)
     analysis_result = analyze_demand(flights)
     render_html(analysis_result, daily_pass)
     
     # 5. Discord通知 (朝6時台のみ)
     bot = DiscordBot()
     
-    # 【変更点】ここだけ修正しました
-    # < 20 だと、10分間隔(06:00, 06:10)でも15分間隔(06:00, 06:15)でも
-    # 2回ヒットして二重投稿になってしまうため、 < 8 (8分間) に狭めました。
-    # これで06:00の1回だけ確実に送信されます。
+    # 【維持】二重投稿防止ロジック (< 8分) はそのまま残しています
     if now.hour == 6 and 0 <= now.minute < 8:
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
 
