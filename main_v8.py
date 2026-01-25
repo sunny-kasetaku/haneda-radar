@@ -14,13 +14,12 @@ CONFIG = {
 
 def main():
     # 1. 現在時刻を「日本時間 (JST)」で確定させる
-    # ここが全ての基準になります。
     now = datetime.utcnow() + timedelta(hours=9)
     today_str = now.strftime('%Y-%m-%d') # 例: "2026-01-26"
     
     print(f"--- START: {now.strftime('%Y-%m-%d %H:%M:%S')} (JST) ---")
 
-    # 2. パスワード生成 (0-6時は前日ベース)
+    # 2. パスワード生成
     if now.hour < 6:
         pass_date = now - timedelta(days=1)
     else:
@@ -29,18 +28,15 @@ def main():
     daily_pass = f"{random.randint(0, 9999):04d}"
     print(f"PASS: {daily_pass}")
 
-    # 3. データ取得
+    # 3. データ取得 (日付指定でUTCズレを防止)
     api_key = CONFIG.get("AVIATION_STACK_API_KEY")
     
-    # 【修正点】
-    # API任せにせず、「今日の日付(2026-01-26)」を明示的に指定して叩く。
-    # これでUTC(昨日)のデータが返ってくる事故を防ぎます。
+    # 【修正点】「今日の日付」を明示的に指定して叩く
     print(f"LOG: Force fetching data for DATE: {today_str} (JST)...")
     flights_raw = fetch_flight_data(api_key, date_str=today_str)
     print(f"LOG: Fetched Today's Data: {len(flights_raw)} records")
 
     # 日またぎ補完 (深夜0時〜4時の間だけ、昨日のデータも追加で拾う)
-    # これがないと「過去60分」の判定で、日付をまたいだ直後の便が消えてしまうため必須。
     if 0 <= now.hour < 4:
         target_date = now - timedelta(days=1)
         yesterday_str = target_date.strftime('%Y-%m-%d')
@@ -50,16 +46,14 @@ def main():
         flights_raw.extend(flights_sub)
         print(f"LOG: Added Yesterday's Data: +{len(flights_sub)} records")
 
-    # 4. 旅客便フィルター (Cargoやキャンセルを除外)
+    # 4. 旅客便フィルター
     flights = []
     for f in flights_raw:
         if f.get('status') == 'cancelled': continue
         
         airline = str(f.get('airline', '')).lower()
         f_num = str(f.get('flight_number', '')).lower()
-        
-        if 'cargo' in airline or 'cargo' in f_num:
-            continue
+        if 'cargo' in airline or 'cargo' in f_num: continue
         
         flights.append(f)
 
