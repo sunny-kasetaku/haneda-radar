@@ -4,8 +4,7 @@ def analyze_demand(flights):
     # 日本時間現在時刻
     now = datetime.utcnow() + timedelta(hours=9)
     
-    # 【設定維持】黄金比設定
-    # 過去60分 / 未来30分
+    # 【設定】黄金比 (過去60分 / 未来30分)
     PAST_MINUTES = 60
     FUTURE_MINUTES = 30
 
@@ -14,6 +13,8 @@ def analyze_demand(flights):
     
     filtered_flights = []
     hourly_counts = {} 
+    
+    # 重複排除用のセット (コードシェア対策)
     seen_flights = set()
 
     for f in flights:
@@ -21,20 +22,27 @@ def analyze_demand(flights):
         if not arr_time_str: continue
         
         try:
-            # 時刻パース (例: "2026-01-26T00:36:00")
+            # 時刻パース
             dt_str = arr_time_str[:19] 
             f_dt = datetime.strptime(dt_str, '%Y-%m-%dT%H:%M:%S')
             
-            # 【JST修正済み】
-            # APIがすでに日本時間を返しているため、+9時間の加算は不要。
+            # 【時差修正完了】 APIがJSTを返すため、+9時間は不要
             f_dt_jst = f_dt 
         except:
             continue
 
-        flight_id = f"{f.get('flight_number')}_{f_dt_jst.day}"
-        if flight_id in seen_flights:
+        # 【重複対策 / コードシェア排除】
+        # 「便名」ではなく「到着時刻」と「出発地」で同一機体を判定します。
+        # これにより、VJ820とW24820などが同じものとして扱われ、ダブりが消えます。
+        dep = f.get('departure', {})
+        origin_code = dep.get('iata') or dep.get('airport') or "UNK"
+        
+        # ユニークキー: "2026-01-26T01:05:00_SGN" のような形式になる
+        unique_key = f"{dt_str}_{origin_code}"
+
+        if unique_key in seen_flights:
             continue
-        seen_flights.add(flight_id)
+        seen_flights.add(unique_key)
 
         # -----------------------------------------------------------
         # 1. リアルタイムリストへの振り分け
@@ -65,17 +73,22 @@ def analyze_demand(flights):
     for f in filtered_flights:
         t_str = str(f.get('terminal', ''))
         
-        # 【修正箇所】ここがクラッシュ原因でした
-        # 航空会社名が None(空) の場合に備えて、str() で強制的に文字列化します
-        airline = str(f.get('airline', '')).lower()
+        # 【エラー対策】航空会社名が空(None)でも落ちないように保護
+        airline_data = f.get('airline') or {}
+        airline = str(airline_data.get('name', '')).lower()
         
         pax = f.get('pax_estimated', 0)
         
         if t_str == '3':
             terminal_counts["国際(T3)"] += pax
         elif t_str == '2':
-            try: num = int(''.join(filter(str.isdigit, f.get('flight_number', '0'))))
-            except: num = 0
+            try: 
+                # 便名から数字だけ抽出
+                f_num_raw = str(f.get('flight_number', '0'))
+                num = int(''.join(filter(str.isdigit, f_num_raw)))
+            except: 
+                num = 0
+            
             if num % 2 == 0: terminal_counts["3号(T2)"] += pax
             else: terminal_counts["4号(T2)"] += pax
         elif t_str == '1':
