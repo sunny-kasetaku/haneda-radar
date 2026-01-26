@@ -1,74 +1,93 @@
 import os
-import random
+import json
 from datetime import datetime, timedelta
-# api_handler_v2 (中身は最新のv3ロジック) を使用
-from api_handler_v2 import fetch_flight_data  
+from api_handler_v2 import fetch_flight_data
 from analyzer_v2 import analyze_demand
-from renderer_new import render_html
-from discord_bot import DiscordBot
-
-CONFIG = {
-    "AVIATION_STACK_API_KEY": os.environ.get("AVIATION_STACK_API_KEY"),
-    "DISCORD_WEBHOOK_URL": os.environ.get("DISCORD_WEBHOOK_URL"),
-}
 
 def main():
-    # 1. 現在時刻を「日本時間 (JST)」で確定させる
-    now = datetime.utcnow() + timedelta(hours=9)
-    today_str = now.strftime('%Y-%m-%d') # 例: "2026-01-26"
+    # --- 1. 日本時間の現在時刻を取得 ---
+    # ここを修正し、システム全体の「時計」を日本時間に合わせます
+    now_jst = datetime.utcnow() + timedelta(hours=9)
+    print(f"DEBUG: Current JST Time: {now_jst.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # APIキーの取得（GitHub Secretsから）
+    api_key = os.environ.get("AVIATION_STACK_API_KEY")
+    if not api_key:
+        print("Error: API Key not found.")
+        return
+
+    # --- 2. データの取得 ---
+    # 日本日付でデータを取得
+    today_str = now_jst.strftime('%Y-%m-%d')
+    flights = fetch_flight_data(api_key, today_str)
+
+    if not flights:
+        print("No flight data fetched.")
+        return
+
+    # --- 3. 分析の実行 ---
+    # 日本時間で分析を行います
+    report = analyze_demand(flights)
+
+    # --- 4. HTMLの生成 ---
+    html_content = generate_html(report, now_jst)
     
-    print(f"--- START: {now.strftime('%Y-%m-%d %H:%M:%S')} (JST) ---")
-
-    # 2. パスワード生成
-    if now.hour < 6:
-        pass_date = now - timedelta(days=1)
-    else:
-        pass_date = now
-    random.seed(pass_date.strftime('%Y%m%d'))
-    daily_pass = f"{random.randint(0, 9999):04d}"
-    print(f"PASS: {daily_pass}")
-
-    # 3. データ取得 (日付指定でUTCズレを防止)
-    api_key = CONFIG.get("AVIATION_STACK_API_KEY")
+    # 保存（GitHub Pages用）
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
     
-    # 【修正点】「今日の日付」を明示的に指定して叩く
-    print(f"LOG: Force fetching data for DATE: {today_str} (JST)...")
-    flights_raw = fetch_flight_data(api_key, date_str=today_str)
-    print(f"LOG: Fetched Today's Data: {len(flights_raw)} records")
+    print("Success: Report generated (index.html)")
 
-    # 日またぎ補完 (深夜0時〜4時の間だけ、昨日のデータも追加で拾う)
-    if 0 <= now.hour < 4:
-        target_date = now - timedelta(days=1)
-        yesterday_str = target_date.strftime('%Y-%m-%d')
-        print(f"LOG: Midnight detected. Also fetching YESTERDAY ({yesterday_str})...")
-        
-        flights_sub = fetch_flight_data(api_key, date_str=yesterday_str)
-        flights_raw.extend(flights_sub)
-        print(f"LOG: Added Yesterday's Data: +{len(flights_sub)} records")
-
-    # 4. 旅客便フィルター
-    flights = []
-    for f in flights_raw:
-        if f.get('status') == 'cancelled': continue
-        
-        airline = str(f.get('airline', '')).lower()
-        f_num = str(f.get('flight_number', '')).lower()
-        if 'cargo' in airline or 'cargo' in f_num: continue
-        
-        flights.append(f)
-
-    print(f"LOG: Total Merged {len(flights_raw)} -> Passenger Only {len(flights)}")
-
-    # 5. 分析 & HTML生成
-    analysis_result = analyze_demand(flights)
-    render_html(analysis_result, daily_pass)
+def generate_html(report, now):
+    """
+    分析レポートをHTML形式に流し込む
+    """
+    # ランク判定
+    total_pax = sum([report.get("1号(T1南)", 0), report.get("2号(T1北)", 0), 
+                     report.get("3号(T2)", 0), report.get("4号(T2)", 0), 
+                     report.get("国際(T3)", 0)])
     
-    # 6. Discord通知 (朝6時台のみ)
-    bot = DiscordBot()
-    if now.hour == 6 and 0 <= now.minute < 8:
-        bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
+    if total_pax >= 2000: rank, label = "🌈 S", "【最高】 需要爆発"
+    elif total_pax >= 1000: rank, label = "🔥 A", "【高】 稼ぎ時"
+    elif total_pax >= 500: rank, label = "✅ B", "【中】 安定"
+    else: rank, label = "⚠️ C", "【低】 忍耐"
 
-    print("--- END: SUCCESS ---")
+    # フライトリストの行生成
+    rows = ""
+    for f in report['flights']:
+        # 表示用に時刻を整形（秒を削る）
+        t_disp = f.get('arrival_time', '00:00:00')[11:16]
+        rows += f"<tr><td>{t_disp}</td><td style='color:gold;'>{f['flight_number']}</td><td>{f['origin']}</td><td>{f.get('pax_estimated', 0)}名</td></tr>"
+
+    # 予測行の生成
+    f_rows = ""
+    for k in ["h1", "h2", "h3"]:
+        item = report['forecast'][k]
+        f_rows += f"""<div class="fc-row">
+            <div class="fc-time">[{item['label']}]</div>
+            <div class="fc-main"><span class="fc-status">{item['status']}</span><span class="fc-pax">(推計 {item['pax']}人)</span></div>
+            <div class="fc-comment">└ {item['comment']}</div>
+        </div>"""
+
+    # HTMLテンプレート (時刻表示部分を日本時間に修正)
+    with open("template.html", "r", encoding="utf-8") as f:
+        template = f.read()
+
+    # 変数の置換
+    html = template.replace("{{RANK}}", rank)
+    html = html.replace("{{RANK_LABEL}}", label)
+    html = html.replace("{{T1_SOUTH}}", str(report.get("1号(T1南)", 0)))
+    html = html.replace("{{T1_NORTH}}", str(report.get("2号(T1北)", 0)))
+    html = html.replace("{{T2_3}}", str(report.get("3号(T2)", 0)))
+    html = html.replace("{{T2_4}}", str(report.get("4号(T2)", 0)))
+    html = html.replace("{{T3}}", str(report.get("国際(T3)", 0)))
+    html = html.replace("{{FLIGHT_ROWS}}", rows)
+    html = html.replace("{{FORECAST_ROWS}}", f_rows)
+    html = html.replace("{{TOTAL_FLIGHTS}}", str(report['unique_count']))
+    # ここが重要：JSTの現在時刻を表示する
+    html = html.replace("{{UPDATE_TIME}}", now.strftime('%H:%M'))
+
+    return html
 
 if __name__ == "__main__":
     main()
