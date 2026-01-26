@@ -10,7 +10,7 @@ def render_html(demand_results, password, current_time=None):
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
-    # 1. 既存のコード辞書
+    # 1. コード辞書
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -33,13 +33,10 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
 
-    # 2. 英語名強制変換辞書 (完全版)
+    # 2. 名前辞書 (完全版)
     NAME_MAP = {
-        # 今回発見された残り (Okayama, Hakodate, Memanbetsuなど)
         "Okayama": "岡山", "Hakodate": "函館", "Memanbetsu": "女満別",
         "Kita Kyushu": "北九州", "Asahikawa": "旭川", "Nanki": "南紀白浜",
-        
-        # 以前追加したもの
         "Junmachi": "山形", "Odate": "大館能代", "Noshiro": "大館能代",
         "Ube": "山口宇部", "Misawa": "三沢", "Nagasaki": "長崎", 
         "Kobe": "神戸", "Miyazaki": "宮崎", "Kagoshima": "鹿児島",
@@ -61,23 +58,24 @@ def render_html(demand_results, password, current_time=None):
         "Manila": "マニラ", "Hanoi": "ハノイ", "Ho Chi Minh": "ホーチミン"
     }
 
+    # 3. 出口別カラー定義 (ここで色を管理)
+    COLOR_MAP = {
+        "1号(T1南)": "#FF8C00", # ダークオレンジ
+        "2号(T1北)": "#FF4444", # 明るい赤
+        "3号(T2)": "#1E90FF",   # ドジャーブルー(ANA青)
+        "4号(T2)": "#00FFFF",   # シアン(水色)
+        "国際(T3)": "#FFD700"   # ゴールド
+    }
+
     def translate_origin(origin_val, origin_name):
-        # 1. コード辞書検索
         if origin_val in AIRPORT_MAP:
             return AIRPORT_MAP[origin_val]
-        
-        # 2. 名前辞書検索 (キーワード検索)
         val_str = str(origin_val)
         for eng, jpn in NAME_MAP.items():
-            if eng in val_str:
-                return jpn
-        
-        # 3. 元の名前からも検索
+            if eng in val_str: return jpn
         name = str(origin_name)
         for eng, jpn in NAME_MAP.items():
-            if eng in name:
-                return jpn
-                
+            if eng in name: return jpn
         return name
 
     def to_int(v):
@@ -99,6 +97,7 @@ def render_html(demand_results, password, current_time=None):
     max_val = max(pax_counts) if any(pax_counts) else -1
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
 
+    # --- 上段カードの生成 ---
     cards_html = ""
     for i, name in enumerate(target_keys):
         is_best = (i == best_idx)
@@ -106,8 +105,13 @@ def render_html(demand_results, password, current_time=None):
         style = 'style="grid-column: 1/3;"' if name == "国際(T3)" else ""
         badge = '<div class="best-badge">🏆 BEST</div>' if is_best else ""
         disp_val = demand_results.get(name, "0")
-        cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num">{disp_val}</div></div>'
+        
+        # カードの数字も色付け
+        num_color = COLOR_MAP.get(name, "#fff")
+        
+        cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num" style="color:{num_color}">{disp_val}</div></div>'
 
+    # --- 下段リストの生成 ---
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
@@ -119,7 +123,12 @@ def render_html(demand_results, password, current_time=None):
         
         origin_name = translate_origin(origin_iata, raw_origin)
         
-        table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
+        # タグを見て色を決める
+        exit_type = f.get('exit_type', '')
+        row_color = COLOR_MAP.get(exit_type, "#FFFFFF")
+        
+        # 便名(f_code)に色を付ける
+        table_rows += f"<tr><td>{time_str}</td><td style='color:{row_color}; font-weight:bold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
     f_data = demand_results.get("forecast", {})
     forecast_html = ""
