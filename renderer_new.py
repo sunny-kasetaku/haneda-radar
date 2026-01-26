@@ -1,8 +1,13 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
-def render_html(demand_results, password):
+# 【修正点】current_time引数を追加
+def render_html(demand_results, password, current_time=None):
+    # 引数がない場合の保険
+    if current_time is None:
+        current_time = datetime.utcnow() + timedelta(hours=9)
+
     flight_list = demand_results.get("flights", [])
     
     # アナライザーから設定値を受け取る
@@ -59,7 +64,7 @@ def render_html(demand_results, password):
     if total >= 2000: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 1000: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 500:  r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
-    else:               r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
+    else:                r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
     max_val = max(pax_counts) if any(pax_counts) else -1
     best_idx = pax_counts.index(max_val) if max_val > 0 else -1
@@ -203,7 +208,7 @@ def render_html(demand_results, password):
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
                 画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {datetime.now().strftime('%H:%M')} | v12.14 Real ID Fix
+                最終データ取得: {current_time.strftime('%H:%M')} | v12.14 Real ID Fix
             </div>
         </div>
         <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>

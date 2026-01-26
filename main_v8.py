@@ -62,9 +62,10 @@ def main():
 
     print(f"LOG: Total Merged {len(flights_raw)} -> Passenger Only {len(flights)}")
 
-    # 5. 分析 & HTML生成 (サニーさんの大切なUI「renderer_new」にすべてを託します)
-    analysis_result = analyze_demand(flights)
-    render_html(analysis_result, daily_pass)
+    # 5. 分析 & HTML生成
+    # 【修正点】ここで「今の日本時間(now)」を各担当に手渡します
+    analysis_result = analyze_demand(flights, current_time=now)
+    render_html(analysis_result, daily_pass, current_time=now)
     
     # 6. Discord通知 (朝6時台のみ)
     bot = DiscordBot()

@@ -1,8 +1,13 @@
 from datetime import datetime, timedelta
 
-def analyze_demand(flights):
+# 【修正点】current_time引数を追加
+def analyze_demand(flights, current_time=None):
     # 日本時間現在時刻
-    now = datetime.utcnow() + timedelta(hours=9)
+    # 引数で渡されなかった場合の保険
+    if current_time is None:
+        now = datetime.utcnow() + timedelta(hours=9)
+    else:
+        now = current_time
     
     # 【設定】黄金比 (過去60分 / 未来30分)
     PAST_MINUTES = 60
@@ -35,6 +40,7 @@ def analyze_demand(flights):
         dep = f.get('departure', {})
         if not dep: dep = {}
         origin_code = dep.get('iata') or dep.get('airport') or "UNK"
+        f['origin_iata'] = origin_code # estimate_paxで使うために保存
         
         # ユニークキー: "時刻_出発地" で同一機体を判定
         unique_key = f"{dt_str}_{origin_code}"
@@ -54,6 +60,8 @@ def analyze_demand(flights):
         # -----------------------------------------------------------
         # 2. 未来予測用の集計
         # -----------------------------------------------------------
+        # 未来の便だけを集計するように判定を追加しても良いですが、
+        # ここはサニーさんのロジック通り「全データから時間帯集計」を行います
         h = f_dt_jst.hour
         pax = estimate_pax(f)
         hourly_counts[h] = hourly_counts.get(h, 0) + pax
@@ -105,6 +113,7 @@ def analyze_demand(flights):
     # -------------------------------------------------
     forecast_data = {}
     for i in range(0, 3):
+        # nowを基準にするよう修正（以前はdatetime.utcnowそのままでズレていた可能性があります）
         target_h = (now.hour + i) % 24
         count = hourly_counts.get(target_h, 0)
         
