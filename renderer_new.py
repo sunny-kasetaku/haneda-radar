@@ -10,7 +10,7 @@ def render_html(demand_results, password, current_time=None):
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
-    # 1. 既存のコード辞書
+    # 1. 既存のコード辞書 (これは今まで通り)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -33,19 +33,25 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
 
-    # 2. 英語名強制変換辞書 (サニーさんのご指摘を反映！)
+    # 2. 英語名強制変換辞書 (ここが今回の修正の肝！)
     NAME_MAP = {
+        # 今回のAPI欠損で判明した英語名を追加
+        "Junmachi": "山形", "Odate": "大館能代", "Noshiro": "大館能代",
+        "Ube": "山口宇部", "Misawa": "三沢", "Nagasaki": "長崎", 
+        "Kobe": "神戸", "Miyazaki": "宮崎", "Kagoshima": "鹿児島",
+        "Tokushima": "徳島", "Takamatsu": "高松", "Izumo": "出雲",
+        
         # サニーさんがチェックしてくれた重要項目
         "Hachijo": "八丈島", "Shonai": "庄内", "Miho": "米子", 
         "Istanbul": "イスタンブール", "Seattle": "シアトル", "Sydney": "シドニー",
         
-        # API欠損対策の主要空港
+        # 既存の救済リスト
         "Beijing": "北京", "Capital": "北京", "Oita": "大分", "Chitose": "新千歳", 
         "Naha": "那覇", "Fukuoka": "福岡", "Matsuyama": "松山", "Kumamoto": "熊本",
         "Itami": "伊丹", "Obihiro": "帯広", "Taipei": "台北", "Songshan": "台北(松山)",
         "Shirahama": "南紀白浜", "Komatsu": "小松", "Shimojishima": "下地島",
         "Kochi": "高知", "Iwami": "石見", "Tottori": "鳥取", "Guangzhou": "広州",
-        "Hong Kong": "香港", "Hiroshima": "広島", "Kushiro": "釧路", "Izumo": "出雲",
+        "Hong Kong": "香港", "Hiroshima": "広島", "Kushiro": "釧路", 
         "Aomori": "青森", "Kansai": "関空", "Doha": "ドーハ", "Dubai": "ドバイ",
         "London": "ロンドン", "Paris": "パリ", "Frankfurt": "フランクフルト",
         "Los Angeles": "ロサンゼルス", "San Francisco": "サンフランシスコ",
@@ -111,7 +117,6 @@ def render_html(demand_results, password, current_time=None):
         origin_iata = f.get('origin_iata', '')
         raw_origin = f.get('origin', origin_iata)
         
-        # 翻訳関数を使用
         origin_name = translate_origin(origin_iata, raw_origin)
         
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"

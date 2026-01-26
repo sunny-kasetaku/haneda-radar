@@ -7,7 +7,7 @@ def analyze_demand(flights, current_time=None):
     else:
         now = current_time
     
-    # 【設定】黄金比 (過去60分 / 未来30分)
+    # 【設定】黄金比
     PAST_MINUTES = 60
     FUTURE_MINUTES = 30
 
@@ -30,10 +30,9 @@ def analyze_demand(flights, current_time=None):
         except:
             continue
 
-        # 【重複対策 / コードシェア排除】
+        # 重複対策
         dep = f.get('departure', {})
         if not dep: dep = {}
-        # IATAがない場合、空港名(airport)が入る。
         origin_code = dep.get('iata') or dep.get('airport') or "UNK"
         f['origin_iata'] = origin_code 
         
@@ -56,7 +55,9 @@ def analyze_demand(flights, current_time=None):
 
     filtered_flights.sort(key=lambda x: x.get('arrival_time'))
 
-    # 2. ターミナル別集計
+    # -------------------------------------------------
+    # 2. ターミナル別集計 (ロジック修正版)
+    # -------------------------------------------------
     terminal_counts = {
         "1号(T1南)": 0, "2号(T1北)": 0,
         "3号(T2)": 0, "4号(T2)": 0,
@@ -64,16 +65,39 @@ def analyze_demand(flights, current_time=None):
     }
     
     for f in filtered_flights:
-        t_str = str(f.get('terminal', ''))
+        raw_t_str = str(f.get('terminal', ''))
         airline = str(f.get('airline', '')).lower()
         pax = f.get('pax_estimated', 0)
         
-        # 国際線判定 (T3 または 250名以上)
-        if t_str == '3' or pax >= 250:
+        # フラグ設定
+        if pax >= 250:
+            f['is_international'] = True
+        else:
+            f['is_international'] = False
+
+        # --- 【重要】ターミナルの「仮決め」ロジック ---
+        target_terminal = raw_t_str
+        
+        if not target_terminal or target_terminal == 'None':
+            # T2系 (ANA, ADO, SNA)
+            if 'all nippon' in airline or 'ana' in airline or 'air do' in airline or 'solaseed' in airline:
+                target_terminal = '2'
+            # T1系 (JAL, SKY, SFJ)
+            elif 'japan airlines' in airline or 'jal' in airline or 'skymark' in airline or 'starflyer' in airline:
+                target_terminal = '1'
+            # それでも不明ならT1へ
+            elif pax < 250: 
+                target_terminal = '1'
+
+        # --- サニーさんのロジック ---
+        
+        # 1. 国際線判定
+        if target_terminal == '3' or pax >= 250:
             terminal_counts["国際(T3)"] += pax
             
-        elif t_str == '2':
-            # T2 (ANA系) 偶数・奇数判定
+        # 2. 第2ターミナル(T2)の振り分け
+        elif target_terminal == '2':
+            # ANA系 偶数・奇数判定
             try: 
                 f_num_raw = str(f.get('flight_number', '0'))
                 num = int(''.join(filter(str.isdigit, f_num_raw)))
@@ -83,12 +107,14 @@ def analyze_demand(flights, current_time=None):
             if num % 2 == 0: terminal_counts["3号(T2)"] += pax
             else: terminal_counts["4号(T2)"] += pax
             
-        elif t_str == '1':
-            # T1 (JAL系) 北・南判定
+        # 3. 第1ターミナル(T1)の振り分け
+        elif target_terminal == '1':
+            # JALは北、それ以外は南
             if 'japan airlines' in airline or 'jal' in airline: 
                 terminal_counts["2号(T1北)"] += pax
             else: 
                 terminal_counts["1号(T1南)"] += pax
+        
         else:
             terminal_counts["国際(T3)"] += pax
 
@@ -120,14 +146,12 @@ def analyze_demand(flights, current_time=None):
 
 def estimate_pax(flight):
     """
-    乗客数を推定する。
-    IATAコードだけでなく、空港名(英語)もチェックして国内線を正しく判定する。
-    表記揺れ（Shi/Si, Tsu/Tu, O/Ou）にも対応。
+    乗客数を推定。
+    サニーさんの完全リスト(表記揺れ対応)に、API欠損対策(Junmachiなど)を追加。
     """
     term = str(flight.get('terminal', ''))
     origin_val = flight.get('origin_iata', '')
     
-    # 1. 3文字コードリスト
     domestic_codes = [
         "CTS", "FUK", "OKA", "ITM", "KIX", "NGO", "KMQ", "HKD", "HIJ", "MYJ",
         "KCZ", "TAK", "KMJ", "KMI", "KOJ", "ISG", "MMY", "IWK", "UBJ", "TKS",
@@ -136,17 +160,16 @@ def estimate_pax(flight):
         "SYO", "YGJ", "KIJ", "TOY", "HAC", "SHI", "UKB"
     ]
 
-    # 2. 英語名キーワードリスト (表記揺れ対応版)
     domestic_keywords = [
-        # 主要空港
+        # 主要
         "Haneda", "Narita", "Itami", "Kansai", "Chitose", "Fukuoka", "Naha", 
         "Nagoya", "Chubu", "Kobe",
-        # 北海道・東北
+        # 北海道・東北 (Junmachi/Odate追加)
         "Hakodate", "Asahikawa", "Obihiro", "Kushiro", "Kusiro", 
         "Memanbetsu", "Wakkanai", "Monbetsu", "Nakashibetsu", "Nakasibetsu",
         "Okushiri", "Okusiri", "Rishiri", "Risiri", "Rebun", 
-        "Aomori", "Misawa", "Hanamaki", "Sendai", "Akita", "Yamagata", 
-        "Shonai", "Syona", "Fukushima", "Hukushima",
+        "Aomori", "Misawa", "Hanamaki", "Sendai", "Akita", "Yamagata", "Junmachi",
+        "Shonai", "Syona", "Fukushima", "Hukushima", "Odate", "Noshiro",
         # 関東・甲信越
         "Ibaraki", "Oshima", "Osima", "Miyakejima", "Hachijojima", "Hachijo", 
         "Chofu", "Niigata", "Sado", "Toyama", "Noto", "Komatsu", 
