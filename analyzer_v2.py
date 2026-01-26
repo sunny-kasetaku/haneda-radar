@@ -56,7 +56,7 @@ def analyze_demand(flights, current_time=None):
     filtered_flights.sort(key=lambda x: x.get('arrival_time'))
 
     # -------------------------------------------------
-    # 2. ターミナル別集計 (ロジック修正版)
+    # 2. ターミナル別集計 (航空会社優先ロジック)
     # -------------------------------------------------
     terminal_counts = {
         "1号(T1南)": 0, "2号(T1北)": 0,
@@ -65,58 +65,57 @@ def analyze_demand(flights, current_time=None):
     }
     
     for f in filtered_flights:
+        # APIからの生データ
         raw_t_str = str(f.get('terminal', ''))
         airline = str(f.get('airline', '')).lower()
         pax = f.get('pax_estimated', 0)
         
-        # フラグ設定
-        if pax >= 250:
-            f['is_international'] = True
-        else:
-            f['is_international'] = False
-
-        # --- 【重要】ターミナルの「仮決め」ロジック ---
-        target_terminal = raw_t_str
+        # --- 【最重要】ターミナル確定ロジック ---
+        # APIの情報が欠損していても、航空会社名から強制的に割り当てる
         
-        if not target_terminal or target_terminal == 'None':
-            # T2系 (ANA, ADO, SNA)
-            if 'all nippon' in airline or 'ana' in airline or 'air do' in airline or 'solaseed' in airline:
-                target_terminal = '2'
-            # T1系 (JAL, SKY, SFJ)
-            elif 'japan airlines' in airline or 'jal' in airline or 'skymark' in airline or 'starflyer' in airline:
-                target_terminal = '1'
-            # それでも不明ならT1へ
-            elif pax < 250: 
-                target_terminal = '1'
+        final_terminal = "3" # デフォルトは3(国際)にしておくが、下で国内線を救出する
 
-        # --- サニーさんのロジック ---
-        
-        # 1. 国際線判定
-        if target_terminal == '3' or pax >= 250:
-            terminal_counts["国際(T3)"] += pax
+        # 1. 第2ターミナル(T2)グループ: ANA, ADO, SNA
+        if 'all nippon' in airline or 'ana' in airline or 'air do' in airline or 'solaseed' in airline:
+            final_terminal = "2"
             
-        # 2. 第2ターミナル(T2)の振り分け
-        elif target_terminal == '2':
-            # ANA系 偶数・奇数判定
+        # 2. 第1ターミナル(T1)グループ: JAL, SKY, SFJ
+        elif 'japan airlines' in airline or 'jal' in airline or 'skymark' in airline or 'starflyer' in airline:
+            final_terminal = "1"
+            
+        # 3. それ以外の場合のみ、APIの情報を信じる
+        elif raw_t_str in ['1', '2', '3']:
+            final_terminal = raw_t_str
+            
+        # 4. それでも不明で、かつ人数が少ない(国内線っぽい)ならT1へ (最終安全策)
+        elif pax < 250:
+            final_terminal = "1"
+
+        # --- 集計バケツへの振り分け ---
+        
+        if final_terminal == "3":
+            terminal_counts["国際(T3)"] += pax
+            f['is_international'] = True
+            
+        elif final_terminal == "2":
+            # T2: 偶数・奇数判定
             try: 
                 f_num_raw = str(f.get('flight_number', '0'))
                 num = int(''.join(filter(str.isdigit, f_num_raw)))
             except: 
                 num = 0
             
+            f['is_international'] = False
             if num % 2 == 0: terminal_counts["3号(T2)"] += pax
             else: terminal_counts["4号(T2)"] += pax
             
-        # 3. 第1ターミナル(T1)の振り分け
-        elif target_terminal == '1':
-            # JALは北、それ以外は南
+        elif final_terminal == "1":
+            # T1: JALかそれ以外か
+            f['is_international'] = False
             if 'japan airlines' in airline or 'jal' in airline: 
                 terminal_counts["2号(T1北)"] += pax
             else: 
                 terminal_counts["1号(T1南)"] += pax
-        
-        else:
-            terminal_counts["国際(T3)"] += pax
 
     # 3. 未来予測データ作成
     forecast_data = {}
@@ -146,8 +145,7 @@ def analyze_demand(flights, current_time=None):
 
 def estimate_pax(flight):
     """
-    乗客数を推定。
-    サニーさんの完全リスト(表記揺れ対応)に、API欠損対策(Junmachiなど)を追加。
+    乗客数を推定。完全版キーワードリスト。
     """
     term = str(flight.get('terminal', ''))
     origin_val = flight.get('origin_iata', '')
@@ -164,7 +162,7 @@ def estimate_pax(flight):
         # 主要
         "Haneda", "Narita", "Itami", "Kansai", "Chitose", "Fukuoka", "Naha", 
         "Nagoya", "Chubu", "Kobe",
-        # 北海道・東北 (Junmachi/Odate追加)
+        # 北海道・東北
         "Hakodate", "Asahikawa", "Obihiro", "Kushiro", "Kusiro", 
         "Memanbetsu", "Wakkanai", "Monbetsu", "Nakashibetsu", "Nakasibetsu",
         "Okushiri", "Okusiri", "Rishiri", "Risiri", "Rebun", 
