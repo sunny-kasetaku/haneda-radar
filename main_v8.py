@@ -14,7 +14,6 @@ CONFIG = {
 
 def main():
     # 1. 現在時刻を「日本時間 (JST)」で確定させる
-    # システム全体の時計を日本時間に合わせ、ズレを解消します
     now = datetime.utcnow() + timedelta(hours=9)
     today_str = now.strftime('%Y-%m-%d') 
     
@@ -32,7 +31,7 @@ def main():
     # 3. データ取得
     api_key = CONFIG.get("AVIATION_STACK_API_KEY")
     
-    # 日本の日付を指定してデータを取得し、昨日のデータが混ざるのを防ぎます
+    # 日本の日付を指定してデータを取得
     print(f"LOG: Force fetching data for DATE: {today_str} (JST)...")
     flights_raw = fetch_flight_data(api_key, date_str=today_str)
     print(f"LOG: Fetched Today's Data: {len(flights_raw)} records")
@@ -47,7 +46,7 @@ def main():
         flights_raw.extend(flights_sub)
         print(f"LOG: Added Yesterday's Data: +{len(flights_sub)} records")
 
-    # 4. 旅客便フィルター (Cargoやキャンセルを除外)
+    # 4. 旅客便フィルター
     flights = []
     for f in flights_raw:
         if f.get('status') == 'cancelled': continue
@@ -63,7 +62,7 @@ def main():
     print(f"LOG: Total Merged {len(flights_raw)} -> Passenger Only {len(flights)}")
 
     # 5. 分析 & HTML生成
-    # 【修正点】ここで「今の日本時間(now)」を各担当に手渡します
+    # 【重要】ここで日本時間(now)を各モジュールに渡します
     analysis_result = analyze_demand(flights, current_time=now)
     render_html(analysis_result, daily_pass, current_time=now)
     

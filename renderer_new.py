@@ -2,19 +2,15 @@ import os
 import re
 from datetime import datetime, timedelta
 
-# 【修正点】current_time引数を追加
 def render_html(demand_results, password, current_time=None):
-    # 引数がない場合の保険
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
     flight_list = demand_results.get("flights", [])
-    
-    # アナライザーから設定値を受け取る
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
-    # 辞書完全版
+    # 1. 既存のコード辞書
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -37,16 +33,45 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
 
-    def translate_origin(origin_iata, origin_name):
-        if origin_iata in AIRPORT_MAP:
-            return AIRPORT_MAP[origin_iata]
+    # 2. 英語名強制変換辞書 (サニーさんのご指摘を反映！)
+    NAME_MAP = {
+        # サニーさんがチェックしてくれた重要項目
+        "Hachijo": "八丈島", "Shonai": "庄内", "Miho": "米子", 
+        "Istanbul": "イスタンブール", "Seattle": "シアトル", "Sydney": "シドニー",
+        
+        # API欠損対策の主要空港
+        "Beijing": "北京", "Capital": "北京", "Oita": "大分", "Chitose": "新千歳", 
+        "Naha": "那覇", "Fukuoka": "福岡", "Matsuyama": "松山", "Kumamoto": "熊本",
+        "Itami": "伊丹", "Obihiro": "帯広", "Taipei": "台北", "Songshan": "台北(松山)",
+        "Shirahama": "南紀白浜", "Komatsu": "小松", "Shimojishima": "下地島",
+        "Kochi": "高知", "Iwami": "石見", "Tottori": "鳥取", "Guangzhou": "広州",
+        "Hong Kong": "香港", "Hiroshima": "広島", "Kushiro": "釧路", "Izumo": "出雲",
+        "Aomori": "青森", "Kansai": "関空", "Doha": "ドーハ", "Dubai": "ドバイ",
+        "London": "ロンドン", "Paris": "パリ", "Frankfurt": "フランクフルト",
+        "Los Angeles": "ロサンゼルス", "San Francisco": "サンフランシスコ",
+        "Honolulu": "ホノルル", "Singapore": "シンガポール",
+        "Bangkok": "バンコク", "Seoul": "ソウル", "Incheon": "ソウル(仁川)",
+        "Shanghai": "上海", "Pudong": "上海(浦東)", "Hongqiao": "上海(虹橋)",
+        "Manila": "マニラ", "Hanoi": "ハノイ", "Ho Chi Minh": "ホーチミン"
+    }
+
+    def translate_origin(origin_val, origin_name):
+        # 1. コード辞書検索
+        if origin_val in AIRPORT_MAP:
+            return AIRPORT_MAP[origin_val]
+        
+        # 2. 名前辞書検索 (キーワード検索)
+        val_str = str(origin_val)
+        for eng, jpn in NAME_MAP.items():
+            if eng in val_str:
+                return jpn
+        
+        # 3. 元の名前からも検索
         name = str(origin_name)
-        if "Hachijo" in name: return "八丈島"
-        if "Shonai" in name: return "庄内"
-        if "Miho" in name: return "米子"
-        if "Istanbul" in name: return "イスタンブール"
-        if "Seattle" in name: return "シアトル"
-        if "Sydney" in name: return "シドニー"
+        for eng, jpn in NAME_MAP.items():
+            if eng in name:
+                return jpn
+                
         return name
 
     def to_int(v):
@@ -60,7 +85,6 @@ def render_html(demand_results, password, current_time=None):
     pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
     total = sum(pax_counts)
     
-    # ランク基準
     if total >= 2000: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
     elif total >= 1000: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
     elif total >= 500:  r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
@@ -86,7 +110,10 @@ def render_html(demand_results, password, current_time=None):
         f_code = f.get('flight_number', '---')
         origin_iata = f.get('origin_iata', '')
         raw_origin = f.get('origin', origin_iata)
+        
+        # 翻訳関数を使用
         origin_name = translate_origin(origin_iata, raw_origin)
+        
         table_rows += f"<tr><td>{time_str}</td><td style='color:gold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
     f_data = demand_results.get("forecast", {})
