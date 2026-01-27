@@ -67,7 +67,8 @@ def analyze_demand(flights, current_time=None):
             target_terminal = "1"
         elif raw_t_str in ['1', '2', '3']:
             target_terminal = raw_t_str
-        elif pax < 250:
+        # 【修正】機材判定で150人が出るようになったので、200人以下ならT1へ救出
+        elif pax <= 200:
             target_terminal = "1"
 
         # バケツ振り分け & タグ付け
@@ -122,9 +123,25 @@ def analyze_demand(flights, current_time=None):
     }
 
 def estimate_pax(flight):
+    """
+    乗客数推定ロジック (Upgrade版)
+    1. API機材情報があれば最優先
+    2. なければ出身地から推測 (リストは完全維持)
+    """
     term = str(flight.get('terminal', ''))
     origin_val = flight.get('origin_iata', '')
     
+    # --- 【追加】API機材情報チェック (最優先) ---
+    aircraft = str(flight.get('aircraft', '')).lower()
+    if aircraft and aircraft != 'none':
+        # 大型機 (B777, B789, A350, A380など) -> 300~350
+        if any(x in aircraft for x in ['777', '789', '781', '350', '330', '747', '380']):
+            return 350 if term == '3' else 300
+        # 中・小型機 (B737, A320, E190など) -> 150
+        if any(x in aircraft for x in ['737', '320', '321', 'e19', '738', '73h']):
+            return 150
+
+    # --- 【維持】サニーさんの鉄壁リスト ---
     domestic_codes = [
         "CTS", "FUK", "OKA", "ITM", "KIX", "NGO", "KMQ", "HKD", "HIJ", "MYJ",
         "KCZ", "TAK", "KMJ", "KMI", "KOJ", "ISG", "MMY", "IWK", "UBJ", "TKS",
@@ -156,9 +173,22 @@ def estimate_pax(flight):
         "Kumejima", "Tarama", "Yonaguni"
     ]
 
-    if term == '3': return 250
+    # --- 【追加】出身地によるサイズ推測 (リストの前に判定) ---
+    
+    # 1. 長距離国際線 -> 350
+    long_haul_origins = ["JFK", "LAX", "SFO", "SEA", "LHR", "CDG", "FRA", "HEL", "DXB", "DOH", "IST", "HNL"]
+    if origin_val in long_haul_origins: return 350
+    
+    # 2. 国内幹線 (大型機が多い) -> 300
+    if origin_val in ["CTS", "FUK", "OKA", "ITM"] or any(kw in origin_val for kw in ["Sapporo", "Fukuoka", "Naha", "Itami"]):
+        return 300
+
+    # --- 【維持】従来の国内線判定 (150人) ---
+    if term == '3': return 250 # T3ならとりあえず国際(250)
+    
     if origin_val in domestic_codes: return 150
     for kw in domestic_keywords:
         if kw in origin_val: return 150
             
+    # デフォルト
     return 250
