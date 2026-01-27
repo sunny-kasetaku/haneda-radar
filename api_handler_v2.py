@@ -4,9 +4,9 @@ import sys
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    AviationStackからデータを取得する（ページネーション復元版）。
-    勝手に削除していた「複数ページ取得（ループ処理）」を復活させました。
-    100件制限を超えて、その日のデータを奥底まで取りに行きます。
+    AviationStackからデータを取得する（省エネ設定版）。
+    1回につき100件取得 × 3回ループ = 最大300件取得。
+    これでAPI消費を大幅に抑えつつ、直近の重要データは確保します。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -14,8 +14,7 @@ def fetch_flight_data(api_key, date_str=None):
     offset = 0
     limit = 100  # APIの1回あたりの最大取得数
     
-    # プロデューサーの指示通り、データを取り切るまで回します
-    # (通常3〜5回程度で全便取得完了します)
+    # ループ開始
     while True:
         params = {
             'access_key': api_key,
@@ -24,12 +23,11 @@ def fetch_flight_data(api_key, date_str=None):
             'offset': offset
         }
         
-        # main_v8からの日付指定を反映
+        # 日付指定があれば追加
         if date_str:
             params['flight_date'] = date_str
         
         try:
-            # 進行状況をログに出します
             print(f"DEBUG: Fetching offset {offset}...", file=sys.stderr)
             
             response = requests.get(base_url, params=params, timeout=10)
@@ -37,7 +35,7 @@ def fetch_flight_data(api_key, date_str=None):
             
             raw_data = data.get('data', [])
             
-            # データが空っぽ（最後のページまで行った）なら終了
+            # データが空っぽなら終了
             if not raw_data:
                 break
             
@@ -47,19 +45,20 @@ def fetch_flight_data(api_key, date_str=None):
                 if info:
                     all_flights.append(info)
             
-            # 次のページ（100件後）へ
+            # 次のページへ進む準備
             offset += limit
             
-            # 安全装置: 無限ループ防止（最大1000件=10回あれば十分カバー可能）
-            if offset >= 1000:
+            # 【重要修正】ここでブレーキをかけます！
+            # 1000 -> 300 に変更しました。これで3回(30リクエスト)で止まります。
+            if offset >= 300:
+                print("DEBUG: Limit reached (300 records). Stopping fetch.", file=sys.stderr)
                 break
                 
-            # APIへの連続アクセス負荷を避けるため一瞬待つ
+            # APIへの負荷軽減
             time.sleep(0.1)
 
         except Exception as e:
             print(f"Error fetching flights: {e}", file=sys.stderr)
-            # エラーが出ても、そこまで取れた分は返す
             break
             
     return all_flights
@@ -70,11 +69,16 @@ def extract_flight_info(flight):
     flight_data = flight.get('flight', {})
     dep = flight.get('departure', {})
     
+    # 【追加修正】機材情報の取得
+    # これがないと、先ほど実装した「大型機判定」が動きません
+    aircraft = flight.get('aircraft', {})
+    aircraft_iata = aircraft.get('iata', 'none') if aircraft else 'none'
+    
     # 到着時刻の特定
     arrival_time = arr.get('estimated') or arr.get('actual') or arr.get('scheduled')
     if not arrival_time: return None
 
-    # ターミナル判定
+    # ターミナル判定 (APIになければ便名で簡易推測)
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
     
@@ -91,5 +95,6 @@ def extract_flight_info(flight):
         "origin_iata": dep.get('iata', 'UNK'),
         "terminal": str(term),
         "arrival_time": arrival_time,
-        "status": flight.get('flight_status', 'unknown')
+        "status": flight.get('flight_status', 'unknown'),
+        "aircraft": aircraft_iata  # ← これをanalyzerに渡します！
     }

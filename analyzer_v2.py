@@ -26,10 +26,8 @@ def analyze_demand(flights, current_time=None):
             f_dt_jst = f_dt 
         except: continue
 
-        dep = f.get('departure', {})
-        if not dep: dep = {}
-        origin_code = dep.get('iata') or dep.get('airport') or "UNK"
-        f['origin_iata'] = origin_code 
+        # api_handlerですでに 'origin_iata' というキーを作ってくれているので直接使う
+        origin_code = f.get('origin_iata') or "UNK"
         
         unique_key = f"{dt_str}_{origin_code}"
         if unique_key in seen_flights: continue
@@ -46,7 +44,7 @@ def analyze_demand(flights, current_time=None):
 
     filtered_flights.sort(key=lambda x: x.get('arrival_time'))
 
-    # --- 2. ターミナル判定 & タグ付け (Tagging) ---
+    # --- 2. ターミナル判定 & タグ付け ---
     terminal_counts = {
         "1号(T1南)": 0, "2号(T1北)": 0,
         "3号(T2)": 0, "4号(T2)": 0,
@@ -67,7 +65,6 @@ def analyze_demand(flights, current_time=None):
             target_terminal = "1"
         elif raw_t_str in ['1', '2', '3']:
             target_terminal = raw_t_str
-        # 【修正】機材判定で150人が出るようになったので、200人以下ならT1へ救出
         elif pax <= 200:
             target_terminal = "1"
 
@@ -124,24 +121,37 @@ def analyze_demand(flights, current_time=None):
 
 def estimate_pax(flight):
     """
-    乗客数推定ロジック (Upgrade版)
-    1. API機材情報があれば最優先
-    2. なければ出身地から推測 (リストは完全維持)
+    乗客数推定ロジック (サニーさんリスト完全維持版)
     """
     term = str(flight.get('terminal', ''))
-    origin_val = flight.get('origin_iata', '')
     
-    # --- 【追加】API機材情報チェック (最優先) ---
+    origin_val = flight.get('origin_iata', '')
+    origin_name = flight.get('origin', '')
+
+    # 検索漏れを防ぐため、コードと名前を結合して小文字化チェック用文字列を作る
+    check_str = (str(origin_val) + " " + str(origin_name)).lower()
+
+    # --- 1. API機材情報チェック (最優先) ---
     aircraft = str(flight.get('aircraft', '')).lower()
     if aircraft and aircraft != 'none':
-        # 大型機 (B777, B789, A350, A380など) -> 300~350
         if any(x in aircraft for x in ['777', '789', '781', '350', '330', '747', '380']):
             return 350 if term == '3' else 300
-        # 中・小型機 (B737, A320, E190など) -> 150
         if any(x in aircraft for x in ['737', '320', '321', 'e19', '738', '73h']):
             return 150
 
-    # --- 【維持】サニーさんの鉄壁リスト ---
+    # --- 2. 出身地によるサイズ推測 ---
+    
+    # 長距離国際線 -> 350
+    long_haul_keys = ["jfk", "lax", "sfo", "sea", "lhr", "cdg", "fra", "hel", "dxb", "doh", "ist", "hnl", "yvr", "syd", "mel"]
+    if any(k in check_str for k in long_haul_keys): return 350
+    
+    # 国内幹線 (札幌、福岡、那覇、伊丹) -> 300
+    major_keys = ["cts", "fuk", "oka", "itm", "sapporo", "fukuoka", "naha", "okinawa", "itami", "osaka", "新千歳", "福岡", "那覇", "伊丹", "大阪"]
+    if any(k in check_str for k in major_keys): return 300
+
+    # --- 3. その他国内線 (150人) ---
+    
+    # リストA: サニーさんの国内コードリスト (そのまま維持)
     domestic_codes = [
         "CTS", "FUK", "OKA", "ITM", "KIX", "NGO", "KMQ", "HKD", "HIJ", "MYJ",
         "KCZ", "TAK", "KMJ", "KMI", "KOJ", "ISG", "MMY", "IWK", "UBJ", "TKS",
@@ -150,6 +160,7 @@ def estimate_pax(flight):
         "SYO", "YGJ", "KIJ", "TOY", "HAC", "SHI", "UKB"
     ]
 
+    # リストB: サニーさんの国内キーワードリスト (そのまま維持)
     domestic_keywords = [
         "Haneda", "Narita", "Itami", "Kansai", "Chitose", "Fukuoka", "Naha", 
         "Nagoya", "Chubu", "Kobe",
@@ -172,23 +183,25 @@ def estimate_pax(flight):
         "Ishigaki", "Isigaki", "Miyako", "Shimojishima", "Shimoji", "Simoji",
         "Kumejima", "Tarama", "Yonaguni"
     ]
+    
+    # リストC: 追加日本語リスト (ここが重要！)
+    domestic_japanese = [
+        "神戸", "函館", "旭川", "帯広", "釧路", "女満別", "稚内", "青森", "三沢", "花巻", "仙台", "秋田", "山形", "庄内",
+        "福島", "茨城", "新潟", "富山", "小松", "静岡", "鳥取", "米子", "出雲", "岡山", "広島", "山口", "徳島", "高松",
+        "松山", "高知", "南紀白浜", "北九州", "佐賀", "長崎", "大分", "熊本", "宮崎", "鹿児島", "石垣", "宮古",
+        "関空", "関西", "中部", "名古屋"
+    ]
 
-    # --- 【追加】出身地によるサイズ推測 (リストの前に判定) ---
-    
-    # 1. 長距離国際線 -> 350
-    long_haul_origins = ["JFK", "LAX", "SFO", "SEA", "LHR", "CDG", "FRA", "HEL", "DXB", "DOH", "IST", "HNL"]
-    if origin_val in long_haul_origins: return 350
-    
-    # 2. 国内幹線 (大型機が多い) -> 300
-    if origin_val in ["CTS", "FUK", "OKA", "ITM"] or any(kw in origin_val for kw in ["Sapporo", "Fukuoka", "Naha", "Itami"]):
-        return 300
-
-    # --- 【維持】従来の国内線判定 (150人) ---
-    if term == '3': return 250 # T3ならとりあえず国際(250)
-    
+    # リストAチェック (コード)
     if origin_val in domestic_codes: return 150
+    
+    # リストBチェック (英語キーワード - 小文字にして部分一致検索)
     for kw in domestic_keywords:
-        if kw in origin_val: return 150
-            
+        if kw.lower() in check_str: return 150
+        
+    # リストCチェック (日本語キーワード)
+    for kw in domestic_japanese:
+        if kw in check_str: return 150
+
     # デフォルト
-    return 250
+    return 250 if term == '3' else 150
