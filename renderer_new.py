@@ -58,12 +58,12 @@ def render_html(demand_results, password, current_time=None):
         "Manila": "マニラ", "Hanoi": "ハノイ", "Ho Chi Minh": "ホーチミン"
     }
 
-    # 3. 出口別カラー定義 (ここで色を管理)
+    # 3. 出口別カラー定義
     COLOR_MAP = {
         "1号(T1南)": "#FF8C00", # ダークオレンジ
         "2号(T1北)": "#FF4444", # 明るい赤
-        "3号(T2)": "#1E90FF",   # ドジャーブルー(ANA青)
-        "4号(T2)": "#00FFFF",   # シアン(水色)
+        "3号(T2)": "#1E90FF",   # ドジャーブルー
+        "4号(T2)": "#00FFFF",   # シアン
         "国際(T3)": "#FFD700"   # ゴールド
     }
 
@@ -94,9 +94,24 @@ def render_html(demand_results, password, current_time=None):
     elif total >= 500:  r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
     else:                r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
+    # --- 【同点決勝ロジック】 ---
+    # 数値が同じなら、期待値(ロング確率)が高い順にBESTを選ぶ
+    # 優先順位: 国際(4) > 3号(2) > 4号(3) > 2号(1) > 1号(0)
+    priority_order = [4, 2, 3, 1, 0]
+    
     max_val = max(pax_counts) if any(pax_counts) else -1
-    best_idx = pax_counts.index(max_val) if max_val > 0 else -1
-
+    best_idx = -1
+    
+    if max_val > 0:
+        # 最高値を持つインデックスを全て探す
+        candidates = [i for i, x in enumerate(pax_counts) if x == max_val]
+        
+        # 優先順位リストと照らし合わせて、一番偉い奴を選ぶ
+        for p_idx in priority_order:
+            if p_idx in candidates:
+                best_idx = p_idx
+                break
+    
     # --- 上段カードの生成 ---
     cards_html = ""
     for i, name in enumerate(target_keys):
@@ -105,10 +120,7 @@ def render_html(demand_results, password, current_time=None):
         style = 'style="grid-column: 1/3;"' if name == "国際(T3)" else ""
         badge = '<div class="best-badge">🏆 BEST</div>' if is_best else ""
         disp_val = demand_results.get(name, "0")
-        
-        # カードの数字も色付け
         num_color = COLOR_MAP.get(name, "#fff")
-        
         cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num" style="color:{num_color}">{disp_val}</div></div>'
 
     # --- 下段リストの生成 ---
@@ -120,14 +132,10 @@ def render_html(demand_results, password, current_time=None):
         f_code = f.get('flight_number', '---')
         origin_iata = f.get('origin_iata', '')
         raw_origin = f.get('origin', origin_iata)
-        
         origin_name = translate_origin(origin_iata, raw_origin)
         
-        # タグを見て色を決める
         exit_type = f.get('exit_type', '')
         row_color = COLOR_MAP.get(exit_type, "#FFFFFF")
-        
-        # 便名(f_code)に色を付ける
         table_rows += f"<tr><td>{time_str}</td><td style='color:{row_color}; font-weight:bold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
 
     f_data = demand_results.get("forecast", {})
@@ -227,16 +235,16 @@ def render_html(demand_results, password, current_time=None):
                 
                 <div class="strategy-box">
                     <div class="st-item">
-                        <span style="color:#00FF00; font-weight:bold;">✅ 需給バランス:</span><br>
-                        需要（客数）に対し供給（タクシー・電車）が足りているか？
+                        <span style="color:#FFD700; font-weight:bold;">🏆 BEST判定について:</span><br>
+                        人数が同数の場合、ロング確率が高い出口（国際 > 3号 > 4号...）を推奨しています。
                     </div>
                     <div class="st-item">
-                        <span style="color:#FFD700; font-weight:bold;">🌙 日付またぎ（終電）:</span><br>
-                        23時以降は電車での帰宅が困難になり、長距離需要が爆発する傾向があります。
+                        <span style="color:#00FF00; font-weight:bold;">🔄 最終判断は「回転率」:</span><br>
+                        いくら単価が高くても、待機台数が多すぎると稼げません。<strong>必ずカメラでタクシープールを見て、回転が早い場所を選んでください。</strong>
                     </div>
                     <div class="st-item">
                         <span style="color:#00BFFF; font-weight:bold;">🤝 チーム戦:</span><br>
-                        Discordでの情報共有も判断材料に。情報と確率で勝ちに行きましょう。
+                        Discordやサロンの情報と、確率（本ツール）を組み合わせて勝ちに行きましょう。
                     </div>
                 </div>
 
