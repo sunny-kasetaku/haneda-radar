@@ -178,7 +178,7 @@ def render_html(demand_results, password, current_time=None):
             .strategy-box {{ text-align: left; background: #1A1A1A; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }}
             .st-item {{ margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #ddd; }}
             
-            /* ★追加: 終電表示用のシンプルな枠★ */
+            /* ★修正: 終電表示用の枠★ */
             .train-alert-box {{ background: #222; border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 20px; text-align:center; }}
             .ta-row {{ display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }}
             .ta-name {{ font-weight: bold; color: #ccc; }}
@@ -224,11 +224,11 @@ def render_html(demand_results, password, current_time=None):
                 
                 <div class="train-alert-box">
                     <div class="ta-row">
-                        <span class="ta-name">🚝 モノレール (浜松町)</span>
+                        <span class="ta-name">🚝 モノレール終電</span>
                         <span class="ta-time">23:42</span>
                     </div>
                     <div class="ta-row">
-                        <span class="ta-name">🔴 京急線 (品川方面)</span>
+                        <span class="ta-name">🔴 京急線終電</span>
                         <span class="ta-time">23:51</span>
                     </div>
                 </div>
