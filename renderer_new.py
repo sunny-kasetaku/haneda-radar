@@ -95,18 +95,13 @@ def render_html(demand_results, password, current_time=None):
     else:                r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
     # --- 【同点決勝ロジック】 ---
-    # 数値が同じなら、期待値(ロング確率)が高い順にBESTを選ぶ
-    # 優先順位: 国際(4) > 3号(2) > 4号(3) > 2号(1) > 1号(0)
     priority_order = [4, 2, 3, 1, 0]
     
     max_val = max(pax_counts) if any(pax_counts) else -1
     best_idx = -1
     
     if max_val > 0:
-        # 最高値を持つインデックスを全て探す
         candidates = [i for i, x in enumerate(pax_counts) if x == max_val]
-        
-        # 優先順位リストと照らし合わせて、一番偉い奴を選ぶ
         for p_idx in priority_order:
             if p_idx in candidates:
                 best_idx = p_idx
@@ -187,6 +182,12 @@ def render_html(demand_results, password, current_time=None):
             .footer {{ text-align:center; color:#666; font-size:11px; padding-bottom:30px; }}
             .strategy-box {{ text-align: left; background: #1A1A1A; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }}
             .st-item {{ margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #ddd; }}
+            
+            /* ★追加: 終電表示用のシンプルな枠★ */
+            .train-alert-box {{ background: #222; border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 20px; text-align:center; }}
+            .ta-row {{ display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }}
+            .ta-name {{ font-weight: bold; color: #ccc; }}
+            .ta-time {{ color: #FFD700; font-weight: bold; font-size: 16px; }}
         </style>
         <script>
             function checkPass() {{
@@ -214,6 +215,20 @@ def render_html(demand_results, password, current_time=None):
                 <div class="legend"><span>🌈S:2000~</span> <span>🔥A:1000~</span> <span>✅B:500~</span> <span>⚠️C:1~</span></div>
             </div>
             <div class="grid">{cards_html}</div>
+
+            <div class="section-title">🚃 終電目安 (第3ターミナル)</div>
+            <div class="train-alert-box">
+                <div class="ta-row">
+                    <span class="ta-name">🚝 モノレール (浜松町)</span>
+                    <span class="ta-time">23:42</span>
+                </div>
+                <div class="ta-row">
+                    <span class="ta-name">🔴 京急線 (品川方面)</span>
+                    <span class="ta-time">23:51</span>
+                </div>
+                <div style="font-size:10px; color:#666; margin-top:5px;">※ダイヤは固定のため目安です</div>
+            </div>
+
             <div class="section-title">✈️ 分析の根拠</div>
             <table class="flight-table">
                 <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>

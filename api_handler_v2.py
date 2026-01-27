@@ -5,10 +5,9 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    AviationStackからデータを取得する（時間追従・省エネ版）。
-    現在時刻を意識し、「もう終わった朝の便」をスキップして、
-    「直近〜未来の便」だけを300件の中に詰め込みます。
-    これにより、夜になっても欧米便などの取りこぼしがなくなります。
+    【修正版】API取得ロジック
+    ・過去データを「2時間前」までで足切りし、300件の枠を節約。
+    ・これにより、夜間のドバイや欧米便が枠から溢れるのを防ぐ。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -16,18 +15,17 @@ def fetch_flight_data(api_key, date_str=None):
     offset = 0
     limit = 100
     
-    # 現在時刻(JST)を取得して、「4時間前」を計算
-    # 例: 今が20:00なら、16:00以降の便だけをリクエストする
+    # 【ここを修正しました】
+    # 4時間前だと広すぎて無駄なデータが入るので、「2時間前」に変更。
+    # これで「今とこれから」の便だけが300件の箱に入ります。
     now_jst = datetime.utcnow() + timedelta(hours=9)
-    min_time_dt = now_jst - timedelta(hours=4)
+    min_time_dt = now_jst - timedelta(hours=2) 
     min_time_str = min_time_dt.strftime('%Y-%m-%d %H:%M:%S')
 
-    # 日付が変わった直後(朝4時まで)は、昨日のデータも取る必要があるのでフィルタしない
-    # 朝4時以降なら、フィルタを有効にする
+    # 朝4時以降ならフィルタを有効にする
     use_time_filter = False
     if now_jst.hour >= 4:
         use_time_filter = True
-        # ただし、date_strが「今日」指定の場合に限る
         if date_str and date_str != now_jst.strftime('%Y-%m-%d'):
             use_time_filter = False
 
@@ -42,14 +40,10 @@ def fetch_flight_data(api_key, date_str=None):
         if date_str:
             params['flight_date'] = date_str
             
-        # 【重要】ここで「古い便」を足切りします
         if use_time_filter:
-            # APIに対して「この時間よりあとの到着便だけくれ」と指定
-            # これで朝の便が除外され、夜の欧米便が300件の枠内に入ってきます
             params['min_scheduled_arrival'] = min_time_str
         
         try:
-            # ログにフィルタ状況を出す
             filter_msg = f"(Filter > {min_time_str})" if use_time_filter else "(All Day)"
             print(f"DEBUG: Fetching offset {offset} {filter_msg}...", file=sys.stderr)
             
@@ -68,7 +62,6 @@ def fetch_flight_data(api_key, date_str=None):
             
             offset += limit
             
-            # 300件でストップ（ブレーキ）
             if offset >= 300:
                 print("DEBUG: Limit reached (300 records). Stopping fetch.", file=sys.stderr)
                 break
@@ -86,7 +79,6 @@ def extract_flight_info(flight):
     airline = flight.get('airline', {})
     flight_data = flight.get('flight', {})
     dep = flight.get('departure', {})
-    # 【重要】機材情報も忘れずに取得
     aircraft = flight.get('aircraft', {})
     aircraft_iata = aircraft.get('iata', 'none') if aircraft else 'none'
     
