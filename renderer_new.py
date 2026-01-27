@@ -33,7 +33,7 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
 
-    # 2. 名前辞書 (完全版)
+    # 2. 名前辞書
     NAME_MAP = {
         "Okayama": "岡山", "Hakodate": "函館", "Memanbetsu": "女満別",
         "Kita Kyushu": "北九州", "Asahikawa": "旭川", "Nanki": "南紀白浜",
@@ -58,13 +58,13 @@ def render_html(demand_results, password, current_time=None):
         "Manila": "マニラ", "Hanoi": "ハノイ", "Ho Chi Minh": "ホーチミン"
     }
 
-    # 3. 出口別カラー定義
+    # 3. 出口別カラー
     COLOR_MAP = {
-        "1号(T1南)": "#FF8C00", # ダークオレンジ
-        "2号(T1北)": "#FF4444", # 明るい赤
-        "3号(T2)": "#1E90FF",   # ドジャーブルー
-        "4号(T2)": "#00FFFF",   # シアン
-        "国際(T3)": "#FFD700"   # ゴールド
+        "1号(T1南)": "#FF8C00", 
+        "2号(T1北)": "#FF4444", 
+        "3号(T2)": "#1E90FF", 
+        "4号(T2)": "#00FFFF", 
+        "国際(T3)": "#FFD700" 
     }
 
     def translate_origin(origin_val, origin_name):
@@ -94,12 +94,9 @@ def render_html(demand_results, password, current_time=None):
     elif total >= 500:  r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
     else:                r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
 
-    # --- 【同点決勝ロジック】 ---
     priority_order = [4, 2, 3, 1, 0]
-    
     max_val = max(pax_counts) if any(pax_counts) else -1
     best_idx = -1
-    
     if max_val > 0:
         candidates = [i for i, x in enumerate(pax_counts) if x == max_val]
         for p_idx in priority_order:
@@ -107,7 +104,6 @@ def render_html(demand_results, password, current_time=None):
                 best_idx = p_idx
                 break
     
-    # --- 上段カードの生成 ---
     cards_html = ""
     for i, name in enumerate(target_keys):
         is_best = (i == best_idx)
@@ -118,7 +114,6 @@ def render_html(demand_results, password, current_time=None):
         num_color = COLOR_MAP.get(name, "#fff")
         cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num" style="color:{num_color}">{disp_val}</div></div>'
 
-    # --- 下段リストの生成 ---
     table_rows = ""
     for f in flight_list:
         raw_time = str(f.get('arrival_time', ''))
@@ -216,19 +211,6 @@ def render_html(demand_results, password, current_time=None):
             </div>
             <div class="grid">{cards_html}</div>
 
-            <div class="section-title">🚃 終電目安 (第3ターミナル)</div>
-            <div class="train-alert-box">
-                <div class="ta-row">
-                    <span class="ta-name">🚝 モノレール (浜松町)</span>
-                    <span class="ta-time">23:42</span>
-                </div>
-                <div class="ta-row">
-                    <span class="ta-name">🔴 京急線 (品川方面)</span>
-                    <span class="ta-time">23:51</span>
-                </div>
-                <div style="font-size:10px; color:#666; margin-top:5px;">※ダイヤは固定のため目安です</div>
-            </div>
-
             <div class="section-title">✈️ 分析の根拠</div>
             <table class="flight-table">
                 <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>
@@ -236,8 +218,20 @@ def render_html(demand_results, password, current_time=None):
             </table>
             <div class="section-title">📈 今後の需要予測 (3時間先)</div>
             <div class="forecast-box">{forecast_html}</div>
+            
             <div class="cam-box">
                 <div class="cam-title">💡 勝つための戦略チェック</div>
+                
+                <div class="train-alert-box">
+                    <div class="ta-row">
+                        <span class="ta-name">🚝 モノレール (浜松町)</span>
+                        <span class="ta-time">23:42</span>
+                    </div>
+                    <div class="ta-row">
+                        <span class="ta-name">🔴 京急線 (品川方面)</span>
+                        <span class="ta-time">23:51</span>
+                    </div>
+                </div>
                 
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
 
