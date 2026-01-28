@@ -45,6 +45,9 @@ def fetch_flight_data(api_key, date_str=None):
             'offset': offset
         }
         
+        # 【ここが唯一の追加】今飛んでいる、またはこれから着く便に絞り、国際線が枠から漏れるのを防ぎます
+        params['flight_status'] = 'active'
+        
         # 国際便のために日付フィルタは無効化します（引かずに残します）
         # if date_str:
         #     params['flight_date'] = date_str
