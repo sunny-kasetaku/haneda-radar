@@ -338,7 +338,8 @@ def render_html(demand_results, password, current_time=None):
                 <div class="disclaimer">
                     【免責事項】<br>
                     ※通信のタイムラグにより、一部の便（特に大幅遅延時など）が表示されない場合があります。<br>
-                    <strong>最終的な正解は、上記の「羽田公式サイト」で必ず確認してください。</strong>
+                    ※最終的な正解は、上記の「羽田公式サイト」で必ず確認してください。<br>
+                    <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
                 </div>
             </div>
             
