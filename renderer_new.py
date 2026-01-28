@@ -317,8 +317,8 @@ def render_html(demand_results, password, current_time=None):
                 </div>
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
                 
-                <div class="cam-title" style="margin-top:15px;">👑 最終確認 (LCC・遅延チェック)</div>
-                <div style="font-size:11px; color:#999; margin-bottom:5px;">※ツールに出ないLCC(Peach等)や、正確な着陸時間を知りたい時に使ってください。</div>
+                <div class="cam-title" style="margin-top:15px;">👑 最終確認 (公式情報)</div>
+                <div style="font-size:11px; color:#999; margin-bottom:5px;">※表示されない便がある時や、正確な遅延情報を知りたい時に。</div>
                 <div class="sub-btn-row">
                     <a href="https://tokyo-haneda.com/flight/flightInfo_int.html" target="_blank" class="cam-btn" style="background:#fff; color:#000;">✈️ 国際線 (T3)</a>
                     <a href="https://tokyo-haneda.com/flight/flightInfo_dms.html" target="_blank" class="cam-btn" style="background:#ddd; color:#000;">✈️ 国内線 (T1/T2)</a>
@@ -337,7 +337,7 @@ def render_html(demand_results, password, current_time=None):
                 </div>
                 <div class="disclaimer">
                     【免責事項】<br>
-                    ※本ツールはAPIの仕様上、LCC等のデータに遅れが生じる場合があります。<br>
+                    ※通信のタイムラグにより、一部の便（特に大幅遅延時など）が表示されない場合があります。<br>
                     <strong>最終的な正解は、上記の「羽田公式サイト」で必ず確認してください。</strong>
                 </div>
             </div>
