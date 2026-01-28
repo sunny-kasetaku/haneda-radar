@@ -45,14 +45,13 @@ def fetch_flight_data(api_key, date_str=None):
             'offset': offset
         }
         
-        # 【修正】日付固定を外すことで、昨日出発した国際便を拾えるようにします
+        # 国際便の「日またぎ」を拾うため、日付フィルタは無効化します
         # if date_str:
         #     params['flight_date'] = date_str
             
         if use_time_filter:
             # UTC時間を渡すことで、APIが正しく認識できるようにする
-            # 【修正】パラメータ名を正しい名称(_time追加)にしました
-            params['min_scheduled_arrival_time'] = min_time_str_utc
+            params['min_scheduled_arrival'] = min_time_str_utc
         
         try:
             filter_msg = f"(Filter UTC > {min_time_str_utc})" if use_time_filter else "(All Day)"
@@ -105,7 +104,19 @@ def extract_flight_info(flight):
     # ターミナル情報の補正
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
-    
+    airline_iata = airline.get('iata', '??')
+    origin_iata = dep.get('iata', 'UNK')
+
+    # 国際線の表記ゆれ対応
+    if term in ["I", "INT", "i", "int"]:
+        term = "3"
+
+    # 航空会社・出発地によるターミナル強制判定
+    intl_airlines = ["GA", "SQ", "LH", "AF", "BA", "CX", "DL", "UA"]
+    if airline_iata in intl_airlines or (len(origin_iata) == 3 and origin_iata not in ["CTS", "FUK", "ITM", "KIX", "NGO", "OKA"]):
+        if term is None or term == "1":
+            term = "3"
+
     # APIがターミナルを返さない場合の簡易推定
     # (サニーさんの元のロジックを維持: 4桁ならT1、それ以外ならT3)
     if term is None:
@@ -115,10 +126,10 @@ def extract_flight_info(flight):
             term = "3"
 
     return {
-        "flight_number": f"{airline.get('iata', '??')}{f_num_str}",
+        "flight_number": f"{airline_iata}{f_num_str}",
         "airline": airline.get('name', 'Unknown'),
         "origin": dep.get('airport', 'Unknown'),
-        "origin_iata": dep.get('iata', 'UNK'),
+        "origin_iata": origin_iata,
         "terminal": str(term),
         "arrival_time": arrival_time,
         "status": flight.get('flight_status', 'unknown'),
