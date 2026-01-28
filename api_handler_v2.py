@@ -5,11 +5,10 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【修正版 v5】「3回別条件」戦略による広範囲取得ロジック
-    ・サニーさんのアイデア通り、3回のリクエスト枠を「異なる条件」で使用。
-    ・1回目: Active（飛行中）→ 現在の状況確保
-    ・2回目: Landed（着陸済み）→ 直近の需要確保
-    ・3回目: Yesterday（昨日出発）→ 日付またぎの欧米便確保
+    【修正版 v8】3連コンボ戦略 ＋ ソート＆重複対策完備
+    ・Active/Landed/Yesterdayの3戦略で、シカゴも国内線も全方位で取得。
+    ・APIの「sort」を使い、新しい国内線も確実に拾う。
+    ・「コードシェア対策」を組み込み、シカゴ便の重複(W)をNH/JL優先で1つにまとめる。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -19,22 +18,30 @@ def fetch_flight_data(api_key, date_str=None):
     now_jst = datetime.utcnow() + timedelta(hours=9)
     yesterday_jst = now_jst - timedelta(days=1)
     
-    # 日付文字列を作成
     today_str = now_jst.strftime('%Y-%m-%d')
     yesterday_str = yesterday_jst.strftime('%Y-%m-%d')
 
-    print(f"DEBUG: Start API Fetch. Strategy: Active -> Landed -> Yesterday", file=sys.stderr)
+    print(f"DEBUG: Start API Fetch v8. Strategy: 3-Ren Combo with Sort & Dedup", file=sys.stderr)
 
-    # 【重要】3回のチャンスを、それぞれ別の戦略に使います
+    # 【重要】3連コンボ：それぞれの弱点を補う「ソート順」を指定します
     strategies = [
-        # 戦略1: 今飛んでいる便（日付問わず、リアルタイムな国内・国際）
-        {'desc': '1. Active',   'params': {'flight_status': 'active', 'limit': 100}},
+        # 1. Active: 「到着早い順」で、これから着く便を確実に拾う
+        {
+            'desc': '1. Active',
+            'params': {'flight_status': 'active', 'limit': 100, 'sort': 'scheduled_arrival'}
+        },
         
-        # 戦略2: 着陸した便（直近のタクシー需要そのもの）
-        {'desc': '2. Landed',   'params': {'flight_status': 'landed', 'limit': 100}},
+        # 2. Landed: 「新しい順」で、さっき着いたばかりの国内線を拾う（これで国内線復活）
+        {
+            'desc': '2. Landed',
+            'params': {'flight_status': 'landed', 'limit': 100, 'sort': 'scheduled_arrival.desc'}
+        },
         
-        # 戦略3: 昨日出発した便（日付の壁で消えていた欧米・長距離便を救出）
-        {'desc': '3. Yesterday', 'params': {'flight_date': yesterday_str, 'limit': 100}}
+        # 3. Yesterday: 「新しい順」で、昨日出発の欧米便を拾う（これでシカゴ確保）
+        {
+            'desc': '3. Yesterday',
+            'params': {'flight_date': yesterday_str, 'limit': 100, 'sort': 'scheduled_arrival.desc'}
+        }
     ]
 
     for strat in strategies:
@@ -42,7 +49,6 @@ def fetch_flight_data(api_key, date_str=None):
             'access_key': api_key,
             'arr_iata': 'HND'
         }
-        # 戦略ごとのパラメータを結合
         params.update(strat['params'])
         
         try:
@@ -53,23 +59,38 @@ def fetch_flight_data(api_key, date_str=None):
             raw_data = data.get('data', [])
             
             if not raw_data:
-                print(f"DEBUG: No data for [{strat['desc']}]", file=sys.stderr)
                 continue
             
             for f in raw_data:
-                # 抽出関数を使ってデータを整理（サニーさんのロジックはそのまま）
                 info = extract_flight_info(f)
                 if info:
-                    # 【重要】重複（W）を防ぐチェック
-                    # すでにリストにある便と「便名」かつ「時間」が一致したらリストに入れない
-                    is_duplicate = False
-                    for existing in all_flights:
-                        if (existing['flight_number'] == info['flight_number'] and 
-                            existing['arrival_time'] == info['arrival_time']):
-                            is_duplicate = True
+                    # -----------------------------------------------------------
+                    # 【コードシェア対策 & 重複排除ロジック】
+                    # シカゴ便などで「時間は同じだが便名が違う」ケースを1つにまとめる
+                    # -----------------------------------------------------------
+                    duplicate_index = -1
+                    for i, existing in enumerate(all_flights):
+                        # 「到着時間が分単位まで同じ」なら、同じ飛行機とみなす
+                        if existing['arrival_time'] == info['arrival_time']:
+                            duplicate_index = i
                             break
                     
-                    if not is_duplicate:
+                    if duplicate_index != -1:
+                        # 重複を発見。どっちを残すか決める。
+                        existing_flight = all_flights[duplicate_index]
+                        
+                        # ルール: 「既存が外資」で「新規が日本(NH/JL)」なら、日本に書き換える
+                        # (例: UA7911 が先にあっても、後から NH111 が来たら NH111 にする)
+                        is_new_japanese = info['flight_number'].startswith(('JL', 'NH'))
+                        is_existing_japanese = existing_flight['flight_number'].startswith(('JL', 'NH'))
+                        
+                        if is_new_japanese and not is_existing_japanese:
+                            all_flights[duplicate_index] = info
+                        
+                        # 逆に「すでにNH」を持っていて「新規がUA」なら、何もしない（NHを守る）
+                        
+                    else:
+                        # 重複がなければ、普通に追加
                         all_flights.append(info)
             
             time.sleep(0.1)
@@ -83,8 +104,8 @@ def fetch_flight_data(api_key, date_str=None):
 def extract_flight_info(flight):
     """
     フライト情報抽出ヘルパー
+    （サニーさんの元のコードをそのまま維持）
     """
-    # ... (ここはサニーさんの元のコードのまま、変更なし) ...
     arr = flight.get('arrival', {})
     airline = flight.get('airline', {})
     flight_data = flight.get('flight', {})
@@ -108,7 +129,6 @@ def extract_flight_info(flight):
 
     # 【足し算】ターミナル判定の強化
     if term is None or term == "" or term == "None":
-        # 国内線キャリア（JAL, ANA, スカイマーク等）
         domestic_carriers = ["JL", "NH", "BC", "7G", "6J", "HD", "NU", "FW"]
         
         if airline_iata in domestic_carriers:
