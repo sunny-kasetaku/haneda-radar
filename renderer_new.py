@@ -11,7 +11,7 @@ def render_html(demand_results, password, current_time=None):
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
-    # 辞書定義 (英語→日本語変換の強化版)
+    # 1. 空港コード辞書 (完全一致)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -34,7 +34,8 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
     
-    # 部分一致用の辞書 (ここを強化しました)
+    # 2. 都市名辞書 (部分一致で検索して変換)
+    # ログにあった英語名をすべて日本語に変換します
     NAME_MAP = {
         "Okayama": "岡山", "Hakodate": "函館", "Memanbetsu": "女満別",
         "Kita Kyushu": "北九州", "Asahikawa": "旭川", "Nanki": "南紀白浜",
@@ -57,9 +58,13 @@ def render_html(demand_results, password, current_time=None):
         "Bangkok": "バンコク", "Seoul": "ソウル", "Incheon": "ソウル(仁川)",
         "Shanghai": "上海", "Pudong": "上海(浦東)", "Hongqiao": "上海(虹橋)",
         "Manila": "マニラ", "Hanoi": "ハノイ", "Ho Chi Minh": "ホーチミン",
+        # ▼ 今回追加した都市 ▼
         "Chicago": "シカゴ", "Dallas": "ダラス", "Atlanta": "アトランタ",
         "Detroit": "デトロイト", "Shenzhen": "深セン", "Dalian": "大連",
-        "Qingdao": "青島", "Gimpo": "ソウル(金浦)", "Helsinki": "ヘルシンキ"
+        "Qingdao": "青島", "Gimpo": "ソウル(金浦)", "Helsinki": "ヘルシンキ",
+        "Minneapolis": "ミネアポリス", "George Bush": "ヒューストン", 
+        "Washington": "ワシントン", "Pearson": "トロント", "Toronto": "トロント",
+        "Leonardo": "ローマ", "Fiumicino": "ローマ", "Indira": "デリー"
     }
 
     def translate_origin(origin_val, origin_name):
