@@ -2,7 +2,7 @@ import os
 import random
 from datetime import datetime, timedelta
 # api_handler_v2 (中身は最新のv3ロジック) を使用
-from api_handler_v2 import fetch_flight_data  
+from api_handler_v2 import fetch_flight_data 
 from analyzer_v2 import analyze_demand
 from renderer_new import render_html
 from discord_bot import DiscordBot
@@ -76,7 +76,8 @@ def main():
     # 確実に「1日1回」だけ通知が飛びます。
     bot = DiscordBot()
     
-    is_notify_time = (now.hour == 6 and now.minute < 15)
+    # ★変更箇所: 30分間隔に対応するため 15 -> 40 に変更 (他は一切触らず)
+    is_notify_time = (now.hour == 6 and now.minute < 40)
 
     if is_notify_time:
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)

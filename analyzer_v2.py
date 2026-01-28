@@ -97,7 +97,9 @@ def analyze_demand(flights, current_time=None):
         if unique_key in seen_flights: continue
         seen_flights.add(unique_key)
 
-        if start_time <= f_dt_jst <= end_time:
+        # 【変更点】ここだけ変えました。時間を絞らず、全データを通します。
+        # if start_time <= f_dt_jst <= end_time:
+        if True:
             # 優先度1: estimate_pax で国内/国際判定も含めて計算
             pax, is_domestic = estimate_pax_and_type(f)
             f['pax_estimated'] = pax
