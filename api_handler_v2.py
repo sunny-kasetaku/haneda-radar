@@ -45,16 +45,17 @@ def fetch_flight_data(api_key, date_str=None):
             'offset': offset
         }
         
-        # 【ここが唯一の追加】今飛んでいる、またはこれから着く便に絞り、国際線が枠から漏れるのを防ぎます
-        params['flight_status'] = 'active'
+        # 【修正】着陸便（Landed）を逃さないよう、ステータス縛りを解除（先頭に#を足しました）
+        # params['flight_status'] = 'active'
         
         # 国際便のために日付フィルタは無効化します（引かずに残します）
         # if date_str:
         #     params['flight_date'] = date_str
             
         if use_time_filter:
-            # UTC時間を渡すことで、APIが正しく認識できるようにする
-            params['min_scheduled_arrival'] = min_time_str_utc
+            # 【修正】API側のバグを避けるため、時間指定を解除（先頭に#を足しました）
+            # params['min_scheduled_arrival'] = min_time_str_utc
+            pass
         
         try:
             filter_msg = f"(Filter UTC > {min_time_str_utc})" if use_time_filter else "(All Day)"
