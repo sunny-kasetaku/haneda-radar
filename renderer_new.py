@@ -34,8 +34,7 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
     
-    # 2. 都市名辞書 (部分一致で検索して変換)
-    # ログにあった英語名をすべて日本語に変換します
+    # 2. 都市名辞書 (部分一致)
     NAME_MAP = {
         "Okayama": "岡山", "Hakodate": "函館", "Memanbetsu": "女満別",
         "Kita Kyushu": "北九州", "Asahikawa": "旭川", "Nanki": "南紀白浜",
@@ -58,7 +57,6 @@ def render_html(demand_results, password, current_time=None):
         "Bangkok": "バンコク", "Seoul": "ソウル", "Incheon": "ソウル(仁川)",
         "Shanghai": "上海", "Pudong": "上海(浦東)", "Hongqiao": "上海(虹橋)",
         "Manila": "マニラ", "Hanoi": "ハノイ", "Ho Chi Minh": "ホーチミン",
-        # ▼ 今回追加した都市 ▼
         "Chicago": "シカゴ", "Dallas": "ダラス", "Atlanta": "アトランタ",
         "Detroit": "デトロイト", "Shenzhen": "深セン", "Dalian": "大連",
         "Qingdao": "青島", "Gimpo": "ソウル(金浦)", "Helsinki": "ヘルシンキ",
@@ -318,17 +316,30 @@ def render_html(demand_results, password, current_time=None):
                     <div class="ta-row"><span class="ta-name">🔴 京急線終電</span><span class="ta-time">23:51</span></div>
                 </div>
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
+                
+                <div class="cam-title" style="margin-top:15px;">👑 最終確認 (LCC・遅延チェック)</div>
+                <div style="font-size:11px; color:#999; margin-bottom:5px;">※ツールに出ないLCC(Peach等)や、正確な着陸時間を知りたい時に使ってください。</div>
                 <div class="sub-btn-row">
+                    <a href="https://tokyo-haneda.com/flight/flightInfo_int.html" target="_blank" class="cam-btn" style="background:#fff; color:#000;">✈️ 国際線 (T3)</a>
+                    <a href="https://tokyo-haneda.com/flight/flightInfo_dms.html" target="_blank" class="cam-btn" style="background:#ddd; color:#000;">✈️ 国内線 (T1/T2)</a>
+                </div>
+
+                <div class="sub-btn-row" style="margin-top:5px;">
                     <a href="https://transit.yahoo.co.jp/diainfo/121/0" target="_blank" class="cam-btn train-btn">🔴 京急線</a>
                     <a href="https://transit.yahoo.co.jp/diainfo/154/0" target="_blank" class="cam-btn train-btn">🚝 モノレール</a>
                 </div>
                 <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn" style="background:#444; color:#fff;">🚃 JR・関東全域 (山手線など)</a>
+                
                 <div class="strategy-box">
-                    <div class="st-item"><span style="color:#FFD700; font-weight:bold;">🏆 BEST判定について:</span><br>人数が同数の場合、ロング確率が高い出口（国際 > 3号 > 4号...）を推奨しています。</div>
+                    <div class="st-item"><span style="color:#FFD700; font-weight:bold;">📊 本ツールの強み:</span><br>公式サイトにはない「合計人数」と「未来予測」で、瞬時に稼働判断ができます。基本はツールでOKです。</div>
                     <div class="st-item"><span style="color:#00FF00; font-weight:bold;">🔄 最終判断は「回転率」:</span><br>いくら単価が高くても、待機台数が多すぎると稼げません。<strong>必ずカメラでタクシープールを見て、回転が早い場所を選んでください。</strong></div>
                     <div class="st-item"><span style="color:#00BFFF; font-weight:bold;">🤝 チーム戦:</span><br>Discordやサロンの情報と、確率（本ツール）を組み合わせて勝ちに行きましょう。</div>
                 </div>
-                <div class="disclaimer">【免責事項】<br>※本システムは推計値であり、正確性を保証するものではありません。<br><strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong></div>
+                <div class="disclaimer">
+                    【免責事項】<br>
+                    ※本ツールはAPIの仕様上、LCC等のデータに遅れが生じる場合があります。<br>
+                    <strong>最終的な正解は、上記の「羽田公式サイト」で必ず確認してください。</strong>
+                </div>
             </div>
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
