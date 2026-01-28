@@ -4,16 +4,14 @@ import json
 from datetime import datetime, timedelta
 
 def render_html(demand_results, password, current_time=None):
-    # 基準時間（Python実行時）
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
-    # 1. データを抽出
     flight_list = demand_results.get("flights", [])
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
-    # 辞書定義 (変更なし)
+    # 辞書定義
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -69,8 +67,7 @@ def render_html(demand_results, password, current_time=None):
             if eng in name: return jpn
         return name
 
-    # 2. 【足し算】JSに渡すためのデータ整形
-    # PythonでHTMLを作るのではなく、「食材セット(JSON)」を作ります
+    # JSに渡すためのデータ整形
     final_flights_for_js = []
     
     for f in flight_list:
@@ -78,16 +75,13 @@ def render_html(demand_results, password, current_time=None):
         raw_origin = f.get('origin', origin_iata)
         jpn_origin = translate_origin(origin_iata, raw_origin)
         
-        # 出口タイプ判定 (JSでの色分け用)
-        # APIからは terminal (1,2,3) が来ますが、詳細な出口(1号,2号...)が不明な場合のフォールバック
         term = str(f.get('terminal', ''))
-        exit_type = f.get('exit_type', '') # メイン処理ですでに付与されていればそれを使う
+        exit_type = f.get('exit_type', '')
 
         if not exit_type:
-            # もしexit_typeがない場合、ターミナルから簡易推定
             if term == "3" or term == "I": exit_type = "国際(T3)"
-            elif term == "2": exit_type = "3号(T2)" # 仮 (T2は3か4)
-            elif term == "1": exit_type = "1号(T1南)" # 仮 (T1は1か2)
+            elif term == "2": exit_type = "3号(T2)"
+            elif term == "1": exit_type = "1号(T1南)"
             else: exit_type = "国際(T3)"
 
         final_flights_for_js.append({
@@ -99,12 +93,8 @@ def render_html(demand_results, password, current_time=None):
             'terminal': term
         })
     
-    # JSON文字列化（これをHTMLに埋め込む）
     json_data = json.dumps(final_flights_for_js, ensure_ascii=False)
 
-    # 3. HTML生成 (JSロジック入り)
-    # デザイン(CSS)は元のまま。<tbody>の中身と数字だけJSで書き換えます。
-    
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -155,18 +145,16 @@ def render_html(demand_results, password, current_time=None):
         </style>
         
         <script>
-            // Python変数をJS変数へ
             const FLIGHT_DATA = {json_data};
             const SETTING_PAST = {val_past};
             const SETTING_FUTURE = {val_future};
             
-            // パスワード認証
             function checkPass() {{
                 var stored = localStorage.getItem("kasetack_auth_pass_v3");
                 if (stored === "{password}" || stored === "0000") {{
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
-                    initApp(); // アプリ起動
+                    initApp();
                 }} else {{
                     var input = (prompt("本日のパスワードを入力してください") || "").trim();
                     if (input === "{password}" || input === "0000") {{ 
@@ -177,46 +165,31 @@ def render_html(demand_results, password, current_time=None):
             }}
             window.onload = checkPass;
 
-            // アプリ初期化
             function initApp() {{
                 updateDisplay();
-                setInterval(updateDisplay, 60000); // 1分ごとに更新
+                setInterval(updateDisplay, 60000); 
             }}
 
-            // 画面更新ロジック (ここが脳みそ)
             function updateDisplay() {{
                 const now = new Date();
-                
-                // 1. 時間範囲計算
                 const startTime = new Date(now.getTime() - SETTING_PAST * 60000);
                 const endTime = new Date(now.getTime() + SETTING_FUTURE * 60000);
 
-                // 集計用変数
                 let counts = {{ "1号(T1南)":0, "2号(T1北)":0, "3号(T2)":0, "4号(T2)":0, "国際(T3)":0 }};
                 let tableHtml = "";
-                let fcCounts = [0, 0, 0]; // 予測(0-1h, 1-2h, 2-3h)
+                let fcCounts = [0, 0, 0];
 
-                // 2. データ選別とHTML生成
                 FLIGHT_DATA.forEach(f => {{
-                    // 日時変換
                     let fDate = new Date(f.arrival_time);
-                    
-                    // 出口タイプ
                     let eType = f.exit_type;
-                    // 万が一不明ならT3へ (安全策)
                     if (!counts.hasOwnProperty(eType)) eType = "国際(T3)";
 
-                    // (A) テーブル＆メインカウント (範囲内の便)
                     if (fDate >= startTime && fDate <= endTime) {{
-                        // カウント加算
                         counts[eType] += f.pax;
-                        
-                        // テーブル行作成
                         let h = fDate.getHours().toString().padStart(2, '0');
                         let m = fDate.getMinutes().toString().padStart(2, '0');
                         let timeStr = h + ":" + m;
                         
-                        // 色設定
                         let color = "#FFFFFF";
                         if (eType === "1号(T1南)") color = "#FF8C00";
                         if (eType === "2号(T1北)") color = "#FF4444";
@@ -227,7 +200,6 @@ def render_html(demand_results, password, current_time=None):
                         tableHtml += `<tr><td>${{timeStr}}</td><td style='color:${{color}}; font-weight:bold;'>${{f.flight_number}}</td><td>${{f.origin}}</td><td>${{f.pax}}名</td></tr>`;
                     }}
                     
-                    // (B) 需要予測 (未来3時間)
                     let diffMs = fDate - now;
                     let diffMins = diffMs / 60000;
                     if (diffMins >= 0 && diffMins < 60) fcCounts[0] += f.pax;
@@ -235,33 +207,22 @@ def render_html(demand_results, password, current_time=None):
                     if (diffMins >= 120 && diffMins < 180) fcCounts[2] += f.pax;
                 }});
 
-                // 3. DOM書き換え
-                
-                // テーブル
                 document.getElementById('flight-table-body').innerHTML = tableHtml;
-                
-                // カウント数
                 document.getElementById('count-t1s').innerText = counts["1号(T1南)"];
                 document.getElementById('count-t1n').innerText = counts["2号(T1北)"];
                 document.getElementById('count-t2-3').innerText = counts["3号(T2)"];
                 document.getElementById('count-t2-4').innerText = counts["4号(T2)"];
                 document.getElementById('count-t3').innerText = counts["国際(T3)"];
                 
-                // BEST判定ロジック (サニーさん仕様: T3 > T2(4) > T2(3) > T1(N) > T1(S))
-                // まずリセット
                 document.querySelectorAll('.t-card').forEach(el => el.classList.remove('best-choice'));
                 document.querySelectorAll('.best-badge').forEach(el => el.remove());
                 
-                // 最大値を探す
                 let maxVal = -1;
                 let bestKey = "";
                 let priorityKeys = ["国際(T3)", "4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"];
-                
-                // 全体の最大値を把握
                 let allMax = Math.max(...Object.values(counts));
                 
                 if (allMax > 0) {{
-                    // 優先順位順にチェックし、最大値と同じならそれをBESTとする（これで優先順位が守られる）
                     for (let k of priorityKeys) {{
                         if (counts[k] === allMax) {{
                             bestKey = k;
@@ -270,7 +231,6 @@ def render_html(demand_results, password, current_time=None):
                     }}
                 }}
                 
-                // BESTバッジ付与
                 let targetId = "";
                 if(bestKey === "1号(T1南)") targetId = "card-t1s";
                 if(bestKey === "2号(T1北)") targetId = "card-t1n";
@@ -284,7 +244,6 @@ def render_html(demand_results, password, current_time=None):
                     bestEl.insertAdjacentHTML('afterbegin', '<div class="best-badge">🏆 BEST</div>');
                 }}
                 
-                // ランク判定
                 let total = Object.values(counts).reduce((a,b)=>a+b, 0);
                 let r="C", c="#FFFFFF", sym="⚠️", st="【注意】 需要僅少";
                 if(total >= 2000) {{ r="S"; c="#FFD700"; sym="🌈"; st="【最高】 需要爆発"; }}
@@ -296,7 +255,6 @@ def render_html(demand_results, password, current_time=None):
                 document.getElementById('rank-sub').innerText = st;
                 document.getElementById('total-count').innerText = total;
 
-                // 予測ボックス更新
                 updateForecast('fc-0', fcCounts[0]);
                 updateForecast('fc-1', fcCounts[1]);
                 updateForecast('fc-2', fcCounts[2]);
@@ -365,16 +323,24 @@ def render_html(demand_results, password, current_time=None):
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
-                データ取得: {current_time.strftime('%H:%M')} (API) | 表示更新: <span id="last-update">Now</span>
+                データ取得: {current_time.strftime('%H:%M')} (API) | 表示更新: <span id="last-update">Now</span><br>
+                <span style="font-size:10px; color:#666;">次のリロードまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒</span>
             </div>
         </div>
         <script>
-            // 画面タイマー
-            let sec=60; setInterval(()=>{{ sec--; if(sec>=0 && document.getElementById('timer')) document.getElementById('timer').innerText=sec; }},1000);
+            // 画面タイマー & 自動リロード
+            let sec=60; 
+            setInterval(()=>{{ 
+                sec--; 
+                if(document.getElementById('timer')) document.getElementById('timer').innerText = sec;
+                if(sec <= 0) location.reload(true);
+            }}, 1000);
+            
             // 表示更新時刻
             setInterval(()=>{{
                 let d=new Date();
-                document.getElementById('last-update').innerText = d.getHours()+":"+d.getMinutes().toString().padStart(2,'0');
+                let m = d.getMinutes().toString().padStart(2,'0');
+                if(document.getElementById('last-update')) document.getElementById('last-update').innerText = d.getHours()+":"+m;
             }}, 60000);
         </script>
     </body></html>
