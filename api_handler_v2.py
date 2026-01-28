@@ -97,33 +97,33 @@ def extract_flight_info(flight):
     aircraft = flight.get('aircraft', {})
     aircraft_iata = aircraft.get('iata', 'none') if aircraft else 'none'
     
-    # 到着時刻がないものは除外
     arrival_time = arr.get('estimated') or arr.get('actual') or arr.get('scheduled')
     if not arrival_time: return None
 
-    # ターミナル情報の補正
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
     airline_iata = airline.get('iata', '??')
     origin_iata = dep.get('iata', 'UNK')
 
-    # 国際線の表記ゆれ対応
+    # 1. APIの文字ゆれ修正 (I/INT -> 3)
     if term in ["I", "INT", "i", "int"]:
         term = "3"
 
-    # 航空会社・出発地によるターミナル強制判定
-    intl_airlines = ["GA", "SQ", "LH", "AF", "BA", "CX", "DL", "UA"]
-    if airline_iata in intl_airlines or (len(origin_iata) == 3 and origin_iata not in ["CTS", "FUK", "ITM", "KIX", "NGO", "OKA"]):
-        if term is None or term == "1":
-            term = "3"
-
-    # APIがターミナルを返さない場合の簡易推定
-    # (サニーさんの元のロジックを維持: 4桁ならT1、それ以外ならT3)
-    if term is None:
-        if len(f_num_str) >= 4:
-            term = "1"
+    # 2. ターミナルが空(None)の場合の、羽田特化・判定ロジック
+    # ※APIが "1" や "2" を返している場合は、それを尊重して何もしません。
+    if term is None or term == "":
+        # 国内線キャリア（JAL, ANA, スカイマーク, スターフライヤー, ソラシド, AIRDO, JTA, IBEX）
+        domestic_carriers = ["JL", "NH", "BC", "7G", "6J", "HD", "NU", "FW"]
+        
+        if airline_iata in domestic_carriers:
+            if airline_iata in ["NH", "HD"]: 
+                term = "2" # ANA/AIRDOはT2
+            elif airline_iata == "JL" and f_num_str.startswith("5"): 
+                term = "3" # JAL 5000番台は国際線(ジャカルタ等)
+            else: 
+                term = "1" # その他(JAL国内, スカイマーク等)はT1
         else:
-            term = "3"
+            term = "3" # それ以外の外資系（UA, DL, SQ等）はすべてT3
 
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
