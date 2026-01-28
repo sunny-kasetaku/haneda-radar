@@ -11,7 +11,7 @@ def render_html(demand_results, password, current_time=None):
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
-    # 1. 空港コード辞書 (完全一致)
+    # 1. 空港コード辞書
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -34,7 +34,7 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
     
-    # 2. 都市名辞書 (部分一致)
+    # 2. 都市名辞書
     NAME_MAP = {
         "Okayama": "岡山", "Hakodate": "函館", "Memanbetsu": "女満別",
         "Kita Kyushu": "北九州", "Asahikawa": "旭川", "Nanki": "南紀白浜",
@@ -192,11 +192,26 @@ def render_html(demand_results, password, current_time=None):
                     let eType = f.exit_type;
                     if (!counts.hasOwnProperty(eType)) eType = "国際(T3)";
 
+                    // 1. 深夜(00:00-04:59)の国内線(T1/T2)強制排除
+                    let h = fDate.getHours();
+                    let term = f.terminal;
+                    if ( h < 5 && (term === "1" || term === "2") ) {{
+                        return; // スキップ
+                    }}
+
+                    // 2. 便名フィルター (9000番台は回送/貨物とみなして排除)
+                    // 文字列から数字だけを抜き出す ("NH9001" -> 9001)
+                    let fNumStr = f.flight_number.replace(/\D/g, ''); 
+                    let fNum = parseInt(fNumStr);
+                    if (!isNaN(fNum) && fNum >= 9000) {{
+                        return; // 9000番以上はスキップ
+                    }}
+
                     if (fDate >= startTime && fDate <= endTime) {{
                         counts[eType] += f.pax;
-                        let h = fDate.getHours().toString().padStart(2, '0');
-                        let m = fDate.getMinutes().toString().padStart(2, '0');
-                        let timeStr = h + ":" + m;
+                        let hStr = fDate.getHours().toString().padStart(2, '0');
+                        let mStr = fDate.getMinutes().toString().padStart(2, '0');
+                        let timeStr = hStr + ":" + mStr;
                         
                         let color = "#FFFFFF";
                         if (eType === "1号(T1南)") color = "#FF8C00";
