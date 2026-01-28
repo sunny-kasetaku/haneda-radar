@@ -11,6 +11,46 @@ def render_html(demand_results, password, current_time=None):
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
+    # ---------------------------------------------------------
+    # 🧠 Tさんのセオリーロジック (Theory Logic)
+    # ---------------------------------------------------------
+    def get_theory_recommendation(hour):
+        # 画像＆テキストに基づく最強の時間割
+        
+        # 06:00 - 16:00 -> 3号(T2)
+        if 6 <= hour < 16:
+            return "3号(T2)"
+            
+        # 16:00 - 18:00 -> 4号(T2)
+        # ※表ではD(2号)等が多い時間もありますが、回転率重視の「4号」という定石を採用
+        elif 16 <= hour < 18:
+            return "4号(T2)"
+            
+        # 18:00 - 21:00 -> 3号(T2)
+        elif 18 <= hour < 21:
+            return "3号(T2)"
+            
+        # 21:00 - 22:00 -> 1号/2号(T1)
+        elif 21 <= hour < 22:
+            return "1号/2号(T1)"
+            
+        # 22:00 - 23:59 -> 3号(T2)
+        # ※スプレッドシート分析：22時台はE列(3号)が9名でトップ
+        elif 22 <= hour < 24:
+            return "3号(T2)"
+            
+        # 00:00 - 05:59 -> 国際(T3)
+        # ※国内線終了のため、物理的に国際一択
+        elif 0 <= hour < 6:
+            return "国際(T3)"
+            
+        else:
+            return "待機"
+
+    current_hour = current_time.hour
+    theory_best = get_theory_recommendation(current_hour)
+    # ---------------------------------------------------------
+
     # 1. 空港コード辞書
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
@@ -120,8 +160,19 @@ def render_html(demand_results, password, current_time=None):
             .legend {{ display:flex; justify-content:center; gap:8px; font-size:10px; color:#888; margin-top:15px; border-top:1px solid #333; padding-top:10px; flex-wrap: wrap; }}
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
             .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
-            .best-choice {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.2); }}
-            .best-badge {{ position: absolute; top: -8px; right: -5px; background: #FFD700; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; }}
+            
+            /* データ推奨 (Data Best) - 黄色 */
+            .data-best {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255,215,0,0.4); }}
+            .data-badge {{ position: absolute; top: -10px; right: -5px; background: #FFD700; color: #000; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 10px; z-index:10; }}
+            
+            /* セオリー推奨 (Theory Best) - 青色 */
+            .theory-best {{ border: 2px solid #00BFFF !important; box-shadow: 0 0 15px rgba(0,191,255,0.4); }}
+            .theory-badge {{ position: absolute; top: -10px; left: -5px; background: #00BFFF; color: #000; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 10px; z-index:10; }}
+            
+            /* 両方一致 (Double Best) - 虹色 */
+            .double-best {{ border: 3px solid #fff !important; background: linear-gradient(#1A1A1A, #1A1A1A) padding-box, linear-gradient(45deg, #FFD700, #00BFFF) border-box; }}
+            .double-badge {{ position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, #FFD700, #00BFFF); color: #000; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 12px; z-index:20; white-space:nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }}
+
             .t-num {{ font-size: 32px; font-weight: bold; margin-top:5px; }}
             .section-title {{ color: gold; font-weight: bold; font-size: 14px; margin: 15px 0 5px 0; border-left: 4px solid gold; padding-left: 10px; }}
             .flight-table {{ width: 100%; font-size: 13px; border-collapse: collapse; background: #111; border-radius:10px; overflow:hidden; margin-bottom: 25px; }}
@@ -150,12 +201,16 @@ def render_html(demand_results, password, current_time=None):
             .ta-row {{ display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }}
             .ta-name {{ font-weight: bold; color: #ccc; }}
             .ta-time {{ color: #FFD700; font-weight: bold; font-size: 16px; }}
+            
+            /* 紛争アラート */
+            .conflict-alert {{ display:none; background:#500; border:2px solid #f00; color:#fff; padding:10px; margin-bottom:15px; border-radius:10px; font-weight:bold; text-align:center; animation: flash 1s infinite alternate; }}
         </style>
         
         <script>
             const FLIGHT_DATA = {json_data};
             const SETTING_PAST = {val_past};
             const SETTING_FUTURE = {val_future};
+            const THEORY_BEST = "{theory_best}"; // Pythonから渡されたセオリー
             
             function checkPass() {{
                 var stored = localStorage.getItem("kasetack_auth_pass_v3");
@@ -192,20 +247,13 @@ def render_html(demand_results, password, current_time=None):
                     let eType = f.exit_type;
                     if (!counts.hasOwnProperty(eType)) eType = "国際(T3)";
 
-                    // 1. 深夜(00:00-04:59)の国内線(T1/T2)強制排除
+                    // 深夜(00-04時)の国内線カット & 便名9000番台カット
                     let h = fDate.getHours();
                     let term = f.terminal;
-                    if ( h < 5 && (term === "1" || term === "2") ) {{
-                        return; // スキップ
-                    }}
-
-                    // 2. 便名フィルター (9000番台は回送/貨物とみなして排除)
-                    // 文字列から数字だけを抜き出す ("NH9001" -> 9001)
+                    if ( h < 5 && (term === "1" || term === "2") ) return;
                     let fNumStr = f.flight_number.replace(/\D/g, ''); 
                     let fNum = parseInt(fNumStr);
-                    if (!isNaN(fNum) && fNum >= 9000) {{
-                        return; // 9000番以上はスキップ
-                    }}
+                    if (!isNaN(fNum) && fNum >= 9000) return;
 
                     if (fDate >= startTime && fDate <= endTime) {{
                         counts[eType] += f.pax;
@@ -237,34 +285,73 @@ def render_html(demand_results, password, current_time=None):
                 document.getElementById('count-t2-4').innerText = counts["4号(T2)"];
                 document.getElementById('count-t3').innerText = counts["国際(T3)"];
                 
-                document.querySelectorAll('.t-card').forEach(el => el.classList.remove('best-choice'));
-                document.querySelectorAll('.best-badge').forEach(el => el.remove());
-                
-                let maxVal = -1;
-                let bestKey = "";
+                // リセット
+                document.querySelectorAll('.t-card').forEach(el => {{
+                    el.classList.remove('data-best', 'theory-best', 'double-best');
+                }});
+                document.querySelectorAll('.data-badge, .theory-badge, .double-badge').forEach(el => el.remove());
+                document.getElementById('conflict-alert').style.display = 'none';
+
+                // --- 1. データBESTの算出 (黄色) ---
+                let dataBestKey = "";
                 let priorityKeys = ["国際(T3)", "4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"];
                 let allMax = Math.max(...Object.values(counts));
-                
                 if (allMax > 0) {{
                     for (let k of priorityKeys) {{
-                        if (counts[k] === allMax) {{
-                            bestKey = k;
-                            break;
-                        }}
+                        if (counts[k] === allMax) {{ dataBestKey = k; break; }}
                     }}
                 }}
-                
-                let targetId = "";
-                if(bestKey === "1号(T1南)") targetId = "card-t1s";
-                if(bestKey === "2号(T1北)") targetId = "card-t1n";
-                if(bestKey === "3号(T2)") targetId = "card-t2-3";
-                if(bestKey === "4号(T2)") targetId = "card-t2-4";
-                if(bestKey === "国際(T3)") targetId = "card-t3";
-                
-                if(targetId) {{
-                    let bestEl = document.getElementById(targetId);
-                    bestEl.classList.add('best-choice');
-                    bestEl.insertAdjacentHTML('afterbegin', '<div class="best-badge">🏆 BEST</div>');
+
+                // --- 2. セオリーBESTの取得 (青色) ---
+                // Pythonから渡された THEORY_BEST を使う
+                // 1号/2号の場合は両方を対象にする
+                let theoryTargets = [];
+                if (THEORY_BEST === "1号/2号(T1)") {{
+                    theoryTargets = ["1号(T1南)", "2号(T1北)"];
+                }} else if (THEORY_BEST !== "待機") {{
+                    theoryTargets = [THEORY_BEST];
+                }}
+
+                // --- 3. バッジの適用ロジック ---
+                let conflict = false;
+
+                // マッピング用ID辞書
+                const idMap = {{
+                    "1号(T1南)": "card-t1s", "2号(T1北)": "card-t1n",
+                    "3号(T2)": "card-t2-3", "4号(T2)": "card-t2-4",
+                    "国際(T3)": "card-t3"
+                }};
+
+                // データBESTの適用
+                if(dataBestKey && idMap[dataBestKey]) {{
+                    let el = document.getElementById(idMap[dataBestKey]);
+                    el.classList.add('data-best');
+                    el.insertAdjacentHTML('afterbegin', '<div class="data-badge">📊 DATA</div>');
+                }}
+
+                // セオリーBESTの適用
+                theoryTargets.forEach(key => {{
+                    if(idMap[key]) {{
+                        let el = document.getElementById(idMap[key]);
+                        // もしデータBESTと同じなら「ダブルBEST」に昇格
+                        if (key === dataBestKey) {{
+                            el.classList.remove('data-best');
+                            el.querySelector('.data-badge').remove();
+                            el.classList.add('double-best');
+                            el.insertAdjacentHTML('afterbegin', '<div class="double-badge">👑 W-BEST</div>');
+                        }} else {{
+                            // 違うなら青色バッジ
+                            el.classList.add('theory-best');
+                            el.insertAdjacentHTML('afterbegin', '<div class="theory-badge">🧠 THEORY</div>');
+                            // データはあるのにセオリーと違う -> 紛争発生
+                            if (dataBestKey) conflict = true;
+                        }}
+                    }}
+                }});
+
+                // 紛争アラート表示
+                if (conflict) {{
+                    document.getElementById('conflict-alert').style.display = 'block';
                 }}
                 
                 let total = Object.values(counts).reduce((a,b)=>a+b, 0);
@@ -287,7 +374,6 @@ def render_html(demand_results, password, current_time=None):
                 let status = "👀 通常";
                 if(pax >= 1000) status = "🔥 高";
                 else if(pax >= 500) status = "✅ 中";
-                
                 document.getElementById(id + '-pax').innerText = "(推計 " + pax + "人)";
                 document.getElementById(id + '-status').innerText = status;
             }}
@@ -297,6 +383,11 @@ def render_html(demand_results, password, current_time=None):
         <div id="main-content">
             <div class="info-banner">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: <span id="total-count">---</span>機</div>
             
+            <div id="conflict-alert" class="conflict-alert">
+                ⚡️ 判断不一致発生中 ⚡️<br>
+                <span style="font-size:12px; font-weight:normal;">データ(黄)とセオリー(青)が割れています。<br>下記の「公式情報」を確認して判断してください。</span>
+            </div>
+
             <div class="rank-card">
                 <div id="rank-disp" class="rank-display">---</div>
                 <div id="rank-sub" class="rank-sub">集計中...</div>
@@ -333,7 +424,7 @@ def render_html(demand_results, password, current_time=None):
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
                 
                 <div class="cam-title" style="margin-top:15px;">👑 最終確認 (公式情報)</div>
-                <div style="font-size:11px; color:#999; margin-bottom:5px;">※表示されない便がある時や、正確な遅延情報を知りたい時に。</div>
+                <div style="font-size:11px; color:#999; margin-bottom:5px;">※「判断不一致」アラート時や、深夜の確認に。</div>
                 <div class="sub-btn-row">
                     <a href="https://tokyo-haneda.com/flight/flightInfo_int.html" target="_blank" class="cam-btn" style="background:#fff; color:#000;">✈️ 国際線 (T3)</a>
                     <a href="https://tokyo-haneda.com/flight/flightInfo_dms.html" target="_blank" class="cam-btn" style="background:#ddd; color:#000;">✈️ 国内線 (T1/T2)</a>
@@ -346,13 +437,13 @@ def render_html(demand_results, password, current_time=None):
                 <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn" style="background:#444; color:#fff;">🚃 JR・関東全域 (山手線など)</a>
                 
                 <div class="strategy-box">
-                    <div class="st-item"><span style="color:#FFD700; font-weight:bold;">📊 本ツールの強み:</span><br>公式サイトにはない「合計人数」と「未来予測」で、瞬時に稼働判断ができます。基本はツールでOKです。</div>
-                    <div class="st-item"><span style="color:#00FF00; font-weight:bold;">🔄 最終判断は「回転率」:</span><br>いくら単価が高くても、待機台数が多すぎると稼げません。<strong>必ずカメラでタクシープールを見て、回転が早い場所を選んでください。</strong></div>
-                    <div class="st-item"><span style="color:#00BFFF; font-weight:bold;">🤝 チーム戦:</span><br>Discordやサロンの情報と、確率（本ツール）を組み合わせて勝ちに行きましょう。</div>
+                    <div class="st-item"><span style="color:#FFD700; font-weight:bold;">📊 DATA(黄):</span> 今の飛行機の数に基づく推奨。<br><span style="color:#00BFFF; font-weight:bold;">🧠 THEORY(青):</span> Tさんの定石に基づく推奨。</div>
+                    <div class="st-item"><span style="color:#fff; font-weight:bold;">👑 W-BEST(虹):</span> データとセオリーが一致。激アツです。</div>
+                    <div class="st-item"><span style="color:#f00; font-weight:bold;">⚡️ 不一致の場合:</span> 公式サイトで実際の到着便を確認してください。</div>
                 </div>
                 <div class="disclaimer">
                     【免責事項】<br>
-                    ※通信のタイムラグにより、一部の便（特に大幅遅延時など）が表示されない場合があります。<br>
+                    ※通信のタイムラグにより、一部の便が表示されない場合があります。<br>
                     ※最終的な正解は、上記の「羽田公式サイト」で必ず確認してください。<br>
                     <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
                 </div>
@@ -365,7 +456,6 @@ def render_html(demand_results, password, current_time=None):
             </div>
         </div>
         <script>
-            // 画面タイマー & 自動リロード
             let sec=60; 
             setInterval(()=>{{ 
                 sec--; 
@@ -373,7 +463,6 @@ def render_html(demand_results, password, current_time=None):
                 if(sec <= 0) location.reload(true);
             }}, 1000);
             
-            // 表示更新時刻
             setInterval(()=>{{
                 let d=new Date();
                 let m = d.getMinutes().toString().padStart(2,'0');
