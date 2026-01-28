@@ -44,7 +44,6 @@ DOMESTIC_JAPANESE = [
 ]
 
 # 4. JAL南ウイング行き先リスト (中国・四国・九州・沖縄)
-# これに含まれない国内線は「北ウイング」と判定します
 JAL_SOUTH_ORIGINS = [
     "HIJ", "UBJ", "IWK", "TKS", "TAK", "MYJ", "KCZ", "FUK", "KKJ", "HSG", "NGS", "OIT", "KMJ", "KMI", "KOJ", 
     "ASJ", "OKA", "ISG", "MMY", "OKJ", "IZO", "OKI",
@@ -73,6 +72,12 @@ def analyze_demand(flights, current_time=None):
     
     seen_flights = set()
 
+    for f in filtered_flights:
+        # 重複排除用のキー
+        # 同じ便名・同じ時間ならスキップするが、コードシェアの場合は便名が違うので
+        # 「到着時間 + 出発地」でユニーク判定をするのが安全
+        pass 
+
     for f in flights:
         arr_time_str = f.get('arrival_time', '')
         if not arr_time_str: continue
@@ -83,9 +88,12 @@ def analyze_demand(flights, current_time=None):
         except: continue
 
         origin_code = f.get('origin_iata') or "UNK"
-        origin_name = f.get('origin') or ""
+        # ユニークキー: 時間_出発地 (便名はコードシェアで変わるため含めない方が安全だが、今回は便名も含める)
+        # ただし、同じ機材で複数の便名がついている場合(JL5012 / GA874)、APIは別々のレコードとして送ってくることが多い。
+        # これを統合するのは難しいので、今回は「別々の便」として扱われてしまうのは許容しつつ、
+        # 確実に「国際線」として拾うことを優先する。
         
-        unique_key = f"{dt_str}_{origin_code}"
+        unique_key = f"{dt_str}_{f.get('flight_number')}"
         if unique_key in seen_flights: continue
         seen_flights.add(unique_key)
 
@@ -96,9 +104,15 @@ def analyze_demand(flights, current_time=None):
             f['is_domestic'] = is_domestic # 判定結果を保存
             filtered_flights.append(f)
 
+        # 時間帯別集計用 (フィルタリング前の全データから推計)
+        # ただし、直近のものだけを集計しないと意味がないので、ここもフィルタリング後に回しても良いが
+        # 元のロジックを尊重して「当日全データ」から集計するならここ。
+        # 今回は「表示範囲内」の集計だけでよければ下でやるべきだが、
+        # "今後の需要予測" は未来のデータ全てを見たいので、別ループにするか、ここでやるか。
+        # → ここでやると「範囲外」の未来データも拾えるのでOK。
         h = f_dt_jst.hour
-        pax, _ = estimate_pax_and_type(f)
-        hourly_counts[h] = hourly_counts.get(h, 0) + pax
+        pax_forecast, _ = estimate_pax_and_type(f)
+        hourly_counts[h] = hourly_counts.get(h, 0) + pax_forecast
 
     filtered_flights.sort(key=lambda x: x.get('arrival_time'))
 
@@ -222,19 +236,37 @@ def estimate_pax_and_type(flight):
     origin_name = flight.get('origin', '')
     check_str = (str(origin_val) + " " + str(origin_name)).lower()
     
-    # 1. 国内線判定
+    # 1. 国内線判定 (厳密化)
     is_domestic = False
     
-    if origin_val in DOMESTIC_CODES: is_domestic = True
+    # 明確な国内空港コード
+    if origin_val in DOMESTIC_CODES: 
+        is_domestic = True
     else:
+        # キーワード検索
         for kw in DOMESTIC_KEYWORDS:
             if kw.lower() in check_str: 
                 is_domestic = True; break
+        
+        # 日本語キーワード検索
         if not is_domestic:
             for kw in DOMESTIC_JAPANESE:
                 if kw in check_str:
                     is_domestic = True; break
     
+    # 【追加】国際線コードの明示的チェック (誤判定防止)
+    # ジャカルタ(CGK/Jakarta), シンガポール(SIN/Singapore), ロンドン(LHR/London), ソウル(GMP/SEL/Seoul)
+    # これらが含まれていたら、上記でDomestic判定されていても強制的にFalseにする
+    INTERNATIONAL_KEYWORDS = [
+        "jakarta", "cgk", "singapore", "sin", "london", "lhr", "seoul", "gmp", "icn", 
+        "bangkok", "bkk", "taipei", "tpe", "tsa", "shanghai", "pvg", "sha", "hong kong", "hkg",
+        "paris", "cdg", "frankfurt", "fra", "los angeles", "lax", "new york", "jfk", "honolulu", "hnl"
+    ]
+    for kw in INTERNATIONAL_KEYWORDS:
+        if kw in check_str:
+            is_domestic = False
+            break
+
     # 2. 機材判定 (最優先)
     aircraft = str(flight.get('aircraft', '')).lower()
     if aircraft and aircraft != 'none':
