@@ -45,12 +45,14 @@ def fetch_flight_data(api_key, date_str=None):
             'offset': offset
         }
         
-        if date_str:
-            params['flight_date'] = date_str
+        # 【修正】日付固定を外すことで、昨日出発した国際便を拾えるようにします
+        # if date_str:
+        #     params['flight_date'] = date_str
             
         if use_time_filter:
             # UTC時間を渡すことで、APIが正しく認識できるようにする
-            params['min_scheduled_arrival'] = min_time_str_utc
+            # 【修正】パラメータ名を正しい名称(_time追加)にしました
+            params['min_scheduled_arrival_time'] = min_time_str_utc
         
         try:
             filter_msg = f"(Filter UTC > {min_time_str_utc})" if use_time_filter else "(All Day)"
