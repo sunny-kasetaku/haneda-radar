@@ -20,6 +20,7 @@ def main():
     print(f"--- START: {now.strftime('%Y-%m-%d %H:%M:%S')} (JST) ---")
 
     # 2. パスワード生成 (0-6時は前日ベース)
+    # これにより、朝6時の更新までは「昨日のパスワード」が維持されます
     if now.hour < 6:
         pass_date = now - timedelta(days=1)
     else:
@@ -37,6 +38,7 @@ def main():
     print(f"LOG: Fetched Today's Data: {len(flights_raw)} records")
 
     # 日またぎ補完 (深夜0時〜4時の間だけ、昨日のデータも追加で拾う)
+    # これがないと、深夜0時を過ぎた瞬間に「到着済み」の便が消えてしまうのを防ぐ
     if 0 <= now.hour < 4:
         target_date = now - timedelta(days=1)
         yesterday_str = target_date.strftime('%Y-%m-%d')
@@ -54,6 +56,7 @@ def main():
         airline = str(f.get('airline', '')).lower()
         f_num = str(f.get('flight_number', '')).lower()
         
+        # 貨物便を除外
         if 'cargo' in airline or 'cargo' in f_num:
             continue
         
@@ -63,13 +66,22 @@ def main():
 
     # 5. 分析 & HTML生成
     # 【重要】ここで日本時間(now)を各モジュールに渡します
+    # render_html内部で「終電情報（23時台）」や「同点時の優先順位」が処理されます
     analysis_result = analyze_demand(flights, current_time=now)
     render_html(analysis_result, daily_pass, current_time=now)
     
-    # 6. Discord通知 (朝6時台のみ)
+    # 6. Discord通知
+    # 修正: 15分間隔起動のため、重複通知しないよう「6:00〜6:14」の間だけ反応させる
+    # これなら 5:56(前日扱い) は無視、6:11(当日初回) は通知、6:26(2回目) は無視となり、
+    # 確実に「1日1回」だけ通知が飛びます。
     bot = DiscordBot()
-    if now.hour == 6 and 0 <= now.minute < 8:
+    
+    is_notify_time = (now.hour == 6 and now.minute < 15)
+
+    if is_notify_time:
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
+    else:
+        print(f"LOG: Notification skipped (Current time {now.strftime('%H:%M')} is out of target slot)")
 
     print("--- END: SUCCESS ---")
 
