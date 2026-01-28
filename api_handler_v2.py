@@ -45,7 +45,7 @@ def fetch_flight_data(api_key, date_str=None):
             'offset': offset
         }
         
-        # 国際便の「日またぎ」を拾うため、日付フィルタは無効化します
+        # 国際便のために日付フィルタは無効化します（引かずに残します）
         # if date_str:
         #     params['flight_date'] = date_str
             
@@ -97,33 +97,36 @@ def extract_flight_info(flight):
     aircraft = flight.get('aircraft', {})
     aircraft_iata = aircraft.get('iata', 'none') if aircraft else 'none'
     
+    # 到着時刻がないものは除外
     arrival_time = arr.get('estimated') or arr.get('actual') or arr.get('scheduled')
     if not arrival_time: return None
 
+    # ターミナル情報の補正
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
     airline_iata = airline.get('iata', '??')
     origin_iata = dep.get('iata', 'UNK')
 
-    # 1. APIの文字ゆれ修正 (I/INT -> 3)
+    # 【足し算】国際線の表記ゆれ（IやINT）を「3」に統合
     if term in ["I", "INT", "i", "int"]:
         term = "3"
 
-    # 2. ターミナルが空(None)の場合の、羽田特化・判定ロジック
-    # ※APIが "1" や "2" を返している場合は、それを尊重して何もしません。
-    if term is None or term == "":
-        # 国内線キャリア（JAL, ANA, スカイマーク, スターフライヤー, ソラシド, AIRDO, JTA, IBEX）
+    # 【足し算】ターミナル判定の強化
+    if term is None or term == "" or term == "None":
+        # 国内線キャリア（JAL, ANA, スカイマーク等）
         domestic_carriers = ["JL", "NH", "BC", "7G", "6J", "HD", "NU", "FW"]
         
         if airline_iata in domestic_carriers:
             if airline_iata in ["NH", "HD"]: 
-                term = "2" # ANA/AIRDOはT2
-            elif airline_iata == "JL" and f_num_str.startswith("5"): 
-                term = "3" # JAL 5000番台は国際線(ジャカルタ等)
+                term = "2"
+            elif airline_iata == "JL" and (f_num_str.startswith("5") or f_num_str.startswith("8") or len(f_num_str) <= 3):
+                # JALの5000/8000番台、および3桁以下の便は国際線(T3)
+                term = "3"
             else: 
-                term = "1" # その他(JAL国内, スカイマーク等)はT1
+                term = "1"
         else:
-            term = "3" # それ以外の外資系（UA, DL, SQ等）はすべてT3
+            # LH716, BR192, OZ1085などの外資系はすべて国際線(T3)
+            term = "3"
 
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
