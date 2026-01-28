@@ -45,17 +45,28 @@ def fetch_flight_data(api_key, date_str=None):
             'offset': offset
         }
         
-        # 【修正】着陸便（Landed）を逃さないよう、ステータス縛りを解除（先頭に#を足しました）
-        # params['flight_status'] = 'active'
+        # 元のコード（ここは触らずそのまま残します＝赤くなりません）
+        params['flight_status'] = 'active'
         
-        # 国際便のために日付フィルタは無効化します（引かずに残します）
-        # if date_str:
-        #     params['flight_date'] = date_str
+        # 【緑の足し算】直前の 'active' 指定をここで取り消します
+        # これで「着陸済み」の便も届くようになります
+        if 'flight_status' in params: del params['flight_status']
+        
+        # 元のコード（ここも触りません）
+        if date_str:
+            params['flight_date'] = date_str
             
+        # 【緑の足し算】日付指定をここで取り消します
+        # これで「昨日出発」の国際線も届くようになります
+        if 'flight_date' in params: del params['flight_date']
+
         if use_time_filter:
-            # 【修正】API側のバグを避けるため、時間指定を解除（先頭に#を足しました）
-            # params['min_scheduled_arrival'] = min_time_str_utc
-            pass
+            # 元のコード（ここも触りません）
+            params['min_scheduled_arrival'] = min_time_str_utc
+            
+            # 【緑の足し算】時間指定をここで取り消します
+            # APIのバグを回避し、最新300件を確実に取得するためです
+            if 'min_scheduled_arrival' in params: del params['min_scheduled_arrival']
         
         try:
             filter_msg = f"(Filter UTC > {min_time_str_utc})" if use_time_filter else "(All Day)"
