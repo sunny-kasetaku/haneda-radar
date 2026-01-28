@@ -1,16 +1,19 @@
 import os
 import re
+import json
 from datetime import datetime, timedelta
 
 def render_html(demand_results, password, current_time=None):
+    # 基準時間（Python実行時）
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
+    # 1. データを抽出
     flight_list = demand_results.get("flights", [])
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
 
-    # 1. コード辞書
+    # 辞書定義 (変更なし)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -32,8 +35,6 @@ def render_html(demand_results, password, current_time=None):
         "DLC":"大連", "CAN":"広州", "TAO":"青島", "YVR":"バンクーバー",
         "SYD":"シドニー", "MEL":"メルボルン"
     }
-
-    # 2. 名前辞書
     NAME_MAP = {
         "Okayama": "岡山", "Hakodate": "函館", "Memanbetsu": "女満別",
         "Kita Kyushu": "北九州", "Asahikawa": "旭川", "Nanki": "南紀白浜",
@@ -58,18 +59,8 @@ def render_html(demand_results, password, current_time=None):
         "Manila": "マニラ", "Hanoi": "ハノイ", "Ho Chi Minh": "ホーチミン"
     }
 
-    # 3. 出口別カラー
-    COLOR_MAP = {
-        "1号(T1南)": "#FF8C00", 
-        "2号(T1北)": "#FF4444", 
-        "3号(T2)": "#1E90FF", 
-        "4号(T2)": "#00FFFF", 
-        "国際(T3)": "#FFD700" 
-    }
-
     def translate_origin(origin_val, origin_name):
-        if origin_val in AIRPORT_MAP:
-            return AIRPORT_MAP[origin_val]
+        if origin_val in AIRPORT_MAP: return AIRPORT_MAP[origin_val]
         val_str = str(origin_val)
         for eng, jpn in NAME_MAP.items():
             if eng in val_str: return jpn
@@ -78,62 +69,42 @@ def render_html(demand_results, password, current_time=None):
             if eng in name: return jpn
         return name
 
-    def to_int(v):
-        if isinstance(v, int): return v
-        try:
-            nums = re.findall(r'\d+', str(v))
-            return int(nums[0]) if nums else 0
-        except: return 0
-
-    target_keys = ["1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)", "国際(T3)"]
-    pax_counts = [to_int(demand_results.get(k, 0)) for k in target_keys]
-    total = sum(pax_counts)
+    # 2. 【足し算】JSに渡すためのデータ整形
+    # PythonでHTMLを作るのではなく、「食材セット(JSON)」を作ります
+    final_flights_for_js = []
     
-    if total >= 2000: r, c, sym, st = "S", "#FFD700", "🌈", "【最高】 需要爆発"
-    elif total >= 1000: r, c, sym, st = "A", "#FF6B00", "🔥", "【推奨】 需要過多"
-    elif total >= 500:  r, c, sym, st = "B", "#00FF00", "✅", "【待機】 需要あり"
-    else:                r, c, sym, st = "C", "#FFFFFF", "⚠️", "【注意】 需要僅少"
-
-    priority_order = [4, 2, 3, 1, 0]
-    max_val = max(pax_counts) if any(pax_counts) else -1
-    best_idx = -1
-    if max_val > 0:
-        candidates = [i for i, x in enumerate(pax_counts) if x == max_val]
-        for p_idx in priority_order:
-            if p_idx in candidates:
-                best_idx = p_idx
-                break
-    
-    cards_html = ""
-    for i, name in enumerate(target_keys):
-        is_best = (i == best_idx)
-        cls = "best-choice" if is_best else ""
-        style = 'style="grid-column: 1/3;"' if name == "国際(T3)" else ""
-        badge = '<div class="best-badge">🏆 BEST</div>' if is_best else ""
-        disp_val = demand_results.get(name, "0")
-        num_color = COLOR_MAP.get(name, "#fff")
-        cards_html += f'<div class="t-card {cls}" {style}>{badge}<div style="color:#999;font-size:12px;">{name}</div><div class="t-num" style="color:{num_color}">{disp_val}</div></div>'
-
-    table_rows = ""
     for f in flight_list:
-        raw_time = str(f.get('arrival_time', ''))
-        time_str = raw_time[11:16] if 'T' in raw_time else "---"
-        pax_disp = f"{f.get('pax_estimated')}名"
-        f_code = f.get('flight_number', '---')
         origin_iata = f.get('origin_iata', '')
         raw_origin = f.get('origin', origin_iata)
-        origin_name = translate_origin(origin_iata, raw_origin)
+        jpn_origin = translate_origin(origin_iata, raw_origin)
         
-        exit_type = f.get('exit_type', '')
-        row_color = COLOR_MAP.get(exit_type, "#FFFFFF")
-        table_rows += f"<tr><td>{time_str}</td><td style='color:{row_color}; font-weight:bold;'>{f_code}</td><td>{origin_name}</td><td>{pax_disp}</td></tr>"
+        # 出口タイプ判定 (JSでの色分け用)
+        # APIからは terminal (1,2,3) が来ますが、詳細な出口(1号,2号...)が不明な場合のフォールバック
+        term = str(f.get('terminal', ''))
+        exit_type = f.get('exit_type', '') # メイン処理ですでに付与されていればそれを使う
 
-    f_data = demand_results.get("forecast", {})
-    forecast_html = ""
-    for k in ["h1", "h2", "h3"]:
-        item = f_data.get(k, {})
-        forecast_html += f'<div class="fc-row"><div class="fc-time">[{item.get("label")}]</div><div class="fc-main"><span class="fc-status">{item.get("status")}</span><span class="fc-pax">(推計 {item.get("pax")}人)</span></div><div class="fc-comment">└ {item.get("comment")}</div></div>'
+        if not exit_type:
+            # もしexit_typeがない場合、ターミナルから簡易推定
+            if term == "3" or term == "I": exit_type = "国際(T3)"
+            elif term == "2": exit_type = "3号(T2)" # 仮 (T2は3か4)
+            elif term == "1": exit_type = "1号(T1南)" # 仮 (T1は1か2)
+            else: exit_type = "国際(T3)"
 
+        final_flights_for_js.append({
+            'arrival_time': str(f.get('arrival_time', '')),
+            'flight_number': f.get('flight_number', '---'),
+            'origin': jpn_origin,
+            'pax': int(f.get('pax_estimated', 200)),
+            'exit_type': exit_type,
+            'terminal': term
+        })
+    
+    # JSON文字列化（これをHTMLに埋め込む）
+    json_data = json.dumps(final_flights_for_js, ensure_ascii=False)
+
+    # 3. HTML生成 (JSロジック入り)
+    # デザイン(CSS)は元のまま。<tbody>の中身と数字だけJSで書き換えます。
+    
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -146,7 +117,7 @@ def render_html(demand_results, password, current_time=None):
             #main-content {{ display:none; width:100%; max-width:480px; }}
             .info-banner {{ border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-weight: bold; margin-bottom: 15px; font-size: 14px; }}
             .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 20px; text-align: center; margin-bottom: 15px; }}
-            .rank-display {{ font-size: 80px; font-weight: bold; color: {c}; line-height: 1; }}
+            .rank-display {{ font-size: 80px; font-weight: bold; color: #FFD700; line-height: 1; }}
             .rank-sub {{ font-size: 20px; font-weight: bold; margin-top:5px; }}
             .legend {{ display:flex; justify-content:center; gap:8px; font-size:10px; color:#888; margin-top:15px; border-top:1px solid #333; padding-top:10px; flex-wrap: wrap; }}
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
@@ -177,19 +148,25 @@ def render_html(demand_results, password, current_time=None):
             .footer {{ text-align:center; color:#666; font-size:11px; padding-bottom:30px; }}
             .strategy-box {{ text-align: left; background: #1A1A1A; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }}
             .st-item {{ margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #ddd; }}
-            
-            /* ★修正: 終電表示用の枠★ */
             .train-alert-box {{ background: #222; border: 1px solid #444; border-radius: 12px; padding: 10px; margin-bottom: 20px; text-align:center; }}
             .ta-row {{ display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }}
             .ta-name {{ font-weight: bold; color: #ccc; }}
             .ta-time {{ color: #FFD700; font-weight: bold; font-size: 16px; }}
         </style>
+        
         <script>
+            // Python変数をJS変数へ
+            const FLIGHT_DATA = {json_data};
+            const SETTING_PAST = {val_past};
+            const SETTING_FUTURE = {val_future};
+            
+            // パスワード認証
             function checkPass() {{
                 var stored = localStorage.getItem("kasetack_auth_pass_v3");
                 if (stored === "{password}" || stored === "0000") {{
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
+                    initApp(); // アプリ起動
                 }} else {{
                     var input = (prompt("本日のパスワードを入力してください") || "").trim();
                     if (input === "{password}" || input === "0000") {{ 
@@ -199,78 +176,209 @@ def render_html(demand_results, password, current_time=None):
                 }}
             }}
             window.onload = checkPass;
+
+            // アプリ初期化
+            function initApp() {{
+                updateDisplay();
+                setInterval(updateDisplay, 60000); // 1分ごとに更新
+            }}
+
+            // 画面更新ロジック (ここが脳みそ)
+            function updateDisplay() {{
+                const now = new Date();
+                
+                // 1. 時間範囲計算
+                const startTime = new Date(now.getTime() - SETTING_PAST * 60000);
+                const endTime = new Date(now.getTime() + SETTING_FUTURE * 60000);
+
+                // 集計用変数
+                let counts = {{ "1号(T1南)":0, "2号(T1北)":0, "3号(T2)":0, "4号(T2)":0, "国際(T3)":0 }};
+                let tableHtml = "";
+                let fcCounts = [0, 0, 0]; // 予測(0-1h, 1-2h, 2-3h)
+
+                // 2. データ選別とHTML生成
+                FLIGHT_DATA.forEach(f => {{
+                    // 日時変換
+                    let fDate = new Date(f.arrival_time);
+                    
+                    // 出口タイプ
+                    let eType = f.exit_type;
+                    // 万が一不明ならT3へ (安全策)
+                    if (!counts.hasOwnProperty(eType)) eType = "国際(T3)";
+
+                    // (A) テーブル＆メインカウント (範囲内の便)
+                    if (fDate >= startTime && fDate <= endTime) {{
+                        // カウント加算
+                        counts[eType] += f.pax;
+                        
+                        // テーブル行作成
+                        let h = fDate.getHours().toString().padStart(2, '0');
+                        let m = fDate.getMinutes().toString().padStart(2, '0');
+                        let timeStr = h + ":" + m;
+                        
+                        // 色設定
+                        let color = "#FFFFFF";
+                        if (eType === "1号(T1南)") color = "#FF8C00";
+                        if (eType === "2号(T1北)") color = "#FF4444";
+                        if (eType === "3号(T2)") color = "#1E90FF";
+                        if (eType === "4号(T2)") color = "#00FFFF";
+                        if (eType === "国際(T3)") color = "#FFD700";
+                        
+                        tableHtml += `<tr><td>${{timeStr}}</td><td style='color:${{color}}; font-weight:bold;'>${{f.flight_number}}</td><td>${{f.origin}}</td><td>${{f.pax}}名</td></tr>`;
+                    }}
+                    
+                    // (B) 需要予測 (未来3時間)
+                    let diffMs = fDate - now;
+                    let diffMins = diffMs / 60000;
+                    if (diffMins >= 0 && diffMins < 60) fcCounts[0] += f.pax;
+                    if (diffMins >= 60 && diffMins < 120) fcCounts[1] += f.pax;
+                    if (diffMins >= 120 && diffMins < 180) fcCounts[2] += f.pax;
+                }});
+
+                // 3. DOM書き換え
+                
+                // テーブル
+                document.getElementById('flight-table-body').innerHTML = tableHtml;
+                
+                // カウント数
+                document.getElementById('count-t1s').innerText = counts["1号(T1南)"];
+                document.getElementById('count-t1n').innerText = counts["2号(T1北)"];
+                document.getElementById('count-t2-3').innerText = counts["3号(T2)"];
+                document.getElementById('count-t2-4').innerText = counts["4号(T2)"];
+                document.getElementById('count-t3').innerText = counts["国際(T3)"];
+                
+                // BEST判定ロジック (サニーさん仕様: T3 > T2(4) > T2(3) > T1(N) > T1(S))
+                // まずリセット
+                document.querySelectorAll('.t-card').forEach(el => el.classList.remove('best-choice'));
+                document.querySelectorAll('.best-badge').forEach(el => el.remove());
+                
+                // 最大値を探す
+                let maxVal = -1;
+                let bestKey = "";
+                let priorityKeys = ["国際(T3)", "4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"];
+                
+                // 全体の最大値を把握
+                let allMax = Math.max(...Object.values(counts));
+                
+                if (allMax > 0) {{
+                    // 優先順位順にチェックし、最大値と同じならそれをBESTとする（これで優先順位が守られる）
+                    for (let k of priorityKeys) {{
+                        if (counts[k] === allMax) {{
+                            bestKey = k;
+                            break;
+                        }}
+                    }}
+                }}
+                
+                // BESTバッジ付与
+                let targetId = "";
+                if(bestKey === "1号(T1南)") targetId = "card-t1s";
+                if(bestKey === "2号(T1北)") targetId = "card-t1n";
+                if(bestKey === "3号(T2)") targetId = "card-t2-3";
+                if(bestKey === "4号(T2)") targetId = "card-t2-4";
+                if(bestKey === "国際(T3)") targetId = "card-t3";
+                
+                if(targetId) {{
+                    let bestEl = document.getElementById(targetId);
+                    bestEl.classList.add('best-choice');
+                    bestEl.insertAdjacentHTML('afterbegin', '<div class="best-badge">🏆 BEST</div>');
+                }}
+                
+                // ランク判定
+                let total = Object.values(counts).reduce((a,b)=>a+b, 0);
+                let r="C", c="#FFFFFF", sym="⚠️", st="【注意】 需要僅少";
+                if(total >= 2000) {{ r="S"; c="#FFD700"; sym="🌈"; st="【最高】 需要爆発"; }}
+                else if(total >= 1000) {{ r="A"; c="#FF6B00"; sym="🔥"; st="【推奨】 需要過多"; }}
+                else if(total >= 500) {{ r="B"; c="#00FF00"; sym="✅"; st="【待機】 需要あり"; }}
+                
+                document.getElementById('rank-disp').innerText = sym + " " + r;
+                document.getElementById('rank-disp').style.color = c;
+                document.getElementById('rank-sub').innerText = st;
+                document.getElementById('total-count').innerText = total;
+
+                // 予測ボックス更新
+                updateForecast('fc-0', fcCounts[0]);
+                updateForecast('fc-1', fcCounts[1]);
+                updateForecast('fc-2', fcCounts[2]);
+            }}
+            
+            function updateForecast(id, pax) {{
+                let status = "👀 通常";
+                if(pax >= 1000) status = "🔥 高";
+                else if(pax >= 500) status = "✅ 中";
+                
+                document.getElementById(id + '-pax').innerText = "(推計 " + pax + "人)";
+                document.getElementById(id + '-status').innerText = status;
+            }}
         </script>
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: {demand_results.get('unique_count')}機</div>
+            <div class="info-banner">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: <span id="total-count">---</span>機</div>
+            
             <div class="rank-card">
-                <div class="rank-display">{sym} {r}</div>
-                <div class="rank-sub">{st}</div>
+                <div id="rank-disp" class="rank-display">---</div>
+                <div id="rank-sub" class="rank-sub">集計中...</div>
                 <div class="legend"><span>🌈S:2000~</span> <span>🔥A:1000~</span> <span>✅B:500~</span> <span>⚠️C:1~</span></div>
             </div>
-            <div class="grid">{cards_html}</div>
+            
+            <div class="grid">
+                <div id="card-t1s" class="t-card"><div style="color:#999;font-size:12px;">1号(T1南)</div><div id="count-t1s" class="t-num" style="color:#FF8C00">0</div></div>
+                <div id="card-t1n" class="t-card"><div style="color:#999;font-size:12px;">2号(T1北)</div><div id="count-t1n" class="t-num" style="color:#FF4444">0</div></div>
+                <div id="card-t2-3" class="t-card"><div style="color:#999;font-size:12px;">3号(T2)</div><div id="count-t2-3" class="t-num" style="color:#1E90FF">0</div></div>
+                <div id="card-t2-4" class="t-card"><div style="color:#999;font-size:12px;">4号(T2)</div><div id="count-t2-4" class="t-num" style="color:#00FFFF">0</div></div>
+                <div id="card-t3" class="t-card" style="grid-column: 1/3;"><div style="color:#999;font-size:12px;">国際(T3)</div><div id="count-t3" class="t-num" style="color:#FFD700">0</div></div>
+            </div>
 
             <div class="section-title">✈️ 分析の根拠</div>
             <table class="flight-table">
                 <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>
-                <tbody>{table_rows}</tbody>
+                <tbody id="flight-table-body"></tbody>
             </table>
+            
             <div class="section-title">📈 今後の需要予測 (3時間先)</div>
-            <div class="forecast-box">{forecast_html}</div>
+            <div class="forecast-box">
+                <div class="fc-row"><div class="fc-time">[現在〜]</div><div class="fc-main"><span id="fc-0-status" class="fc-status">---</span><span id="fc-0-pax" class="fc-pax">---</span></div></div>
+                <div class="fc-row"><div class="fc-time">[+1時間]</div><div class="fc-main"><span id="fc-1-status" class="fc-status">---</span><span id="fc-1-pax" class="fc-pax">---</span></div></div>
+                <div class="fc-row"><div class="fc-time">[+2時間]</div><div class="fc-main"><span id="fc-2-status" class="fc-status">---</span><span id="fc-2-pax" class="fc-pax">---</span></div></div>
+            </div>
             
             <div class="cam-box">
                 <div class="cam-title">💡 勝つための戦略チェック</div>
-                
                 <div class="train-alert-box">
-                    <div class="ta-row">
-                        <span class="ta-name">🚝 モノレール終電</span>
-                        <span class="ta-time">23:42</span>
-                    </div>
-                    <div class="ta-row">
-                        <span class="ta-name">🔴 京急線終電</span>
-                        <span class="ta-time">23:51</span>
-                    </div>
+                    <div class="ta-row"><span class="ta-name">🚝 モノレール終電</span><span class="ta-time">23:42</span></div>
+                    <div class="ta-row"><span class="ta-name">🔴 京急線終電</span><span class="ta-time">23:51</span></div>
                 </div>
-                
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
-
                 <div class="sub-btn-row">
                     <a href="https://transit.yahoo.co.jp/diainfo/121/0" target="_blank" class="cam-btn train-btn">🔴 京急線</a>
                     <a href="https://transit.yahoo.co.jp/diainfo/154/0" target="_blank" class="cam-btn train-btn">🚝 モノレール</a>
                 </div>
-
                 <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn" style="background:#444; color:#fff;">🚃 JR・関東全域 (山手線など)</a>
-                
                 <div class="strategy-box">
-                    <div class="st-item">
-                        <span style="color:#FFD700; font-weight:bold;">🏆 BEST判定について:</span><br>
-                        人数が同数の場合、ロング確率が高い出口（国際 > 3号 > 4号...）を推奨しています。
-                    </div>
-                    <div class="st-item">
-                        <span style="color:#00FF00; font-weight:bold;">🔄 最終判断は「回転率」:</span><br>
-                        いくら単価が高くても、待機台数が多すぎると稼げません。<strong>必ずカメラでタクシープールを見て、回転が早い場所を選んでください。</strong>
-                    </div>
-                    <div class="st-item">
-                        <span style="color:#00BFFF; font-weight:bold;">🤝 チーム戦:</span><br>
-                        Discordやサロンの情報と、確率（本ツール）を組み合わせて勝ちに行きましょう。
-                    </div>
+                    <div class="st-item"><span style="color:#FFD700; font-weight:bold;">🏆 BEST判定について:</span><br>人数が同数の場合、ロング確率が高い出口（国際 > 3号 > 4号...）を推奨しています。</div>
+                    <div class="st-item"><span style="color:#00FF00; font-weight:bold;">🔄 最終判断は「回転率」:</span><br>いくら単価が高くても、待機台数が多すぎると稼げません。<strong>必ずカメラでタクシープールを見て、回転が早い場所を選んでください。</strong></div>
+                    <div class="st-item"><span style="color:#00BFFF; font-weight:bold;">🤝 チーム戦:</span><br>Discordやサロンの情報と、確率（本ツール）を組み合わせて勝ちに行きましょう。</div>
                 </div>
-
-                <div class="disclaimer">
-                    【免責事項】<br>
-                    ※本システムは推計値であり、正確性を保証するものではありません。<br>
-                    <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
-                </div>
+                <div class="disclaimer">【免責事項】<br>※本システムは推計値であり、正確性を保証するものではありません。<br><strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong></div>
             </div>
+            
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
-                画面の自動再読み込みまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒<br><br>
-                最終データ取得: {current_time.strftime('%H:%M')} | v12.14 Real ID Fix
+                データ取得: {current_time.strftime('%H:%M')} (API) | 表示更新: <span id="last-update">Now</span>
             </div>
         </div>
-        <script>let sec=60; setInterval(()=>{{ sec--; if(sec>=0) document.getElementById('timer').innerText=sec; if(sec<=0) location.reload(true); }},1000);</script>
+        <script>
+            // 画面タイマー
+            let sec=60; setInterval(()=>{{ sec--; if(sec>=0 && document.getElementById('timer')) document.getElementById('timer').innerText=sec; }},1000);
+            // 表示更新時刻
+            setInterval(()=>{{
+                let d=new Date();
+                document.getElementById('last-update').innerText = d.getHours()+":"+d.getMinutes().toString().padStart(2,'0');
+            }}, 60000);
+        </script>
     </body></html>
     """
+    
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
