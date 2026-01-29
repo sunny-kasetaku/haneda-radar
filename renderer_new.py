@@ -12,7 +12,7 @@ def render_html(demand_results, password, current_time=None):
     val_future = demand_results.get("setting_future", 20)
 
     # ---------------------------------------------------------
-    # 🦁 修正1: 時差統一 & 重複排除 (ここを追加！)
+    # 🦁 修正1: 時差統一 & 重複排除
     # ---------------------------------------------------------
     # 国内空港マスター
     DOMESTIC_CODES = {"CTS","FUK","OKA","ITM","KIX","NGO","KMQ","HKD","HIJ","MYJ","KCZ","TAK","KMJ","KMI","KOJ","ISG","MMY","IWK","UBJ","TKS","AOJ","MSJ","OIT","AXT","GAJ","OKJ","NGS","AKJ","OBO","SHM","ASJ","MMB","IZO","KUH","KKJ","TTJ","UKB","HSG","NTQ","HNA","SYO","YGJ","KIJ","TOY","HAC","SHI"}
@@ -27,13 +27,26 @@ def render_html(demand_results, password, current_time=None):
         f_num = get_f_num(f.get('flight_number'))
         if f_num >= 9000: continue
 
-        # UTC -> JST 変換
+        # --- 【修正箇所】タイムゾーン情報の除去 ---
         raw_arr = f.get('arrival_time', '')
         try:
-            dt = datetime.fromisoformat(raw_arr.replace('Z', '+00:00'))
-            # jst_dt = dt + timedelta(hours=9)  <-- 削除: データは既にJSTなので二重加算しない
+            # 文字列として "+00:00" や "Z" がついていたら切り落とす
+            # 例: "2026-01-29T21:09:00+00:00" -> "2026-01-29T21:09:00"
+            if "+" in raw_arr:
+                clean_time_str = raw_arr.split("+")[0]
+            elif "Z" in raw_arr:
+                clean_time_str = raw_arr.replace("Z", "")
+            else:
+                clean_time_str = raw_arr
+            
+            # これで純粋な「日時」として読み込まれる（時差情報は消滅）
+            dt = datetime.fromisoformat(clean_time_str)
+            
+            # そのまま使う（+9時間などは一切しない）
             jst_arr_str = dt.strftime('%Y-%m-%dT%H:%M:%S')
+            
         except:
+            # 万が一パースできなかったら元のまま
             jst_arr_str = raw_arr
 
         origin_iata = f.get('origin_iata', 'UNKNOWN')
@@ -261,7 +274,7 @@ def render_html(demand_results, password, current_time=None):
             const FLIGHT_DATA = {json_data};
             const SETTING_PAST = {val_past};
             const SETTING_FUTURE = {val_future};
-            const THEORY_BEST = "{theory_best}"; // Pythonから渡されたセオリー
+            const THEORY_BEST = "{theory_best}"; 
             
             function checkPass() {{
                 var stored = localStorage.getItem("kasetack_auth_pass_v3");
@@ -354,8 +367,6 @@ def render_html(demand_results, password, current_time=None):
                 }}
 
                 // --- 2. セオリーBESTの取得 (青色) ---
-                // Pythonから渡された THEORY_BEST を使う
-                // 1号/2号の場合は両方を対象にする
                 let theoryTargets = [];
                 if (THEORY_BEST === "1号/2号(T1)") {{
                     theoryTargets = ["1号(T1南)", "2号(T1北)"];
@@ -365,8 +376,6 @@ def render_html(demand_results, password, current_time=None):
 
                 // --- 3. バッジの適用ロジック ---
                 let conflict = false;
-
-                // マッピング用ID辞書
                 const idMap = {{
                     "1号(T1南)": "card-t1s", "2号(T1北)": "card-t1n",
                     "3号(T2)": "card-t2-3", "4号(T2)": "card-t2-4",
@@ -384,23 +393,19 @@ def render_html(demand_results, password, current_time=None):
                 theoryTargets.forEach(key => {{
                     if(idMap[key]) {{
                         let el = document.getElementById(idMap[key]);
-                        // もしデータBESTと同じなら「ダブルBEST」に昇格
                         if (key === dataBestKey) {{
                             el.classList.remove('data-best');
                             el.querySelector('.data-badge').remove();
                             el.classList.add('double-best');
                             el.insertAdjacentHTML('afterbegin', '<div class="double-badge">👑 W-BEST</div>');
                         }} else {{
-                            // 違うなら青色バッジ
                             el.classList.add('theory-best');
                             el.insertAdjacentHTML('afterbegin', '<div class="theory-badge">🧠 THEORY</div>');
-                            // データはあるのにセオリーと違う -> 紛争発生
                             if (dataBestKey) conflict = true;
                         }}
                     }}
                 }});
 
-                // 紛争アラート表示
                 if (conflict) {{
                     document.getElementById('conflict-alert').style.display = 'block';
                 }}
