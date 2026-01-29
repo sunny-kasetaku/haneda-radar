@@ -32,7 +32,7 @@ def render_html(demand_results, password, current_time=None):
         try:
             dt = datetime.fromisoformat(raw_arr.replace('Z', '+00:00'))
             jst_dt = dt + timedelta(hours=9)
-            jst_arr_str = jst_dt.isoformat()
+            jst_arr_str = jst_dt.strftime('%Y-%m-%dT%H:%M:%S')
         except:
             jst_arr_str = raw_arr
 
@@ -160,7 +160,7 @@ def render_html(demand_results, password, current_time=None):
         # 日本語化辞書を通す
         jpn_origin = translate_origin(origin_iata, f.get('origin', origin_iata))
         
-        airline = f.get('airline_iata', '')
+        f_num = str(f.get('flight_number', ''))
         
         # 🦁 修正2: 精密仕分け (ここを書き換え！)
         is_dom = False
@@ -168,12 +168,12 @@ def render_html(demand_results, password, current_time=None):
         if origin_iata in DOMESTIC_CODES or any(k in jpn_origin for k in DOMESTIC_NAMES):
             is_dom = True
         # (B) 国内線専用キャリアで判定 (JAL/ANAは除外)
-        elif airline in ["BC", "HD", "6J", "7G", "U4"]:
+        elif any(code in f_num for code in ["BC", "HD", "6J", "7G", "U4"]):
             is_dom = True
         
         if is_dom:
             # 国内線の詳細
-            if airline in ["JL", "BC", "U4", "7G"]:
+            if any(code in f_num for code in ["JL", "BC", "U4", "7G"]):
                 # スターフライヤー等はT1
                 exit_type = "1号(T1南)"
             else:
