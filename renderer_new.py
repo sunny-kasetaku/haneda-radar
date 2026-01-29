@@ -179,7 +179,8 @@ def render_html(demand_results, password, current_time=None):
         jpn_origin = translate_origin(origin_iata, f.get('origin', origin_iata))
         
         f_num = str(f.get('flight_number', ''))
-        
+        term_raw = str(f.get('terminal', '')) # APIの生ターミナル情報
+
         # 🦁 修正2: 精密仕分け (ここを書き換え！)
         is_dom = False
         # (A) 空港コードか日本語名で判定
@@ -198,8 +199,12 @@ def render_html(demand_results, password, current_time=None):
                 # ANA等はT2
                 exit_type = "3号(T2)"
         else:
-            # 国際線 (T3)
-            exit_type = "国際(T3)"
+            # 国際線
+            # 🦁 修正: ターミナルが「2」なら4号へ、それ以外はT3へ
+            if term_raw == "2":
+                exit_type = "4号(T2)"
+            else:
+                exit_type = "国際(T3)"
 
         final_flights_for_js.append({
             'arrival_time': f.get('arrival_time_jst'), # 変換後の時刻を使用
@@ -207,7 +212,7 @@ def render_html(demand_results, password, current_time=None):
             'origin': jpn_origin,
             'pax': int(f.get('pax_estimated', 200)),
             'exit_type': exit_type,
-            'terminal': str(f.get('terminal', ''))
+            'terminal': term_raw
         })
     
     json_data = json.dumps(final_flights_for_js, ensure_ascii=False)
@@ -277,6 +282,13 @@ def render_html(demand_results, password, current_time=None):
             /* 🦁 追加: 経過時間アラート */
             .old-data-alert {{ background:#333; border:1px solid #666; color:#ccc; padding:8px; margin-bottom:10px; border-radius:8px; font-size:12px; text-align:center; }}
             .old-data-alert.danger {{ background:#500; border:2px solid #f00; color:#fff; font-weight:bold; }}
+            
+            /* 🦁 早見表のスタイル */
+            .quick-ref {{ text-align:left; background:#222; padding:10px; border-radius:8px; margin-top:10px; border:1px solid #444; font-size:12px; }}
+            .qr-row {{ display:grid; grid-template-columns: 35% 65%; border-bottom:1px solid #333; padding:6px 0; }}
+            .qr-row:last-child {{ border-bottom:none; }}
+            .qr-key {{ font-weight:bold; }}
+            .qr-val {{ color:#ddd; }}
         </style>
         
         <script>
@@ -342,10 +354,7 @@ def render_html(demand_results, password, current_time=None):
                     let eType = f.exit_type;
                     if (!counts.hasOwnProperty(eType)) eType = "国際(T3)";
 
-                    // 深夜(00-04時)の国内線カット & 便名9000番台カット
-                    let h = fDate.getHours();
-                    let term = f.terminal;
-                    if ( h < 5 && (term === "1" || term === "2") ) return;
+                    // 🦁 修正: 深夜の時間フィルター(h < 5 ...)を削除し、便名9000番台フィルターのみ残した
                     let fNumStr = f.flight_number.replace(/\D/g, ''); 
                     let fNum = parseInt(fNumStr);
                     if (!isNaN(fNum) && fNum >= 9000) return;
@@ -517,6 +526,26 @@ def render_html(demand_results, password, current_time=None):
                 </div>
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
                 
+                <div class="cam-title" style="margin-top:15px;">🚕 乗り場・航空会社 早見表</div>
+                <div class="quick-ref">
+                    <div class="qr-row">
+                        <div class="qr-key" style="color:#FF8C00;">1号 (T1)</div>
+                        <div class="qr-val">JAL(JL), スカイ(BC), SFJ(7G)</div>
+                    </div>
+                    <div class="qr-row">
+                        <div class="qr-key" style="color:#1E90FF;">3号 (T2)</div>
+                        <div class="qr-val">ANA(NH), AIRDO(HD), SNA(6J)</div>
+                    </div>
+                    <div class="qr-row">
+                        <div class="qr-key" style="color:#00FFFF;">4号 (T2)</div>
+                        <div class="qr-val">ANA 国際線</div>
+                    </div>
+                    <div class="qr-row">
+                        <div class="qr-key" style="color:#FFD700;">国際 (T3)</div>
+                        <div class="qr-val">JAL, デルタ, 海外系すべて</div>
+                    </div>
+                </div>
+
                 <div class="cam-title" style="margin-top:15px;">👑 最終確認 (公式情報)</div>
                 <div style="font-size:11px; color:#999; margin-bottom:5px;">※「データ古」のアラート時は必ず確認！</div>
                 <div class="sub-btn-row">
@@ -563,7 +592,8 @@ def render_html(demand_results, password, current_time=None):
                 if(document.getElementById('last-update')) document.getElementById('last-update').innerText = d.getHours()+":"+m;
             }}, 60000);
         </script>
-    </body></html>
+    </body>
+    </html>
     """
     
     with open("index.html", "w", encoding="utf-8") as f:
