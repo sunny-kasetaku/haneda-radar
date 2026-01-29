@@ -7,11 +7,10 @@ def render_html(demand_results, password, current_time=None):
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
-    # ---------------------------------------------------------
-    # 🦁 追加: 取得時刻とアラート用時刻
-    # ---------------------------------------------------------
+    # 🦁 追加: 取得時刻とアラート用時刻 (時差バグ修正済み)
     fetch_time_str = current_time.strftime('%H:%M')
-    fetch_timestamp = int(current_time.timestamp() * 1000)
+    # 表示用(JST)から9時間引いて、正しいUTCタイムスタンプに戻すことで「-537分」を防ぐ
+    fetch_timestamp = int((current_time - timedelta(hours=9)).timestamp() * 1000)
 
     raw_flight_list = demand_results.get("flights", [])
     val_past = demand_results.get("setting_past", 40)

@@ -78,13 +78,11 @@ def main():
     render_html(analysis_result, daily_pass, current_time=now)
     
     # 6. Discord通知
-    # 修正: 15分間隔起動のため、重複通知しないよう「6:00〜6:14」の間だけ反応させる
-    # これなら 5:56(前日扱い) は無視、6:11(当日初回) は通知、6:26(2回目) は無視となり、
-    # 確実に「1日1回」だけ通知が飛びます。
+    # 修正: 1時間に1回の実行のため、6時台の実行であれば通知を送るように変更
     bot = DiscordBot()
     
-    # ★変更箇所: 30分間隔に対応するため 15 -> 40 に変更 (他は一切触らず)
-    is_notify_time = (now.hour == 6 and now.minute < 40)
+    # ★変更箇所: 1時間に1回の実行なので、時間(hour)だけで判定すればOK
+    is_notify_time = (now.hour == 6)
 
     if is_notify_time:
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
