@@ -48,6 +48,13 @@ def main():
         flights_raw.extend(flights_sub)
         print(f"LOG: Added Yesterday's Data: +{len(flights_sub)} records")
 
+    # ▼▼▼【犯人探し用デバッグログ】ここにAPIから来た直後の生時間を表示 ▼▼▼
+    if len(flights_raw) > 0:
+        # api_handler_v2から返ってきたリストの先頭を確認
+        # ここが「19:xx」ならAPIがJSTを返している。「10:xx」ならUTC。
+        print(f"DEBUG_RAW_CHECK: Flight {flights_raw[0].get('flight_number')} -> Time: {flights_raw[0].get('arrival_time')}")
+    # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
     # 4. 旅客便フィルター
     flights = []
     for f in flights_raw:
