@@ -7,6 +7,12 @@ def render_html(demand_results, password, current_time=None):
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
+    # ---------------------------------------------------------
+    # 🦁 追加: 取得時刻とアラート用時刻
+    # ---------------------------------------------------------
+    fetch_time_str = current_time.strftime('%H:%M')
+    fetch_timestamp = int(current_time.timestamp() * 1000)
+
     raw_flight_list = demand_results.get("flights", [])
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
@@ -268,6 +274,10 @@ def render_html(demand_results, password, current_time=None):
             
             /* 紛争アラート */
             .conflict-alert {{ display:none; background:#500; border:2px solid #f00; color:#fff; padding:10px; margin-bottom:15px; border-radius:10px; font-weight:bold; text-align:center; animation: flash 1s infinite alternate; }}
+            
+            /* 🦁 追加: 経過時間アラート */
+            .old-data-alert {{ background:#333; border:1px solid #666; color:#ccc; padding:8px; margin-bottom:10px; border-radius:8px; font-size:12px; text-align:center; }}
+            .old-data-alert.danger {{ background:#500; border:2px solid #f00; color:#fff; font-weight:bold; }}
         </style>
         
         <script>
@@ -275,6 +285,7 @@ def render_html(demand_results, password, current_time=None):
             const SETTING_PAST = {val_past};
             const SETTING_FUTURE = {val_future};
             const THEORY_BEST = "{theory_best}"; 
+            const FETCH_TIMESTAMP = {fetch_timestamp}; /* 🦁 追加 */
             
             function checkPass() {{
                 var stored = localStorage.getItem("kasetack_auth_pass_v3");
@@ -294,7 +305,28 @@ def render_html(demand_results, password, current_time=None):
 
             function initApp() {{
                 updateDisplay();
+                updateTimeAlert(); /* 🦁 追加 */
                 setInterval(updateDisplay, 60000); 
+                setInterval(updateTimeAlert, 60000); /* 🦁 追加 */
+            }}
+
+            /* 🦁 追加: 経過時間チェック関数 */
+            function updateTimeAlert() {{
+                const now = new Date().getTime();
+                const diffMins = Math.floor((now - FETCH_TIMESTAMP) / 60000);
+                const alertBox = document.getElementById('time-alert-box');
+                const timeText = document.getElementById('elapsed-time-text');
+                
+                if (diffMins < 5) {{
+                    timeText.innerText = "取得から " + diffMins + "分経過 (最新)";
+                    alertBox.className = "old-data-alert";
+                }} else if (diffMins < 30) {{
+                    timeText.innerText = "取得から " + diffMins + "分経過";
+                    alertBox.className = "old-data-alert";
+                }} else {{
+                    timeText.innerText = "⚠️ 取得から " + diffMins + "分経過 (データ古)";
+                    alertBox.className = "old-data-alert danger";
+                }}
             }}
 
             function updateDisplay() {{
@@ -437,7 +469,14 @@ def render_html(demand_results, password, current_time=None):
     </head>
     <body>
         <div id="main-content">
-            <div class="info-banner">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: <span id="total-count">---</span>機</div>
+            <div class="info-banner">
+                データ取得: {fetch_time_str}<br>
+                <span style="font-size:12px">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: <span id="total-count">---</span>機</span>
+            </div>
+            
+            <div id="time-alert-box" class="old-data-alert">
+                <span id="elapsed-time-text">計算中...</span>
+            </div>
             
             <div id="conflict-alert" class="conflict-alert">
                 ⚡️ 判断不一致発生中 ⚡️<br>
@@ -480,7 +519,7 @@ def render_html(demand_results, password, current_time=None):
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
                 
                 <div class="cam-title" style="margin-top:15px;">👑 最終確認 (公式情報)</div>
-                <div style="font-size:11px; color:#999; margin-bottom:5px;">※「判断不一致」アラート時や、深夜の確認に。</div>
+                <div style="font-size:11px; color:#999; margin-bottom:5px;">※「データ古」のアラート時は必ず確認！</div>
                 <div class="sub-btn-row">
                     <a href="https://tokyo-haneda.com/flight/flightInfo_int.html" target="_blank" class="cam-btn" style="background:#fff; color:#000;">✈️ 国際線 (T3)</a>
                     <a href="https://tokyo-haneda.com/flight/flightInfo_dms.html" target="_blank" class="cam-btn" style="background:#ddd; color:#000;">✈️ 国内線 (T1/T2)</a>
@@ -499,15 +538,15 @@ def render_html(demand_results, password, current_time=None):
                 </div>
                 <div class="disclaimer">
                     【免責事項】<br>
-                    ※通信のタイムラグにより、一部の便が表示されない場合があります。<br>
-                    ※最終的な正解は、上記の「羽田公式サイト」で必ず確認してください。<br>
+                    <strong>※データ取得は1時間に1回です。</strong><br>
+                    ※30分以上経過している場合は、公式サイトで遅延状況を確認してください。<br>
                     <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
                 </div>
             </div>
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
-                データ取得: {current_time.strftime('%H:%M')} (API) | 表示更新: <span id="last-update">Now</span><br>
+                データ取得: {fetch_time_str} (API) | 表示更新: <span id="last-update">Now</span><br>
                 <span style="font-size:10px; color:#666;">次のリロードまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒</span>
             </div>
         </div>

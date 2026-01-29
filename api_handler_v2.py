@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v12 修正完了版】深掘り全取得 ＋ タイムアウト対策(30秒)
-    ・APIリクエストは5回深掘り（Active×2, Landed×2, Yesterday×1）
+    【v13 修正完了版】深掘り全取得 ＋ タイムアウト対策(30秒)
+    ・APIリクエストは7回深掘り（Active×2, Landed×2, Scheduled×2, Yesterday×1）
     ・タイムアウトを30秒に設定し、通信エラーを防ぐ
     ・取得したデータは時間で捨てずに全て返す
     """
@@ -19,15 +19,17 @@ def fetch_flight_data(api_key, date_str=None):
     yesterday_jst = now_jst - timedelta(days=1)
     yesterday_str = yesterday_jst.strftime('%Y-%m-%d')
 
-    print(f"DEBUG: Start API Fetch v12. Strategy: Deep Dive & Keep ALL", file=sys.stderr)
+    print(f"DEBUG: Start API Fetch v13. Strategy: Deep Dive & Keep ALL", file=sys.stderr)
 
     strategies = [
         # 1. Active: 未来の便 (200件まで深掘り)
         {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': 'scheduled_arrival'}, 'max_depth': 200},
         # 2. Landed: 過去の便 (200件まで深掘り -> これで消えた国内線を全カバー)
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc'}, 'max_depth': 200},
-        # 3. Yesterday: 昨日出発の長距離便 (100件)
-        {'desc': '3. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100}
+        # 3. Scheduled: 予定の便 (200件まで深掘り) ★ここを追加して欠落を防ぐ
+        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': 'scheduled_arrival'}, 'max_depth': 200},
+        # 4. Yesterday: 昨日出発の長距離便 (100件)
+        {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100}
     ]
 
     for strat in strategies:
