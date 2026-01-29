@@ -31,8 +31,8 @@ def render_html(demand_results, password, current_time=None):
         raw_arr = f.get('arrival_time', '')
         try:
             dt = datetime.fromisoformat(raw_arr.replace('Z', '+00:00'))
-            jst_dt = dt + timedelta(hours=9)
-            jst_arr_str = jst_dt.strftime('%Y-%m-%dT%H:%M:%S')
+            # jst_dt = dt + timedelta(hours=9)  <-- 削除: データは既にJSTなので二重加算しない
+            jst_arr_str = dt.strftime('%Y-%m-%dT%H:%M:%S')
         except:
             jst_arr_str = raw_arr
 
@@ -167,7 +167,7 @@ def render_html(demand_results, password, current_time=None):
         # (A) 空港コードか日本語名で判定
         if origin_iata in DOMESTIC_CODES or any(k in jpn_origin for k in DOMESTIC_NAMES):
             is_dom = True
-        # (B) 国内線専用キャリアで判定 (JAL/ANAは除外)
+        # (B) 便名で国内LCC等を判定 (BC=スカイ, 7G=SFJ, U4, 6J, HD)
         elif any(code in f_num for code in ["BC", "HD", "6J", "7G", "U4"]):
             is_dom = True
         
