@@ -7,9 +7,46 @@ def render_html(demand_results, password, current_time=None):
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
-    flight_list = demand_results.get("flights", [])
+    raw_flight_list = demand_results.get("flights", [])
     val_past = demand_results.get("setting_past", 40)
     val_future = demand_results.get("setting_future", 20)
+
+    # ---------------------------------------------------------
+    # 🦁 修正1: 時差統一 & 重複排除 (ここを追加！)
+    # ---------------------------------------------------------
+    # 国内空港マスター
+    DOMESTIC_CODES = {"CTS","FUK","OKA","ITM","KIX","NGO","KMQ","HKD","HIJ","MYJ","KCZ","TAK","KMJ","KMI","KOJ","ISG","MMY","IWK","UBJ","TKS","AOJ","MSJ","OIT","AXT","GAJ","OKJ","NGS","AKJ","OBO","SHM","ASJ","MMB","IZO","KUH","KKJ","TTJ","UKB","HSG","NTQ","HNA","SYO","YGJ","KIJ","TOY","HAC","SHI"}
+    DOMESTIC_NAMES = ["新千歳","福岡","那覇","伊丹","関空","中部","小松","函館","広島","松山","高知","高松","熊本","宮崎","鹿児島","石垣","宮古","岩国","山口","徳島","青森","三沢","大分","秋田","山形","岡山","長崎","旭川","帯広","白浜","奄美","女満別","出雲","釧路","北九州","鳥取","神戸","佐賀","能登","花巻","庄内","米子","新潟","富山","八丈島","下地島"]
+
+    def get_f_num(s):
+        m = re.search(r'\d+', str(s))
+        return int(m.group()) if m else 99999
+
+    processed_flights = {}
+    for f in raw_flight_list:
+        f_num = get_f_num(f.get('flight_number'))
+        if f_num >= 9000: continue
+
+        # UTC -> JST 変換
+        raw_arr = f.get('arrival_time', '')
+        try:
+            dt = datetime.fromisoformat(raw_arr.replace('Z', '+00:00'))
+            jst_dt = dt + timedelta(hours=9)
+            jst_arr_str = jst_dt.isoformat()
+        except:
+            jst_arr_str = raw_arr
+
+        origin_iata = f.get('origin_iata', 'UNKNOWN')
+        # 重複キーに日付も含めることで、別日の同便名が消えるのを防ぐ
+        key = (jst_arr_str, origin_iata)
+
+        if key not in processed_flights or f_num < get_f_num(processed_flights[key].get('flight_number')):
+            f['arrival_time_jst'] = jst_arr_str
+            processed_flights[key] = f
+    
+    # リストを更新（ここから下は processed_flights を使う）
+    flight_list = list(processed_flights.values())
+
 
     # ---------------------------------------------------------
     # 🧠 Tさんのセオリーロジック (Theory Logic)
@@ -51,7 +88,7 @@ def render_html(demand_results, password, current_time=None):
     theory_best = get_theory_recommendation(current_hour)
     # ---------------------------------------------------------
 
-    # 1. 空港コード辞書
+    # 1. 空港コード辞書 (既存のまま)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -74,7 +111,7 @@ def render_html(demand_results, password, current_time=None):
         "SYD":"シドニー", "MEL":"メルボルン"
     }
     
-    # 2. 都市名辞書
+    # 2. 都市名辞書 (既存のまま)
     NAME_MAP = {
         "Okayama": "岡山", "Hakodate": "函館", "Memanbetsu": "女満別",
         "Kita Kyushu": "北九州", "Asahikawa": "旭川", "Nanki": "南紀白浜",
@@ -120,25 +157,39 @@ def render_html(demand_results, password, current_time=None):
     
     for f in flight_list:
         origin_iata = f.get('origin_iata', '')
-        raw_origin = f.get('origin', origin_iata)
-        jpn_origin = translate_origin(origin_iata, raw_origin)
+        # 日本語化辞書を通す
+        jpn_origin = translate_origin(origin_iata, f.get('origin', origin_iata))
         
-        term = str(f.get('terminal', ''))
-        exit_type = f.get('exit_type', '')
-
-        if not exit_type:
-            if term == "3" or term == "I": exit_type = "国際(T3)"
-            elif term == "2": exit_type = "3号(T2)"
-            elif term == "1": exit_type = "1号(T1南)"
-            else: exit_type = "国際(T3)"
+        airline = f.get('airline_iata', '')
+        
+        # 🦁 修正2: 精密仕分け (ここを書き換え！)
+        is_dom = False
+        # (A) 空港コードか日本語名で判定
+        if origin_iata in DOMESTIC_CODES or any(k in jpn_origin for k in DOMESTIC_NAMES):
+            is_dom = True
+        # (B) 国内線専用キャリアで判定 (JAL/ANAは除外)
+        elif airline in ["BC", "HD", "6J", "7G", "U4"]:
+            is_dom = True
+        
+        if is_dom:
+            # 国内線の詳細
+            if airline in ["JL", "BC", "U4", "7G"]:
+                # スターフライヤー等はT1
+                exit_type = "1号(T1南)"
+            else:
+                # ANA等はT2
+                exit_type = "3号(T2)"
+        else:
+            # 国際線 (T3)
+            exit_type = "国際(T3)"
 
         final_flights_for_js.append({
-            'arrival_time': str(f.get('arrival_time', '')),
+            'arrival_time': f.get('arrival_time_jst'), # 変換後の時刻を使用
             'flight_number': f.get('flight_number', '---'),
             'origin': jpn_origin,
             'pax': int(f.get('pax_estimated', 200)),
             'exit_type': exit_type,
-            'terminal': term
+            'terminal': str(f.get('terminal', ''))
         })
     
     json_data = json.dumps(final_flights_for_js, ensure_ascii=False)
@@ -437,7 +488,7 @@ def render_html(demand_results, password, current_time=None):
                 <a href="https://transit.yahoo.co.jp/diainfo/area/4" target="_blank" class="cam-btn train-btn" style="background:#444; color:#fff;">🚃 JR・関東全域 (山手線など)</a>
                 
                 <div class="strategy-box">
-                    <div class="st-item"><span style="color:#FFD700; font-weight:bold;">📊 DATA(黄):</span> 今の飛行機の数に基づく推奨。<br><span style="color:#00BFFF; font-weight:bold;">🧠 THEORY(青):</span> Tさんの定石に基づく推奨。</div>
+                    <div class="st-item"><span style="color:#FFD700; font-weight:bold;">📊 DATA(黄):</span> 今の飛行機の数に基づく推奨。<br><span style="color:#00BFFF; font-weight:bold;">🧠 THEORY(青):</span> セオリー(定石)に基づく推奨。</div>
                     <div class="st-item"><span style="color:#fff; font-weight:bold;">👑 W-BEST(虹):</span> データとセオリーが一致。激アツです。</div>
                     <div class="st-item"><span style="color:#f00; font-weight:bold;">⚡️ 不一致の場合:</span> 公式サイトで実際の到着便を確認してください。</div>
                 </div>
