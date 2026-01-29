@@ -18,6 +18,9 @@ def fetch_flight_data(api_key, date_str=None):
     now_jst = datetime.utcnow() + timedelta(hours=9)
     yesterday_jst = now_jst - timedelta(days=1)
     yesterday_str = yesterday_jst.strftime('%Y-%m-%d')
+    
+    # 🦁 修正: 日付指定がない場合は今日とする (降順取得時の未来日混入を防ぐ必須対応)
+    target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
 
     # 🦁 追加: 午後は「降順」で夜の便を優先確保
     if now_jst.hour >= 12:
@@ -33,7 +36,8 @@ def fetch_flight_data(api_key, date_str=None):
         # 2. Landed: 過去の便 (200件まで深掘り -> これで消えた国内線を全カバー)
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc'}, 'max_depth': 200},
         # 🦁 追加: 3. Scheduled: 予定の便 (200件まで深掘り) ★ここを追加
-        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort}, 'max_depth': 200},
+        # 【修正】flight_date を指定して、確実に「指定日(今日)の夜」を取るように変更
+        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 200},
         # 4. Yesterday: 昨日出発の長距離便 (100件)
         {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100}
     ]
