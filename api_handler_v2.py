@@ -115,6 +115,7 @@ def fetch_flight_data(api_key, date_str=None):
             
     return all_flights
 
+# 🦁 ここから下が消えていたので、MAX時刻ロジックを含めて完全復元しました
 def extract_flight_info(flight):
     arr = flight.get('arrival', {})
     airline = flight.get('airline', {})
@@ -123,12 +124,18 @@ def extract_flight_info(flight):
     aircraft = flight.get('aircraft', {})
     aircraft_iata = aircraft.get('iata', 'none') if aircraft else 'none'
     
-    # 🦁 修正: 遅延を救出するロジック (Actual > Estimated > Scheduled)
-    scheduled_time = arr.get('scheduled')
-    arrival_time = arr.get('actual') or arr.get('estimated') or scheduled_time
+    # 🦁 修正：遅延を絶対に逃さない「MAX時刻採用ロジック」
+    s_time = arr.get('scheduled')
+    e_time = arr.get('estimated')
+    a_time = arr.get('actual')
     
-    if not arrival_time: return None
-
+    time_candidates = [t for t in [s_time, e_time, a_time] if t]
+    if not time_candidates: return None
+    
+    # 全候補の中で最も遅い時刻を到着とする。これで遅延便が正しい時間枠に救出されます。
+    arrival_time = max(time_candidates)
+    scheduled_time = s_time # 比較用に元の定刻も保持
+    
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
     airline_iata = airline.get('iata', '??')
@@ -157,7 +164,7 @@ def extract_flight_info(flight):
         "origin_iata": origin_iata,
         "terminal": str(term),
         "arrival_time": arrival_time,
-        "scheduled_time": scheduled_time, # 🦁 追加: レンダラーでの遅延表示用
+        "scheduled_time": scheduled_time,
         "status": flight.get('flight_status', 'unknown'),
         "aircraft": aircraft_iata
     }
