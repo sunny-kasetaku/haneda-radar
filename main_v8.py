@@ -1,5 +1,6 @@
 import os
 import random
+import subprocess  # 🦁 追加: GitHubへの自動保存コマンド実行用
 from datetime import datetime, timedelta
 # api_handler_v2 (中身は最新のv3ロジック) を使用
 from api_handler_v2 import fetch_flight_data 
@@ -88,6 +89,25 @@ def main():
         bot.send_daily_info(CONFIG.get("DISCORD_WEBHOOK_URL"), daily_pass)
     else:
         print(f"LOG: Notification skipped (Current time {now.strftime('%H:%M')} is out of target slot)")
+
+    # 🦁 7. 未知の空港ログの自動保存 (GitHub Push) 
+    # renderer_new.py で書き出されたログファイルをGitHubに保存します
+    log_file = "unknown_airports.log"
+    if os.path.exists(log_file):
+        try:
+            print(f"LOG: Found {log_file}. Syncing with GitHub...")
+            subprocess.run(["git", "config", "user.name", "github-actions"], check=True)
+            subprocess.run(["git", "config", "user.email", "github-actions@github.com"], check=True)
+            subprocess.run(["git", "add", log_file], check=True)
+            # 変更がある場合のみコミット
+            result = subprocess.run(["git", "commit", "-m", f"Update unknown airports log: {now.strftime('%Y-%m-%d %H:%M')}"], capture_output=True, text=True)
+            if "nothing to commit" not in result.stdout:
+                subprocess.run(["git", "push"], check=True)
+                print("LOG: Successfully updated unknown_airports.log on GitHub.")
+            else:
+                print("LOG: No new unknown airports found. Nothing to commit.")
+        except Exception as e:
+            print(f"LOG: GitHub Sync Error: {e}")
 
     print("--- END: SUCCESS ---")
 

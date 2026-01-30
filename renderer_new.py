@@ -168,10 +168,21 @@ def render_html(demand_results, password, current_time=None):
         for eng, jpn in NAME_MAP.items():
             if eng in name: return jpn
         
-        # 🦁 ログ出力の実装：辞書にない場合に追記
+        # 🦁 ログ出力の実装：辞書にない場合に追記（GitHub Actionsでの自動保存用）
         try:
-            with open("unknown_airports.log", "a", encoding="utf-8") as log_f:
-                log_f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Code: {origin_val}, Name: {origin_name}\n")
+            # 重複して書き込まないように、一度中身を確認するロジックを追加
+            log_line = f"Code: {origin_val}, Name: {origin_name}"
+            exists = False
+            if os.path.exists("unknown_airports.log"):
+                with open("unknown_airports.log", "r", encoding="utf-8") as f:
+                    if log_line in f.read():
+                        exists = True
+            
+            if not exists:
+                with open("unknown_airports.log", "a", encoding="utf-8") as log_f:
+                    log_f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {log_line}\n")
+                # コンソールログにも目立つように出す
+                print(f"⚠️  NEW UNKNOWN DETECTED: {log_line}", file=sys.stderr)
         except Exception as e:
             print(f"Log Error: {e}", file=sys.stderr)
             
