@@ -11,6 +11,8 @@ from discord_bot import DiscordBot
 CONFIG = {
     "AVIATION_STACK_API_KEY": os.environ.get("AVIATION_STACK_API_KEY"),
     "DISCORD_WEBHOOK_URL": os.environ.get("DISCORD_WEBHOOK_URL"),
+    # 🦁 追加: シークレットからDiscordスレッドのURLを取得
+    "DISCORD_THREAD_URL": os.environ.get("DISCORD_THREAD_URL", "#"), 
 }
 
 def main():
@@ -76,7 +78,10 @@ def main():
     # 【重要】ここで日本時間(now)を各モジュールに渡します
     # render_html内部で「終電情報（23時台）」や「同点時の優先順位」が処理されます
     analysis_result = analyze_demand(flights, current_time=now)
-    render_html(analysis_result, daily_pass, current_time=now)
+    
+    # 🦁 修正: シークレットから読み込んだURLを渡す
+    discord_url = CONFIG.get("DISCORD_THREAD_URL")
+    render_html(analysis_result, daily_pass, discord_url, current_time=now)
     
     # 6. Discord通知
     # 修正: 1時間に1回の実行のため、6時台の実行であれば通知を送るように変更

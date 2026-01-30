@@ -4,7 +4,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 
-def render_html(demand_results, password, current_time=None):
+def render_html(demand_results, password, discord_url="#", current_time=None):
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
@@ -33,21 +33,21 @@ def render_html(demand_results, password, current_time=None):
         f_num = get_f_num(f.get('flight_number'))
         if f_num >= 9000: continue
 
-        # --- 【修正箇所】タイムゾーン情報の除去 ---
+        # --- 【修正箇所】タイムゾーンの完全修正 ---
         raw_arr = f.get('arrival_time', '')
         try:
-            # 文字列として "+00:00" や "Z" がついていたら切り落とす
-            if "+" in raw_arr:
-                clean_time_str = raw_arr.split("+")[0]
-            elif "Z" in raw_arr:
-                clean_time_str = raw_arr.replace("Z", "")
+            # "Z" (UTC) がある場合は、削除して9時間足す！
+            if "Z" in raw_arr:
+                dt_utc = datetime.fromisoformat(raw_arr.replace("Z", ""))
+                dt = dt_utc + timedelta(hours=9)
+            elif "+" in raw_arr:
+                # "+09:00" などがある場合はそのままパース
+                dt = datetime.fromisoformat(raw_arr)
             else:
-                clean_time_str = raw_arr
+                # 何もない場合はそのまま
+                dt = datetime.fromisoformat(raw_arr)
             
-            # これで純粋な「日時」として読み込まれる（時差情報は消滅）
-            dt = datetime.fromisoformat(clean_time_str)
-            
-            # そのまま使う（+9時間などは一切しない）
+            # これで dt は正しい日本時間になる
             jst_arr_str = dt.strftime('%Y-%m-%dT%H:%M:%S')
             
         except:
@@ -604,7 +604,7 @@ def render_html(demand_results, password, current_time=None):
                 </div>
             </div>
             
-            <a href="https://discord.com/channels/YOUR_SERVER_ID/YOUR_THREAD_ID" class="cam-btn discord-btn">💬 Discordスレッドに戻る</a>
+            <a href="{discord_url}" class="cam-btn discord-btn">💬 Discordスレッドに戻る</a>
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
