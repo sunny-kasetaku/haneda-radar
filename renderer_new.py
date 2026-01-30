@@ -245,21 +245,24 @@ def render_html(demand_results, password, current_time=None):
             .flight-table {{ width: 100%; font-size: 13px; border-collapse: collapse; background: #111; border-radius:10px; overflow:hidden; margin-bottom: 25px; }}
             .flight-table th {{ color:gold; padding:10px; border-bottom:1px solid #333; text-align:center; }}
             .flight-table td {{ padding: 10px; border-bottom: 1px solid #222; text-align: center; }}
-            .forecast-box {{ background: #111; border: 1px solid #444; border-radius: 15px; padding: 15px; margin-bottom: 20px; }}
+            
+            /* 🦁 追加・修正：凡例ドッキングUI */
+            .fc-legend-box {{ background: #222; border: 1px solid #444; border-bottom: none; border-radius: 15px 15px 0 0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; color: #FFD700; }}
+            .forecast-box {{ background: #111; border: 1px solid #444; border-radius: 0 0 15px 15px; padding: 15px; margin-bottom: 20px; }}
             .fc-row {{ border-bottom: 1px dashed #333; padding: 10px 0; }}
             .fc-row:last-child {{ border-bottom: none; }}
             .fc-time {{ font-size: 14px; color: #FFD700; font-weight: bold; margin-bottom: 4px; }}
             .fc-main {{ font-size: 16px; margin-bottom: 2px; }}
-            .fc-status {{ font-weight: bold; color: #fff; margin-right: 5px; }}
+            .fc-status {{ font-weight: bold; color: #fff; margin-right: 5px; font-size: 18px; }} /* 文字を大きく */
             .fc-pax {{ color: #00FF00; font-weight: bold; }}
-            .fc-comment {{ font-size: 12px; color: #888; margin-left: 10px; }}
+
             .cam-box {{ background:#111; border:1px solid #444; border-radius:15px; padding:15px; margin-bottom:20px; text-align:center; }}
             .cam-title {{ color:#FFD700; font-weight:bold; font-size:14px; margin-bottom:10px; }}
             .cam-btn {{ display: block; padding: 12px; margin-bottom: 5px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; color: #000; }}
             .taxi-btn {{ background: #FFD700; }}
             .train-btn {{ background: #00BFFF; }}
-            /* 🦁 追加: Discordボタンのスタイル */
-            .discord-btn {{ background: #5865F2; color: #fff; }}
+            /* 🦁 修正: Discordボタンを大きく目立たせる */
+            .discord-btn {{ background: #5865F2; color: #fff; padding: 15px; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4); }}
             .sub-btn-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }}
             .disclaimer {{ font-size: 12px; color: #999; text-align: left; line-height: 1.5; border-top: 1px solid #444; padding-top: 10px; margin-top: 15px; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }}
@@ -484,8 +487,7 @@ def render_html(demand_results, password, current_time=None):
                 <div id="rank-disp" class="rank-display">---</div>
                 <div id="rank-sub" class="rank-sub">集計中...</div>
                 <div class="legend">
-                    <span>🌈S:2000~ 🔥A:1000~ ✅B:500~ ⚠️C:1~</span><br>
-                    <span style="color:#888;">【予測】 🔥高:1000~ ✅中:500~ 👀通常:1~</span>
+                    <span>🌈S:2000~ 🔥A:1000~ ✅B:500~ ⚠️C:1~</span>
                 </div>
             </div>
             
@@ -504,6 +506,7 @@ def render_html(demand_results, password, current_time=None):
             </table>
             
             <div class="section-title">📈 今後の需要予測 (3時間先)</div>
+            <div class="fc-legend-box">【基準】 🔥高:1000~ ✅中:500~ 👀通常:1~</div>
             <div class="forecast-box">
                 <div class="fc-row"><div class="fc-time">[現在〜]</div><div class="fc-main"><span id="fc-0-status" class="fc-status">---</span><span id="fc-0-pax" class="fc-pax">---</span></div></div>
                 <div class="fc-row"><div class="fc-time">[+1時間]</div><div class="fc-main"><span id="fc-1-status" class="fc-status">---</span><span id="fc-1-pax" class="fc-pax">---</span></div></div>
@@ -543,7 +546,6 @@ def render_html(demand_results, password, current_time=None):
                 </div>
 
                 <div class="cam-title" style="margin-top:15px;">👑 最終確認 (公式情報)</div>
-                <div style="font-size:11px; color:#999; margin-bottom:5px;">※「データ古」のアラート時は必ず確認！</div>
                 <div class="sub-btn-row">
                     <a href="https://tokyo-haneda.com/flight/flightInfo_int.html" target="_blank" class="cam-btn" style="background:#fff; color:#000;">✈️ 国際線 (T3)</a>
                     <a href="https://tokyo-haneda.com/flight/flightInfo_dms.html" target="_blank" class="cam-btn" style="background:#ddd; color:#000;">✈️ 国内線 (T1/T2)</a>
@@ -558,7 +560,6 @@ def render_html(demand_results, password, current_time=None):
                 <div class="strategy-box">
                     <div class="st-item"><span style="color:#FFD700; font-weight:bold;">📊 DATA(黄):</span> 今の飛行機の数に基づく推奨。<br><span style="color:#00BFFF; font-weight:bold;">🧠 THEORY(青):</span> セオリー(定石)に基づく推奨。</div>
                     <div class="st-item"><span style="color:#fff; font-weight:bold;">👑 W-BEST(虹):</span> データとセオリーが一致。激アツです。</div>
-                    <div class="st-item"><span style="color:#f00; font-weight:bold;">⚡️ 不一致の場合:</span> 公式サイトで実際の到着便を確認してください。</div>
                 </div>
                 <div class="disclaimer">
                     【免責事項】<br>
