@@ -32,7 +32,8 @@ def fetch_flight_data(api_key, date_str=None):
 
     strategies = [
         # 1. Active: 未来の便 (200件まで深掘り)
-        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': 'scheduled_arrival'}, 'max_depth': 200},
+        # 🦁 修正: flight_dateを指定して去年のゴミデータを排除
+        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': 'scheduled_arrival', 'flight_date': target_date}, 'max_depth': 200},
         # 2. Landed: 過去の便 (200件まで深掘り -> これで消えた国内線を全カバー)
         # 🦁 修正: flight_dateを指定して「今日の」新しい順にすることで、23時台の到着漏れを防ぐ
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 200},
@@ -70,7 +71,7 @@ def fetch_flight_data(api_key, date_str=None):
                 for f in raw_data:
                     info = extract_flight_info(f)
                     if info:
-                        # --- 重複排除ロジック ---
+                        # --- 重複排除 (1) 同一便名チェック ---
                         same_flight_index = -1
                         for i, existing in enumerate(all_flights):
                             if existing['flight_number'] == info['flight_number']:
@@ -79,6 +80,26 @@ def fetch_flight_data(api_key, date_str=None):
                         
                         if same_flight_index != -1:
                             all_flights[same_flight_index] = info
+                            continue
+
+                        # --- 重複排除 (2) コードシェア便トリプルチェック ---
+                        # 同時刻・同ターミナル・同出発地の場合のみ「同じ1機」とみなす
+                        duplicate_index = -1
+                        for i, existing in enumerate(all_flights):
+                            if (existing['arrival_time'] == info['arrival_time'] and 
+                                existing['terminal'] == info['terminal'] and 
+                                existing['origin_iata'] == info['origin_iata']):
+                                duplicate_index = i
+                                break
+                        
+                        if duplicate_index != -1:
+                            # 既にJALやANAが入っているなら、海外便名は追加せずに捨てる
+                            existing_flight = all_flights[duplicate_index]
+                            is_new_japanese = info['flight_number'].startswith(('JL', 'NH'))
+                            is_existing_japanese = existing_flight['flight_number'].startswith(('JL', 'NH'))
+                            
+                            if is_new_japanese and not is_existing_japanese:
+                                all_flights[duplicate_index] = info
                             continue
 
                         # 時間フィルタなしで全部追加
