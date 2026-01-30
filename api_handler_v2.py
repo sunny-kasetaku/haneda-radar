@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v16 修正完了版】深掘り全取得 ＋ タイムアウト対策(30秒)
+    【v18 最終修正版】深掘り全取得 ＋ タイムアウト対策(30秒)
     ・APIリクエストは7回深掘り（Active×2, Landed×2, Scheduled×2, Yesterday×1）
     ・タイムアウトを30秒に設定し、通信エラーを防ぐ
-    ・取得したデータは時間で捨てずに全て返す
+    ・重複排除を「時刻・ターミナル・出発地」のトリプルチェックに改善
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -28,7 +28,8 @@ def fetch_flight_data(api_key, date_str=None):
     else:
         sched_sort = 'scheduled_arrival'
 
-    print(f"DEBUG: Start API Fetch v16. Strategy: Deep Dive & Keep ALL", file=sys.stderr)
+    # バージョン表示を v18 に修正
+    print(f"DEBUG: Start API Fetch v18. Strategy: Deep Dive & Triple Check", file=sys.stderr)
 
     strategies = [
         # 1. Active: 未来の便 (200件まで深掘り)
@@ -102,7 +103,7 @@ def fetch_flight_data(api_key, date_str=None):
                                 all_flights[duplicate_index] = info
                             continue
 
-                        # 時間フィルタなしで全部追加
+                        # 全部追加
                         all_flights.append(info)
                 
                 got_num = len(raw_data)
@@ -138,9 +139,9 @@ def extract_flight_info(flight):
     time_candidates = [t for t in [s_time, e_time, a_time] if t]
     if not time_candidates: return None
     
-    # 全候補の中で最も遅い時刻を到着とする。これで遅延便が正しい時間枠に救出されます。
+    # 全候補の中で最も遅い時刻を到着とする。
     arrival_time = max(time_candidates)
-    scheduled_time = s_time # 比較用に元の定刻も保持
+    scheduled_time = s_time 
     
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
