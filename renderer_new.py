@@ -541,27 +541,40 @@ def render_html(demand_results, password, current_time=None):
                 </div>
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
                 
-                <div class="cam-title" style="margin-top:15px;">🚕 乗り場・航空会社 早見表</div>
+                <div class="cam-title" style="margin-top:15px;">🚕 乗り場・航空会社 選び方のガイド</div>
                 <div class="quick-ref">
                     <div class="qr-row">
-                        <div class="qr-key" style="color:#FF8C00;">1号 (T1)</div>
-                        <div class="qr-val">JAL(JL), スカイ(BC)</div>
+                        <div class="qr-key" style="color:#FF8C00;">1号 (T1南)</div>
+                        <div class="qr-val">
+                            <strong>JAL（西日本・四国・九州方面）</strong><br>
+                            スカイマーク(BC)
+                        </div>
                     </div>
                     <div class="qr-row">
-                        <div class="qr-key" style="color:#FF4444;">2号 (T1)</div>
-                        <div class="qr-val">JAL(JL), SFJ(7G) ※北九州・山形便等</div>
+                        <div class="qr-key" style="color:#FF4444;">2号 (T1北)</div>
+                        <div class="qr-val">
+                            <strong>JAL（北海道・東北・北陸方面）</strong><br>
+                            スターフライヤー(7G) ※北九州・山形便など
+                        </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#1E90FF;">3号 (T2)</div>
-                        <div class="qr-val">ANA(NH), AIRDO(HD), SNA(6J)</div>
+                        <div class="qr-val">
+                            <strong>ANA（国内線すべて）</strong><br>
+                            AIRDO(HD)、ソラシド(6J)
+                        </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#00FFFF;">4号 (T2)</div>
-                        <div class="qr-val">ANA 国際線</div>
+                        <div class="qr-val">
+                            <strong>ANA（海外からの到着便）</strong>
+                        </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#FFD700;">国際 (T3)</div>
-                        <div class="qr-val">JAL, デルタ, 海外系すべて</div>
+                        <div class="qr-val">
+                            <strong>JAL国際線</strong>、デルタ、外資系すべて
+                        </div>
                     </div>
                 </div>
 
