@@ -546,28 +546,29 @@ def render_html(demand_results, password, current_time=None):
                     <div class="qr-row">
                         <div class="qr-key" style="color:#FF8C00;">1号 (T1南)</div>
                         <div class="qr-val">
-                            <strong>JAL（西日本・四国・九州方面）</strong><br>
-                            スカイマーク(BC)
+                            <strong>JAL（西日本・九州方面）</strong><br>
+                            スカイマーク
                         </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#FF4444;">2号 (T1北)</div>
                         <div class="qr-val">
-                            <strong>JAL（北海道・東北・北陸方面）</strong><br>
-                            スターフライヤー(7G) ※北九州・山形便など
+                            <strong>JAL（北海道・東北方面）</strong><br>
+                            スターフライヤー
                         </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#1E90FF;">3号 (T2)</div>
                         <div class="qr-val">
-                            <strong>ANA（国内線すべて）</strong><br>
-                            AIRDO(HD)、ソラシド(6J)
+                            <strong>ANA（国内線メイン）</strong><br>
+                            AIRDO、ソラシド
                         </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#00FFFF;">4号 (T2)</div>
                         <div class="qr-val">
-                            <strong>ANA（海外からの到着便）</strong>
+                            <strong>ANA（国際線バブル狙い！）</strong><br>
+                            <span style="font-size:11px;">※夕方17時や朝など、国際線が重なる時の特設会場です。</span>
                         </div>
                     </div>
                     <div class="qr-row">
