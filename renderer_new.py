@@ -36,7 +36,6 @@ def render_html(demand_results, password, current_time=None):
         raw_arr = f.get('arrival_time', '')
         try:
             # 文字列として "+00:00" や "Z" がついていたら切り落とす
-            # 例: "2026-01-29T21:09:00+00:00" -> "2026-01-29T21:09:00"
             if "+" in raw_arr:
                 clean_time_str = raw_arr.split("+")[0]
             elif "Z" in raw_arr:
@@ -60,6 +59,8 @@ def render_html(demand_results, password, current_time=None):
 
         if key not in processed_flights or f_num < get_f_num(processed_flights[key].get('flight_number')):
             f['arrival_time_jst'] = jst_arr_str
+            # 🦁 追加: 遅延計算用にAPIから受け取った定刻を保持
+            f['scheduled_time'] = f.get('scheduled_time', jst_arr_str)
             processed_flights[key] = f
     
     # リストを更新（ここから下は processed_flights を使う）
@@ -77,7 +78,6 @@ def render_html(demand_results, password, current_time=None):
             return "3号(T2)"
             
         # 16:00 - 18:00 -> 4号(T2)
-        # ※表ではD(2号)等が多い時間もありますが、回転率重視の「4号」という定石を採用
         elif 16 <= hour < 18:
             return "4号(T2)"
             
@@ -90,12 +90,10 @@ def render_html(demand_results, password, current_time=None):
             return "1号/2号(T1)"
             
         # 22:00 - 23:59 -> 3号(T2)
-        # ※スプレッドシート分析：22時台はE列(3号)が9名でトップ
         elif 22 <= hour < 24:
             return "3号(T2)"
             
         # 00:00 - 05:59 -> 国際(T3)
-        # ※国内線終了のため、物理的に国際一択
         elif 0 <= hour < 6:
             return "国際(T3)"
             
@@ -181,33 +179,31 @@ def render_html(demand_results, password, current_time=None):
         f_num = str(f.get('flight_number', ''))
         term_raw = str(f.get('terminal', '')) # APIの生ターミナル情報
 
-        # 🦁 修正2: 精密仕分け (ここを書き換え！)
+        # 🦁 修正2: 精密仕分け
         is_dom = False
         # (A) 空港コードか日本語名で判定
         if origin_iata in DOMESTIC_CODES or any(k in jpn_origin for k in DOMESTIC_NAMES):
             is_dom = True
-        # (B) 便名で国内LCC等を判定 (BC=スカイ, 7G=SFJ, U4, 6J, HD)
+        # (B) 便名で国内LCC等を判定
         elif any(code in f_num for code in ["BC", "HD", "6J", "7G", "U4"]):
             is_dom = True
         
         if is_dom:
             # 国内線の詳細
             if any(code in f_num for code in ["JL", "BC", "U4", "7G"]):
-                # スターフライヤー等はT1
                 exit_type = "1号(T1南)"
             else:
-                # ANA等はT2
                 exit_type = "3号(T2)"
         else:
             # 国際線
-            # 🦁 修正: ターミナルが「2」なら4号へ、それ以外はT3へ
             if term_raw == "2":
                 exit_type = "4号(T2)"
             else:
                 exit_type = "国際(T3)"
 
         final_flights_for_js.append({
-            'arrival_time': f.get('arrival_time_jst'), # 変換後の時刻を使用
+            'arrival_time': f.get('arrival_time_jst'),
+            'scheduled_time': f.get('scheduled_time'), # 🦁 追加
             'flight_number': f.get('flight_number', '---'),
             'origin': jpn_origin,
             'pax': int(f.get('pax_estimated', 200)),
@@ -235,15 +231,12 @@ def render_html(demand_results, password, current_time=None):
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
             .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
             
-            /* データ推奨 (Data Best) - 黄色 */
             .data-best {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255,215,0,0.4); }}
             .data-badge {{ position: absolute; top: -10px; right: -5px; background: #FFD700; color: #000; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 10px; z-index:10; }}
             
-            /* セオリー推奨 (Theory Best) - 青色 */
             .theory-best {{ border: 2px solid #00BFFF !important; box-shadow: 0 0 15px rgba(0,191,255,0.4); }}
             .theory-badge {{ position: absolute; top: -10px; left: -5px; background: #00BFFF; color: #000; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 10px; z-index:10; }}
             
-            /* 両方一致 (Double Best) - 虹色 */
             .double-best {{ border: 3px solid #fff !important; background: linear-gradient(#1A1A1A, #1A1A1A) padding-box, linear-gradient(45deg, #FFD700, #00BFFF) border-box; }}
             .double-badge {{ position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, #FFD700, #00BFFF); color: #000; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 12px; z-index:20; white-space:nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }}
 
@@ -265,6 +258,8 @@ def render_html(demand_results, password, current_time=None):
             .cam-btn {{ display: block; padding: 12px; margin-bottom: 5px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; color: #000; }}
             .taxi-btn {{ background: #FFD700; }}
             .train-btn {{ background: #00BFFF; }}
+            /* 🦁 追加: Discordボタンのスタイル */
+            .discord-btn {{ background: #5865F2; color: #fff; }}
             .sub-btn-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }}
             .disclaimer {{ font-size: 12px; color: #999; text-align: left; line-height: 1.5; border-top: 1px solid #444; padding-top: 10px; margin-top: 15px; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }}
@@ -276,14 +271,11 @@ def render_html(demand_results, password, current_time=None):
             .ta-name {{ font-weight: bold; color: #ccc; }}
             .ta-time {{ color: #FFD700; font-weight: bold; font-size: 16px; }}
             
-            /* 紛争アラート */
             .conflict-alert {{ display:none; background:#500; border:2px solid #f00; color:#fff; padding:10px; margin-bottom:15px; border-radius:10px; font-weight:bold; text-align:center; animation: flash 1s infinite alternate; }}
             
-            /* 🦁 追加: 経過時間アラート */
             .old-data-alert {{ background:#333; border:1px solid #666; color:#ccc; padding:8px; margin-bottom:10px; border-radius:8px; font-size:12px; text-align:center; }}
             .old-data-alert.danger {{ background:#500; border:2px solid #f00; color:#fff; font-weight:bold; }}
             
-            /* 🦁 早見表のスタイル */
             .quick-ref {{ text-align:left; background:#222; padding:10px; border-radius:8px; margin-top:10px; border:1px solid #444; font-size:12px; }}
             .qr-row {{ display:grid; grid-template-columns: 35% 65%; border-bottom:1px solid #333; padding:6px 0; }}
             .qr-row:last-child {{ border-bottom:none; }}
@@ -296,7 +288,7 @@ def render_html(demand_results, password, current_time=None):
             const SETTING_PAST = {val_past};
             const SETTING_FUTURE = {val_future};
             const THEORY_BEST = "{theory_best}"; 
-            const FETCH_TIMESTAMP = {fetch_timestamp}; /* 🦁 追加 */
+            const FETCH_TIMESTAMP = {fetch_timestamp};
             
             function checkPass() {{
                 var stored = localStorage.getItem("kasetack_auth_pass_v3");
@@ -316,12 +308,11 @@ def render_html(demand_results, password, current_time=None):
 
             function initApp() {{
                 updateDisplay();
-                updateTimeAlert(); /* 🦁 追加 */
+                updateTimeAlert();
                 setInterval(updateDisplay, 60000); 
-                setInterval(updateTimeAlert, 60000); /* 🦁 追加 */
+                setInterval(updateTimeAlert, 60000);
             }}
 
-            /* 🦁 追加: 経過時間チェック関数 */
             function updateTimeAlert() {{
                 const now = new Date().getTime();
                 const diffMins = Math.floor((now - FETCH_TIMESTAMP) / 60000);
@@ -351,10 +342,10 @@ def render_html(demand_results, password, current_time=None):
 
                 FLIGHT_DATA.forEach(f => {{
                     let fDate = new Date(f.arrival_time);
+                    let sDate = new Date(f.scheduled_time || f.arrival_time); // 🦁 定刻
                     let eType = f.exit_type;
                     if (!counts.hasOwnProperty(eType)) eType = "国際(T3)";
 
-                    // 🦁 修正: 深夜の時間フィルター(h < 5 ...)を削除し、便名9000番台フィルターのみ残した
                     let fNumStr = f.flight_number.replace(/\D/g, ''); 
                     let fNum = parseInt(fNumStr);
                     if (!isNaN(fNum) && fNum >= 9000) return;
@@ -365,6 +356,10 @@ def render_html(demand_results, password, current_time=None):
                         let mStr = fDate.getMinutes().toString().padStart(2, '0');
                         let timeStr = hStr + ":" + mStr;
                         
+                        // 🦁 遅延ラベルの計算
+                        let delayMins = Math.floor((fDate - sDate) / 60000);
+                        let delayText = (delayMins >= 15) ? " <span style='color:#FF4444; font-weight:bold; font-size:10px;'>🔥"+delayMins+"分遅延</span>" : "";
+                        
                         let color = "#FFFFFF";
                         if (eType === "1号(T1南)") color = "#FF8C00";
                         if (eType === "2号(T1北)") color = "#FF4444";
@@ -372,7 +367,7 @@ def render_html(demand_results, password, current_time=None):
                         if (eType === "4号(T2)") color = "#00FFFF";
                         if (eType === "国際(T3)") color = "#FFD700";
                         
-                        tableHtml += `<tr><td>${{timeStr}}</td><td style='color:${{color}}; font-weight:bold;'>${{f.flight_number}}</td><td>${{f.origin}}</td><td>${{f.pax}}名</td></tr>`;
+                        tableHtml += `<tr><td>${{timeStr}}</td><td style='color:${{color}}; font-weight:bold;'>${{f.flight_number}}${{delayText}}</td><td>${{f.origin}}</td><td>${{f.pax}}名</td></tr>`;
                     }}
                     
                     let diffMs = fDate - now;
@@ -389,14 +384,12 @@ def render_html(demand_results, password, current_time=None):
                 document.getElementById('count-t2-4').innerText = counts["4号(T2)"];
                 document.getElementById('count-t3').innerText = counts["国際(T3)"];
                 
-                // リセット
                 document.querySelectorAll('.t-card').forEach(el => {{
                     el.classList.remove('data-best', 'theory-best', 'double-best');
                 }});
                 document.querySelectorAll('.data-badge, .theory-badge, .double-badge').forEach(el => el.remove());
                 document.getElementById('conflict-alert').style.display = 'none';
 
-                // --- 1. データBESTの算出 (黄色) ---
                 let dataBestKey = "";
                 let priorityKeys = ["国際(T3)", "4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"];
                 let allMax = Math.max(...Object.values(counts));
@@ -406,7 +399,6 @@ def render_html(demand_results, password, current_time=None):
                     }}
                 }}
 
-                // --- 2. セオリーBESTの取得 (青色) ---
                 let theoryTargets = [];
                 if (THEORY_BEST === "1号/2号(T1)") {{
                     theoryTargets = ["1号(T1南)", "2号(T1北)"];
@@ -414,7 +406,6 @@ def render_html(demand_results, password, current_time=None):
                     theoryTargets = [THEORY_BEST];
                 }}
 
-                // --- 3. バッジの適用ロジック ---
                 let conflict = false;
                 const idMap = {{
                     "1号(T1南)": "card-t1s", "2号(T1北)": "card-t1n",
@@ -422,14 +413,12 @@ def render_html(demand_results, password, current_time=None):
                     "国際(T3)": "card-t3"
                 }};
 
-                // データBESTの適用
                 if(dataBestKey && idMap[dataBestKey]) {{
                     let el = document.getElementById(idMap[dataBestKey]);
                     el.classList.add('data-best');
                     el.insertAdjacentHTML('afterbegin', '<div class="data-badge">📊 DATA</div>');
                 }}
 
-                // セオリーBESTの適用
                 theoryTargets.forEach(key => {{
                     if(idMap[key]) {{
                         let el = document.getElementById(idMap[key]);
@@ -494,7 +483,10 @@ def render_html(demand_results, password, current_time=None):
             <div class="rank-card">
                 <div id="rank-disp" class="rank-display">---</div>
                 <div id="rank-sub" class="rank-sub">集計中...</div>
-                <div class="legend"><span>🌈S:2000~</span> <span>🔥A:1000~</span> <span>✅B:500~</span> <span>⚠️C:1~</span></div>
+                <div class="legend">
+                    <span>🌈S:2000~ 🔥A:1000~ ✅B:500~ ⚠️C:1~</span><br>
+                    <span style="color:#888;">【予測】 🔥高:1000~ ✅中:500~ 👀通常:1~</span>
+                </div>
             </div>
             
             <div class="grid">
@@ -530,7 +522,11 @@ def render_html(demand_results, password, current_time=None):
                 <div class="quick-ref">
                     <div class="qr-row">
                         <div class="qr-key" style="color:#FF8C00;">1号 (T1)</div>
-                        <div class="qr-val">JAL(JL), スカイ(BC), SFJ(7G)</div>
+                        <div class="qr-val">JAL(JL), スカイ(BC)</div>
+                    </div>
+                    <div class="qr-row">
+                        <div class="qr-key" style="color:#FF4444;">2号 (T1)</div>
+                        <div class="qr-val">JAL(JL), SFJ(7G) ※北九州・山形便等</div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#1E90FF;">3号 (T2)</div>
@@ -571,6 +567,8 @@ def render_html(demand_results, password, current_time=None):
                     <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
                 </div>
             </div>
+            
+            <a href="https://discord.com/channels/YOUR_SERVER_ID/YOUR_THREAD_ID" class="cam-btn discord-btn">💬 Discordスレッドに戻る</a>
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">

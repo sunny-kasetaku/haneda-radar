@@ -123,7 +123,10 @@ def extract_flight_info(flight):
     aircraft = flight.get('aircraft', {})
     aircraft_iata = aircraft.get('iata', 'none') if aircraft else 'none'
     
-    arrival_time = arr.get('estimated') or arr.get('actual') or arr.get('scheduled')
+    # 🦁 修正: 遅延を救出するロジック (Actual > Estimated > Scheduled)
+    scheduled_time = arr.get('scheduled')
+    arrival_time = arr.get('actual') or arr.get('estimated') or scheduled_time
+    
     if not arrival_time: return None
 
     term = arr.get('terminal')
@@ -154,6 +157,7 @@ def extract_flight_info(flight):
         "origin_iata": origin_iata,
         "terminal": str(term),
         "arrival_time": arrival_time,
+        "scheduled_time": scheduled_time, # 🦁 追加: レンダラーでの遅延表示用
         "status": flight.get('flight_status', 'unknown'),
         "aircraft": aircraft_iata
     }
