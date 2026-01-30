@@ -37,9 +37,9 @@ def fetch_flight_data(api_key, date_str=None):
         {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': 'scheduled_arrival', 'flight_date': target_date}, 'max_depth': 200},
         # 2. Landed: 過去の便 (200件まで深掘り -> これで消えた国内線を全カバー)
         # 🦁 修正: flight_dateを指定して「今日の」新しい順にすることで、23時台の到着漏れを防ぐ
-        {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 200},
+        {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 400},
         # 🦁 追加: 3. Scheduled: 予定の便 (200件まで深掘り) ★ここを追加
-        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 200},
+        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300},
         # 4. Yesterday: 昨日出発の長距離便 (100件)
         {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100}
     ]
