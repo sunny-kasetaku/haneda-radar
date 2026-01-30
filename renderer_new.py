@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import sys
 from datetime import datetime, timedelta
 
 def render_html(demand_results, password, current_time=None):
@@ -166,6 +167,14 @@ def render_html(demand_results, password, current_time=None):
         name = str(origin_name)
         for eng, jpn in NAME_MAP.items():
             if eng in name: return jpn
+        
+        # 🦁 ログ出力の実装：辞書にない場合に追記
+        try:
+            with open("unknown_airports.log", "a", encoding="utf-8") as log_f:
+                log_f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Code: {origin_val}, Name: {origin_name}\n")
+        except Exception as e:
+            print(f"Log Error: {e}", file=sys.stderr)
+            
         return name
 
     # JSに渡すためのデータ整形
@@ -560,6 +569,7 @@ def render_html(demand_results, password, current_time=None):
                 <div class="strategy-box">
                     <div class="st-item"><span style="color:#FFD700; font-weight:bold;">📊 DATA(黄):</span> 今の飛行機の数に基づく推奨。<br><span style="color:#00BFFF; font-weight:bold;">🧠 THEORY(青):</span> セオリー(定石)に基づく推奨。</div>
                     <div class="st-item"><span style="color:#fff; font-weight:bold;">👑 W-BEST(虹):</span> データとセオリーが一致。激アツです。</div>
+                    <div class="st-item"><span style="color:#f00; font-weight:bold;">⚡️ 不一致の場合:</span> 公式サイトで実際の到着便を確認してください。</div>
                 </div>
                 <div class="disclaimer">
                     【免責事項】<br>
