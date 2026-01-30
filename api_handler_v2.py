@@ -81,21 +81,6 @@ def fetch_flight_data(api_key, date_str=None):
                             all_flights[same_flight_index] = info
                             continue
 
-                        duplicate_time_index = -1
-                        for i, existing in enumerate(all_flights):
-                            if existing['arrival_time'] == info['arrival_time']:
-                                duplicate_time_index = i
-                                break
-                        
-                        if duplicate_time_index != -1:
-                            existing_flight = all_flights[duplicate_time_index]
-                            is_new_japanese = info['flight_number'].startswith(('JL', 'NH'))
-                            is_existing_japanese = existing_flight['flight_number'].startswith(('JL', 'NH'))
-                            
-                            if is_new_japanese and not is_existing_japanese:
-                                all_flights[duplicate_time_index] = info
-                            continue
-                        
                         # 時間フィルタなしで全部追加
                         all_flights.append(info)
                 
