@@ -1,16 +1,8 @@
 name: Haneda Radar Final
 
 on:
-  # 手動実行ボタン（テスト用）
+  # 手動実行、および外部（GAS）からの起動用
   workflow_dispatch:
-  
-  # 👇【変更】ここをコメントアウトして、更新時の自動起動を停止しました
-  # push:
-  #   branches: [ main ]
-
-  # 👇【追加】毎時3分に自動実行（これを入れないと自動更新されません）
-  schedule:
-    - cron: '3 * * * *'
 
 permissions:
   contents: write
