@@ -9,6 +9,7 @@ def fetch_flight_data(api_key, date_str=None):
     ・Active(飛行中)を「300件(3回)」まで深掘りし、取りこぼしを完全防止。
     ・Landed3回, Scheduled3回, Yesterday2回。
     ・合計11回コールで、プラン内に収めつつ最大のデータ精度を確保。
+    ・昼間のオフセットスキップを廃止し、国内線消失バグを修正。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -48,7 +49,7 @@ def fetch_flight_data(api_key, date_str=None):
         # 2. Landed: 過去の便 (300件で維持)
         # 🦁 修正: flight_dateを指定して「今日の」新しい順にすることで、23時台の到着漏れを防ぐ
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 300, 'use_offset': False},
-        # 🦁 追加: 3. Scheduled: 予定の便 (300件で維持) ★ここを追加
+        # 🦁 追加: 3. Scheduled: 予定の便 (300件で維持)
         # 🦁 追加: use_offset フラグを追加
         {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300, 'use_offset': True},
         # 4. Yesterday: 昨日出発の長距離便 (200件に削減してコスト調整)
