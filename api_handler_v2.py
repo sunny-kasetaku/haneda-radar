@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v18 最終修正版】深掘り全取得 ＋ タイムアウト対策(30秒)
-    ・APIリクエストは7回深掘り（Active×2, Landed×2, Scheduled×2, Yesterday×1）
-    ・タイムアウトを30秒に設定し、通信エラーを防ぐ
-    ・重複排除を「時刻・ターミナル・出発地」のトリプルチェックに改善
+    【v19 High-Spec】API回数11回/run (月間8,184回使用 / 上限10,000回)
+    ・Active(飛行中)を「300件(3回)」まで深掘りし、取りこぼしを完全防止。
+    ・Landed3回, Scheduled3回, Yesterday2回。
+    ・合計11回コールで、プラン内に収めつつ最大のデータ精度を確保。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -30,29 +30,29 @@ def fetch_flight_data(api_key, date_str=None):
         # 朝モード
         sched_sort = 'scheduled_arrival'
     elif 13 <= current_hour < 18:
-        # 昼モード (朝のデータを飛ばす)
+        # 昼モード (朝のデータを飛ばす -> 廃止。常に0から)
         sched_sort = 'scheduled_arrival'
-        base_offset = 100
+        # base_offset = 100  <-- ★削除 (これが国内線消失バグの原因だったため)
     else:
         # 夜モード
         sched_sort = 'scheduled_arrival.desc'
 
-    # バージョン表示を v18 に修正
-    print(f"DEBUG: Start API Fetch v18. Strategy: Deep Dive & Triple Check", file=sys.stderr)
+    # バージョン表示を v19 High-Spec に修正
+    print(f"DEBUG: Start API Fetch v19 High-Spec. Strategy: 11 Calls (Active Boost)", file=sys.stderr)
 
     strategies = [
-        # 1. Active: 未来の便 (100件に変更)
-        # 🦁 修正: flight_dateを指定して去年のゴミデータを排除
-        # 🦁 追加: use_offset フラグを追加
-        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 100, 'use_offset': True},
-        # 2. Landed: 過去の便 (300件に変更)
+        # 1. Active: 未来の便 (300件に増強)
+        # 🦁 修正: max_depth 100 -> 300 (3回)
+        # 🦁 修正: use_offset -> False (昼でも必ず0から取得し、国内線を確保)
+        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300, 'use_offset': False},
+        # 2. Landed: 過去の便 (300件で維持)
         # 🦁 修正: flight_dateを指定して「今日の」新しい順にすることで、23時台の到着漏れを防ぐ
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 300, 'use_offset': False},
-        # 🦁 追加: 3. Scheduled: 予定の便 (300件に変更) ★ここを追加
+        # 🦁 追加: 3. Scheduled: 予定の便 (300件で維持) ★ここを追加
         # 🦁 追加: use_offset フラグを追加
         {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300, 'use_offset': True},
-        # 4. Yesterday: 昨日出発の長距離便 (300件に増強！深夜便対策)
-        {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 300, 'use_offset': False}
+        # 4. Yesterday: 昨日出発の長距離便 (200件に削減してコスト調整)
+        {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 200, 'use_offset': False}
     ]
 
     for strat in strategies:
@@ -79,6 +79,7 @@ def fetch_flight_data(api_key, date_str=None):
                 
                 # 【修正】タイムアウトを30秒に延長
                 response = requests.get(base_url, params=params, timeout=30)
+                response.raise_for_status()
                 data = response.json()
                 raw_data = data.get('data', [])
                 
