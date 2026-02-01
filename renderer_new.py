@@ -21,8 +21,13 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
     # 🦁 修正1: 時差統一 & 重複排除
     # ---------------------------------------------------------
     # 国内空港マスター
-    DOMESTIC_CODES = {"CTS","FUK","OKA","ITM","KIX","NGO","KMQ","HKD","HIJ","MYJ","KCZ","TAK","KMJ","KMI","KOJ","ISG","MMY","IWK","UBJ","TKS","AOJ","MSJ","OIT","AXT","GAJ","OKJ","NGS","AKJ","OBO","SHM","ASJ","MMB","IZO","KUH","KKJ","TTJ","UKB","HSG","NTQ","HNA","SYO","YGJ","KIJ","TOY","HAC","SHI"}
-    DOMESTIC_NAMES = ["新千歳","福岡","那覇","伊丹","関空","中部","小松","函館","広島","松山","高知","高松","熊本","宮崎","鹿児島","石垣","宮古","岩国","山口","徳島","青森","三沢","大分","秋田","山形","岡山","長崎","旭川","帯広","白浜","奄美","女満別","出雲","釧路","北九州","鳥取","神戸","佐賀","能登","花巻","庄内","米子","新潟","富山","八丈島","下地島"]
+    DOMESTIC_CODES = {
+        "CTS","FUK","OKA","ITM","KIX","NGO","KMQ","HKD","HIJ","MYJ","KCZ","TAK","KMJ","KMI","KOJ",
+        "ISG","MMY","IWK","UBJ","TKS","AOJ","MSJ","OIT","AXT","GAJ","OKJ","NGS","AKJ","OBO","SHM",
+        "ASJ","MMB","IZO","KUH","KKJ","TTJ","UKB","HSG","NTQ","HNA","SYO","YGJ","KIJ","TOY","HAC","SHI",
+        "MBE","WKJ","SHB" # 🦁 追加: 紋別, 稚内, 中標津
+    }
+    DOMESTIC_NAMES = ["新千歳","福岡","那覇","伊丹","関空","中部","小松","函館","広島","松山","高知","高松","熊本","宮崎","鹿児島","石垣","宮古","岩国","山口","徳島","青森","三沢","大分","秋田","山形","岡山","長崎","旭川","帯広","白浜","奄美","女満別","出雲","釧路","北九州","鳥取","神戸","佐賀","能登","花巻","庄内","米子","新潟","富山","八丈島","下地島","紋別","稚内","中標津"]
 
     def get_f_num(s):
         m = re.search(r'\d+', str(s))
@@ -105,7 +110,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
     theory_best = get_theory_recommendation(current_hour)
     # ---------------------------------------------------------
 
-    # 1. 空港コード辞書 (既存のまま)
+    # 1. 空港コード辞書 (更新版)
     AIRPORT_MAP = {
         "CTS":"新千歳", "FUK":"福岡", "OKA":"那覇", "ITM":"伊丹", "KIX":"関空",
         "NGO":"中部", "KMQ":"小松", "HKD":"函館", "HIJ":"広島", "MYJ":"松山",
@@ -116,7 +121,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
         "ASJ":"奄美", "MMB":"女満別", "IZO":"出雲", "KUH":"釧路", "KKJ":"北九州",
         "TTJ":"鳥取", "UKB":"神戸", "HSG":"佐賀", "NTQ":"能登", "HNA":"花巻",
         "SYO":"庄内", "YGJ":"米子", "KIJ":"新潟", "TOY":"富山",
-        "HAC":"八丈島", "SHI":"下地島",
+        "HAC":"八丈島", "SHI":"下地島", 
+        "MBE":"紋別", "WKJ":"稚内", "SHB":"中標津", # 🦁 追加: 北海道
+        
         "HNL":"ホノルル", "JFK":"NY(JFK)", "LAX":"ロス", "SFO":"サンフランシスコ", 
         "SEA":"シアトル", "LHR":"ロンドン", "CDG":"パリ", "FRA":"フランクフルト", 
         "HEL":"ヘルシンキ", "DXB":"ドバイ", "DOH":"ドーハ", "IST":"イスタンブール",
@@ -125,7 +132,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
         "TPE":"台北(桃園)", "TSA":"台北(松山)", "ICN":"ソウル(仁川)", 
         "GMP":"ソウル(金浦)", "PEK":"北京", "PVG":"上海(浦東)", "SHA":"上海(虹橋)", 
         "DLC":"大連", "CAN":"広州", "TAO":"青島", "YVR":"バンクーバー",
-        "SYD":"シドニー", "MEL":"メルボルン"
+        "SYD":"シドニー", "MEL":"メルボルン",
+        "MUC":"ミュンヘン", "VIE":"ウィーン", "BOS":"ボストン", "EWR":"NY(ニューアーク)", 
+        "GUM":"グアム", "TSN":"天津", "SJC":"サンノゼ" # 🦁 追加: 国際線
     }
     
     # 2. 都市名辞書 (既存のまま)
@@ -156,7 +165,11 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
         "Qingdao": "青島", "Gimpo": "ソウル(金浦)", "Helsinki": "ヘルシンキ",
         "Minneapolis": "ミネアポリス", "George Bush": "ヒューストン", 
         "Washington": "ワシントン", "Pearson": "トロント", "Toronto": "トロント",
-        "Leonardo": "ローマ", "Fiumicino": "ローマ", "Indira": "デリー"
+        "Leonardo": "ローマ", "Fiumicino": "ローマ", "Indira": "デリー",
+        "Vienna": "ウィーン", "Munich": "ミュンヘン", "Boston": "ボストン",
+        "Newark": "NY(ニューアーク)", "Guam": "グアム", "Tianjin": "天津",
+        "San Jose": "サンノゼ", "Monbetsu": "紋別", "Wakkanai": "稚内",
+        "Nakashibetsu": "中標津"
     }
 
     def translate_origin(origin_val, origin_name):
@@ -168,7 +181,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
         for eng, jpn in NAME_MAP.items():
             if eng in name: return jpn
         
-        # 🦁 ログ出力の実装：辞書にない場合に追記（GitHub Actionsでの自動保存用）
+        # 🦁 ログ出力の実装：辞書にない場合に追記
         try:
             # 重複して書き込まないように、一度中身を確認するロジックを追加
             log_line = f"Code: {origin_val}, Name: {origin_name}"
@@ -181,7 +194,6 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             if not exists:
                 with open("unknown_airports.log", "a", encoding="utf-8") as log_f:
                     log_f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {log_line}\n")
-                # コンソールログにも目立つように出す
                 print(f"⚠️  NEW UNKNOWN DETECTED: {log_line}", file=sys.stderr)
         except Exception as e:
             print(f"Log Error: {e}", file=sys.stderr)
@@ -210,11 +222,12 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
         
         if is_dom:
             # 国内線の詳細
-            # 🦁 JAL (JL) の場合の北/南 振り分けロジックを追加
+            # 🦁 JAL (JL) の場合の北/南 振り分けロジック
             if "JL" in f_num:
                 # 2号(T1北)へ行くべき出発地リスト
                 # 北海道・東北・北陸・近畿(伊丹/関空/南紀白浜)
-                north_origins = ["新千歳", "函館", "旭川", "帯広", "釧路", "女満別", "青森", "三沢", "秋田", "山形", "小松", "伊丹", "関空", "南紀白浜"]
+                # 🦁 ここに紋別(MBE)、稚内(WKJ)、中標津(SHB)も対象として含まれます（"北海道"扱いのため）
+                north_origins = ["新千歳", "函館", "旭川", "帯広", "釧路", "女満別", "紋別", "稚内", "中標津", "青森", "三沢", "秋田", "山形", "小松", "伊丹", "関空", "南紀白浜"]
                 
                 if any(place in jpn_origin for place in north_origins):
                     exit_type = "2号(T1北)"
