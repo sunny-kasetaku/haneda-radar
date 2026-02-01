@@ -440,12 +440,18 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                 document.querySelectorAll('.data-badge, .theory-badge, .double-badge').forEach(el => el.remove());
                 document.getElementById('conflict-alert').style.display = 'none';
 
+                // 🦁 修正箇所：昼間(6-24時)は国際線(T3)をDATA BEST判定から除外
                 let dataBestKey = "";
-                let priorityKeys = ["国際(T3)", "4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"];
-                let allMax = Math.max(...Object.values(counts));
-                if (allMax > 0) {{
-                    for (let k of priorityKeys) {{
-                        if (counts[k] === allMax) {{ dataBestKey = k; break; }}
+                let h = now.getHours();
+                let candidates = (h >= 6 && h <= 23) 
+                    ? ["4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"]
+                    : ["国際(T3)", "4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"];
+
+                let maxVal = 0;
+                candidates.forEach(k => {{ if(counts[k] > maxVal) maxVal = counts[k]; }});
+                if (maxVal > 0) {{
+                    for (let k of candidates) {{
+                        if (counts[k] === maxVal) {{ dataBestKey = k; break; }}
                     }}
                 }}
 
@@ -543,7 +549,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                 <div id="card-t1n" class="t-card"><div style="color:#999;font-size:12px;">2号(T1北)</div><div id="count-t1n" class="t-num" style="color:#FF4444">0</div></div>
                 <div id="card-t2-3" class="t-card"><div style="color:#999;font-size:12px;">3号(T2)</div><div id="count-t2-3" class="t-num" style="color:#1E90FF">0</div></div>
                 <div id="card-t2-4" class="t-card"><div style="color:#999;font-size:12px;">4号(T2)</div><div id="count-t2-4" class="t-num" style="color:#00FFFF">0</div></div>
-                <div id="card-t3" class="t-card" style="grid-column: 1/3;"><div style="color:#999;font-size:12px;">国際(T3)</div><div id="count-t3" class="t-num" style="color:#FFD700">0</div></div>
+                <div id="card-t3" class="t-card" style="grid-column: 1/3;"><div style="color:#999;font-size:12px;">国際(T3) <span style="font-size:10px; color:#FF44FF;">※認定証が必要</span></div><div id="count-t3" class="t-num" style="color:#FFD700">0</div></div>
             </div>
 
             <div class="section-title">✈️ 分析の根拠</div>
