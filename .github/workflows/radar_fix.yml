@@ -1,9 +1,16 @@
 name: Haneda Radar Final
 
 on:
+  # 手動実行ボタン（テスト用）
   workflow_dispatch:
-  push:
-    branches: [ main ]
+  
+  # 👇【変更】ここをコメントアウトして、更新時の自動起動を停止しました
+  # push:
+  #   branches: [ main ]
+
+  # 👇【追加】毎時3分に自動実行（これを入れないと自動更新されません）
+  schedule:
+    - cron: '3 * * * *'
 
 permissions:
   contents: write
@@ -16,7 +23,6 @@ jobs:
     env:
       AVIATION_STACK_API_KEY: ${{ secrets.AVIATION_STACK_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      # 🦁 ここに追加しました！これでPythonがURLを受け取れます
       DISCORD_THREAD_URL: ${{ secrets.DISCORD_THREAD_URL }}
 
     steps:
