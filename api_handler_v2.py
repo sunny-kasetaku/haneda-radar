@@ -22,11 +22,20 @@ def fetch_flight_data(api_key, date_str=None):
     # 🦁 修正: 日付指定がない場合は今日とする
     target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
 
-    # 🦁 追加: 午後は「降順」で夜の便を優先確保
-    if now_jst.hour >= 12:
-        sched_sort = 'scheduled_arrival.desc'
-    else:
+    # 🦁 修正: 3段階シフト（朝:Asc/0, 昼:Asc/100, 夜:Desc/0）
+    current_hour = now_jst.hour
+    base_offset = 0
+    
+    if 0 <= current_hour < 13:
+        # 朝モード
         sched_sort = 'scheduled_arrival'
+    elif 13 <= current_hour < 18:
+        # 昼モード (朝のデータを飛ばす)
+        sched_sort = 'scheduled_arrival'
+        base_offset = 100
+    else:
+        # 夜モード
+        sched_sort = 'scheduled_arrival.desc'
 
     # バージョン表示を v18 に修正
     print(f"DEBUG: Start API Fetch v18. Strategy: Deep Dive & Triple Check", file=sys.stderr)
@@ -34,18 +43,25 @@ def fetch_flight_data(api_key, date_str=None):
     strategies = [
         # 1. Active: 未来の便 (100件に変更)
         # 🦁 修正: flight_dateを指定して去年のゴミデータを排除
-        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': 'scheduled_arrival', 'flight_date': target_date}, 'max_depth': 100},
+        # 🦁 追加: use_offset フラグを追加
+        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 100, 'use_offset': True},
         # 2. Landed: 過去の便 (300件に変更)
         # 🦁 修正: flight_dateを指定して「今日の」新しい順にすることで、23時台の到着漏れを防ぐ
-        {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 300},
+        {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 300, 'use_offset': False},
         # 🦁 追加: 3. Scheduled: 予定の便 (300件に変更) ★ここを追加
-        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300},
+        # 🦁 追加: use_offset フラグを追加
+        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300, 'use_offset': True},
         # 4. Yesterday: 昨日出発の長距離便 (300件に増強！深夜便対策)
-        {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 300}
+        {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 300, 'use_offset': False}
     ]
 
     for strat in strategies:
-        current_offset = 0
+        # 🦁 修正: ストラテジーに応じたオフセット初期値を設定
+        if strat.get('use_offset'):
+            current_offset = base_offset
+        else:
+            current_offset = 0
+            
         fetched_count = 0
         target_depth = strat['max_depth']
         
