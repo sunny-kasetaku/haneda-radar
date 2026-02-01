@@ -210,9 +210,23 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
         
         if is_dom:
             # 国内線の詳細
-            if any(code in f_num for code in ["JL", "BC", "U4", "7G"]):
+            # 🦁 JAL (JL) の場合の北/南 振り分けロジックを追加
+            if "JL" in f_num:
+                # 2号(T1北)へ行くべき出発地リスト
+                # 北海道・東北・北陸・近畿(伊丹/関空/南紀白浜)
+                north_origins = ["新千歳", "函館", "旭川", "帯広", "釧路", "女満別", "青森", "三沢", "秋田", "山形", "小松", "伊丹", "関空", "南紀白浜"]
+                
+                if any(place in jpn_origin for place in north_origins):
+                    exit_type = "2号(T1北)"
+                else:
+                    # それ以外（中国・四国・九州・沖縄）は1号(T1南)
+                    exit_type = "1号(T1南)"
+            
+            # スカイマーク(BC), スターフライヤー(7G)などは従来通り1号
+            elif any(code in f_num for code in ["BC", "U4", "7G"]):
                 exit_type = "1号(T1南)"
             else:
+                # ANA(NH), Solaseed, AIRDO等は3号(T2)
                 exit_type = "3号(T2)"
         else:
             # 国際線
