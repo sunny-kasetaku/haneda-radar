@@ -438,6 +438,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                 // 1-2-6 の形式に結合
                 const loc = `${{pool}}-${{lane}}-${{pos}}`;
                 
+                // 🦁 修正: プール番号を保存 (Po時に使用)
+                localStorage.setItem("kasetack_pi_pool", pool);
+
                 const now = new Date();
                 localStorage.setItem("kasetack_pi_time", now.getTime());
                 if(name) localStorage.setItem("kasetack_name", name);
@@ -455,6 +458,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             // 🦁 追加: プールアウト処理 (自動計算)
             function handlePo() {{
                 const piTime = localStorage.getItem("kasetack_pi_time");
+                const piPool = localStorage.getItem("kasetack_pi_pool"); // 🦁 修正: プール番号を取得
                 const name = document.getElementById('p-name').value;
                 
                 if(!piTime) {{ alert("先に「プールイン」を押して時間を記録してください"); return; }}
@@ -463,8 +467,10 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                 const diffMs = now.getTime() - parseInt(piTime);
                 const diffMins = Math.floor(diffMs / 60000);
                 
-                // 50分 プールアウト の形式でコピー
-                let text = `${{diffMins}}分 プールアウト`;
+                // 🦁 修正: プール番号を含めて出力
+                let poolText = piPool ? piPool + "号 " : "";
+                let text = `${{poolText}}${{diffMins}}分 プールアウト`;
+                
                 if(name) text += ` @${{name}}`;
                 
                 copyToClip(text);
