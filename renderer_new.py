@@ -14,8 +14,10 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
     fetch_timestamp = int((current_time - timedelta(hours=9)).timestamp() * 1000)
 
     raw_flight_list = demand_results.get("flights", [])
-    val_past = demand_results.get("setting_past", 40)
-    val_future = demand_results.get("setting_future", 20)
+    
+    # 🦁 修正: UI革命用に表示範囲を拡張 (スクロール対応)
+    val_past = 120 
+    val_future = 180
 
     # ---------------------------------------------------------
     # 🦁 修正1: 時差統一 & 重複排除
@@ -270,14 +272,21 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             body.loading {{ animation: flash 0.8s ease-out; }}
             body {{ background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
             #main-content {{ display:none; width:100%; max-width:480px; }}
+            
+            /* タブデザイン */
+            .tab-container {{ display:flex; gap:10px; margin-bottom:15px; }}
+            .tab-btn {{ flex:1; padding:12px; background:#333; border:1px solid #555; border-radius:10px; color:#aaa; font-weight:bold; cursor:pointer; text-align:center; font-size:14px; transition:0.2s; }}
+            .tab-btn.active {{ background:#FFD700; color:#000; border:1px solid #FFD700; box-shadow:0 0 10px rgba(255,215,0,0.4); }}
+            
             .info-banner {{ border: 2px solid #FFD700; border-radius: 12px; padding: 10px; text-align: center; color: #FFD700; font-weight: bold; margin-bottom: 15px; font-size: 14px; }}
             .rank-card {{ background: #222; border: 2px solid #444; border-radius: 25px; padding: 20px; text-align: center; margin-bottom: 15px; }}
             .rank-display {{ font-size: 80px; font-weight: bold; color: #FFD700; line-height: 1; }}
             .rank-sub {{ font-size: 20px; font-weight: bold; margin-top:5px; }}
             .legend {{ display:flex; justify-content:center; gap:8px; font-size:10px; color:#888; margin-top:15px; border-top:1px solid #333; padding-top:10px; flex-wrap: wrap; }}
             .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
-            .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; }}
-            
+            .t-card {{ background: #1A1A1A; border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; position: relative; display:block; }}
+            .t-card.hidden {{ display:none !important; }}
+
             .data-best {{ border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255,215,0,0.4); }}
             .data-badge {{ position: absolute; top: -10px; right: -5px; background: #FFD700; color: #000; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 10px; z-index:10; }}
             
@@ -289,9 +298,14 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
 
             .t-num {{ font-size: 32px; font-weight: bold; margin-top:5px; }}
             .section-title {{ color: gold; font-weight: bold; font-size: 14px; margin: 15px 0 5px 0; border-left: 4px solid gold; padding-left: 10px; }}
-            .flight-table {{ width: 100%; font-size: 13px; border-collapse: collapse; background: #111; border-radius:10px; overflow:hidden; margin-bottom: 25px; }}
-            .flight-table th {{ color:gold; padding:10px; border-bottom:1px solid #333; text-align:center; }}
+            
+            /* スクロールとライン */
+            .table-container {{ max-height: 400px; overflow-y: auto; border: 1px solid #333; border-radius: 10px; background: #111; margin-bottom: 25px; }}
+            .flight-table {{ width: 100%; font-size: 13px; border-collapse: collapse; }}
+            .flight-table th {{ color:gold; padding:10px; border-bottom:1px solid #333; text-align:center; position: sticky; top: 0; background: #222; z-index: 5; }}
             .flight-table td {{ padding: 10px; border-bottom: 1px solid #222; text-align: center; }}
+            .target-row {{ background: #1a2a1a; }} 
+            .target-row td:first-child {{ border-left: 4px solid #00FF00; }}
             
             /* 🦁 追加・修正：凡例ドッキングUI */
             .fc-legend-box {{ background: #222; border: 1px solid #444; border-bottom: none; border-radius: 15px 15px 0 0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; color: #FFD700; }}
@@ -339,6 +353,11 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             const SETTING_FUTURE = {val_future};
             const THEORY_BEST = "{theory_best}"; 
             const FETCH_TIMESTAMP = {fetch_timestamp};
+
+            // ランク計算の範囲設定 (-60分 〜 +30分)
+            const CALC_PAST = 60;
+            const CALC_FUTURE = 30;
+            let currentTab = 'DOM'; // 初期値（ロード時にDOMに変更）
             
             function checkPass() {{
                 var stored = localStorage.getItem("kasetack_auth_pass_v3");
@@ -357,10 +376,19 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             window.onload = checkPass;
 
             function initApp() {{
-                updateDisplay();
-                updateTimeAlert();
+                setTab('DOM'); // デフォルトは国内線タブ
                 setInterval(updateDisplay, 60000); 
                 setInterval(updateTimeAlert, 60000);
+                updateTimeAlert();
+            }}
+
+            function setTab(mode) {{
+                currentTab = mode;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                if(mode === 'ALL') document.getElementById('tab-all').classList.add('active');
+                if(mode === 'DOM') document.getElementById('tab-dom').classList.add('active');
+                if(mode === 'INT') document.getElementById('tab-int').classList.add('active');
+                updateDisplay();
             }}
 
             function updateTimeAlert() {{
@@ -383,9 +411,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
 
             function updateDisplay() {{
                 const now = new Date();
-                const startTime = new Date(now.getTime() - SETTING_PAST * 60000);
-                const endTime = new Date(now.getTime() + SETTING_FUTURE * 60000);
-
+                
                 let counts = {{ "1号(T1南)":0, "2号(T1北)":0, "3号(T2)":0, "4号(T2)":0, "国際(T3)":0 }};
                 let tableHtml = "";
                 let fcCounts = [0, 0, 0];
@@ -396,12 +422,26 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                     let eType = f.exit_type;
                     if (!counts.hasOwnProperty(eType)) eType = "国際(T3)";
 
-                    let fNumStr = f.flight_number.replace(/\D/g, ''); 
-                    let fNum = parseInt(fNumStr);
-                    if (!isNaN(fNum) && fNum >= 9000) return;
+                    // タブによるフィルタリング
+                    // DOM: 1,2,3,4号を表示 / INT: 国際(T3)を表示
+                    let isVisible = true;
+                    if (currentTab === 'DOM') {{
+                        if (eType === "国際(T3)") isVisible = false;
+                    }} else if (currentTab === 'INT') {{
+                        if (eType !== "国際(T3)") isVisible = false;
+                    }}
 
-                    if (fDate >= startTime && fDate <= endTime) {{
-                        counts[eType] += f.pax;
+                    let diffMs = fDate - now;
+                    let diffMins = diffMs / 60000;
+                    
+                    // リスト表示条件: -60分以降 〜 +180分以内
+                    if (diffMins >= -60 && diffMins <= 180 && isVisible) {{
+                        // ランク計算対象か？（-60 〜 +30）
+                        let isTarget = (diffMins >= -60 && diffMins <= 30);
+                        if (isTarget) {{
+                            counts[eType] += f.pax;
+                        }}
+
                         let hStr = fDate.getHours().toString().padStart(2, '0');
                         let mStr = fDate.getMinutes().toString().padStart(2, '0');
                         let timeStr = hStr + ":" + mStr;
@@ -417,23 +457,42 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                         if (eType === "4号(T2)") color = "#00FFFF";
                         if (eType === "国際(T3)") color = "#FFD700";
                         
-                        tableHtml += `<tr><td>${{timeStr}}</td><td style='color:${{color}}; font-weight:bold;'>${{f.flight_number}}${{delayText}}</td><td>${{f.origin}}</td><td>${{f.pax}}名</td></tr>`;
+                        // 計算対象行には色をつける
+                        let rowClass = isTarget ? "target-row" : "";
+                        
+                        tableHtml += `<tr class="${{rowClass}}"><td>${{timeStr}}</td><td style='color:${{color}}; font-weight:bold;'>${{f.flight_number}}${{delayText}}</td><td>${{f.origin}}</td><td>${{f.pax}}名</td></tr>`;
                     }}
                     
-                    let diffMs = fDate - now;
-                    let diffMins = diffMs / 60000;
+                    // 予測計算
                     if (diffMins >= 0 && diffMins < 60) fcCounts[0] += f.pax;
                     if (diffMins >= 60 && diffMins < 120) fcCounts[1] += f.pax;
                     if (diffMins >= 120 && diffMins < 180) fcCounts[2] += f.pax;
                 }});
 
                 document.getElementById('flight-table-body').innerHTML = tableHtml;
+                
                 document.getElementById('count-t1s').innerText = counts["1号(T1南)"];
                 document.getElementById('count-t1n').innerText = counts["2号(T1北)"];
                 document.getElementById('count-t2-3').innerText = counts["3号(T2)"];
                 document.getElementById('count-t2-4').innerText = counts["4号(T2)"];
                 document.getElementById('count-t3').innerText = counts["国際(T3)"];
                 
+                // タブに合わせてカードの表示/非表示制御
+                document.getElementById('card-t1s').classList.remove('hidden');
+                document.getElementById('card-t1n').classList.remove('hidden');
+                document.getElementById('card-t2-3').classList.remove('hidden');
+                document.getElementById('card-t2-4').classList.remove('hidden');
+                document.getElementById('card-t3').classList.remove('hidden');
+
+                if (currentTab === 'DOM') {{
+                    document.getElementById('card-t3').classList.add('hidden');
+                }} else if (currentTab === 'INT') {{
+                    document.getElementById('card-t1s').classList.add('hidden');
+                    document.getElementById('card-t1n').classList.add('hidden');
+                    document.getElementById('card-t2-3').classList.add('hidden');
+                    document.getElementById('card-t2-4').classList.add('hidden');
+                }}
+
                 document.querySelectorAll('.t-card').forEach(el => {{
                     el.classList.remove('data-best', 'theory-best', 'double-best');
                 }});
@@ -442,15 +501,14 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
 
                 // 🦁 修正箇所：昼間(6-24時)は国際線(T3)をDATA BEST判定から除外
                 let dataBestKey = "";
-                let h = now.getHours();
-                let candidates = (h >= 6 && h <= 23) 
-                    ? ["4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"]
-                    : ["国際(T3)", "4号(T2)", "3号(T2)", "2号(T1北)", "1号(T1南)"];
-
                 let maxVal = 0;
-                candidates.forEach(k => {{ if(counts[k] > maxVal) maxVal = counts[k]; }});
+                let visibleKeys = [];
+                if (currentTab === 'DOM' || currentTab === 'ALL') visibleKeys.push("1号(T1南)", "2号(T1北)", "3号(T2)", "4号(T2)");
+                if (currentTab === 'INT' || currentTab === 'ALL') visibleKeys.push("国際(T3)");
+
+                visibleKeys.forEach(k => {{ if(counts[k] > maxVal) maxVal = counts[k]; }});
                 if (maxVal > 0) {{
-                    for (let k of candidates) {{
+                    for (let k of visibleKeys) {{
                         if (counts[k] === maxVal) {{ dataBestKey = k; break; }}
                     }}
                 }}
@@ -495,7 +553,10 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                     document.getElementById('conflict-alert').style.display = 'block';
                 }}
                 
-                let total = Object.values(counts).reduce((a,b)=>a+b, 0);
+                // ランク表示 (表示中の合計値で判定)
+                let total = 0;
+                visibleKeys.forEach(k => total += counts[k]);
+
                 let r="C", c="#FFFFFF", sym="⚠️", st="【注意】 需要僅少";
                 if(total >= 2000) {{ r="S"; c="#FFD700"; sym="🌈"; st="【最高】 需要爆発"; }}
                 else if(total >= 1000) {{ r="A"; c="#FF6B00"; sym="🔥"; st="【推奨】 需要過多"; }}
@@ -536,6 +597,12 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                 <span style="font-size:12px; font-weight:normal;">データ(黄)とセオリー(青)が割れています。<br>下記の「公式情報」を確認して判断してください。</span>
             </div>
 
+            <div class="tab-container">
+                <div id="tab-all" class="tab-btn" onclick="setTab('ALL')">すべて</div>
+                <div id="tab-dom" class="tab-btn" onclick="setTab('DOM')">1･2･3･4号(国内)</div>
+                <div id="tab-int" class="tab-btn" onclick="setTab('INT')">国際(T3)</div>
+            </div>
+
             <div class="rank-card">
                 <div id="rank-disp" class="rank-display">---</div>
                 <div id="rank-sub" class="rank-sub">集計中...</div>
@@ -552,11 +619,13 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                 <div id="card-t3" class="t-card" style="grid-column: 1/3;"><div style="color:#999;font-size:12px;">国際(T3) <span style="font-size:10px; color:#FF44FF;">※認定証が必要</span></div><div id="count-t3" class="t-num" style="color:#FFD700">0</div></div>
             </div>
 
-            <div class="section-title">✈️ 分析の根拠</div>
-            <table class="flight-table">
-                <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>
-                <tbody id="flight-table-body"></tbody>
-            </table>
+            <div class="section-title">✈️ 分析の根拠（背景色は計算対象）</div>
+            <div class="table-container">
+                <table class="flight-table">
+                    <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>
+                    <tbody id="flight-table-body"></tbody>
+                </table>
+            </div>
             
             <div class="section-title">📈 今後の需要予測 (3時間先)</div>
             <div class="fc-legend-box">【基準】 🔥高:1000~ ✅中:500~ 👀通常:1~</div>
@@ -568,10 +637,14 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             
             <div class="cam-box">
                 <div class="cam-title">💡 勝つための戦略チェック</div>
+                
+                <a href="{discord_url}" class="cam-btn discord-btn">💬 情報共有 (プールIN・OUT / 写真など)</a>
+                
                 <div class="train-alert-box">
                     <div class="ta-row"><span class="ta-name">🚝 モノレール終電</span><span class="ta-time">23:42</span></div>
                     <div class="ta-row"><span class="ta-name">🔴 京急線終電</span><span class="ta-time">23:51</span></div>
                 </div>
+                
                 <a href="https://ttc.taxi-inf.jp/" target="_blank" class="cam-btn taxi-btn">🚖 タクシープール (TTC)</a>
                 
                 <div class="cam-title" style="margin-top:15px;">🚕 乗り場・航空会社 選び方のガイド</div>
