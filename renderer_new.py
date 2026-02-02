@@ -196,7 +196,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             if not exists:
                 with open("unknown_airports.log", "a", encoding="utf-8") as log_f:
                     log_f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {log_line}\n")
-                print(f"⚠️  NEW UNKNOWN DETECTED: {log_line}", file=sys.stderr)
+                print(f"⚠️  NEW UNKNOWN DETECTED: {log_line}", file=sys.stderr)
         except Exception as e:
             print(f"Log Error: {e}", file=sys.stderr)
             
@@ -267,6 +267,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
     <html lang="ja">
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>HANEDA RADAR v22</title>
         <style>
             @keyframes flash {{ 0% {{ opacity: 0.6; }} 50% {{ opacity: 0.8; }} 100% {{ opacity: 1; }} }}
             body.loading {{ animation: flash 0.8s ease-out; }}
@@ -307,7 +308,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             .target-row {{ background: #1a2a1a; }} 
             .target-row td:first-child {{ border-left: 4px solid #00FF00; }}
             
-            /* 🦁 追加・修正：凡例ドッキングUI */
+            /* 凡例ドッキングUI */
             .fc-legend-box {{ background: #222; border: 1px solid #444; border-bottom: none; border-radius: 15px 15px 0 0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; color: #FFD700; }}
             .forecast-box {{ background: #111; border: 1px solid #444; border-radius: 0 0 15px 15px; padding: 15px; margin-bottom: 20px; }}
             .fc-row {{ border-bottom: 1px dashed #333; padding: 10px 0; }}
@@ -322,8 +323,21 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             .cam-btn {{ display: block; padding: 12px; margin-bottom: 5px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size:13px; color: #000; }}
             .taxi-btn {{ background: #FFD700; }}
             .train-btn {{ background: #00BFFF; }}
-            /* 🦁 修正: Discordボタンを大きく目立たせる */
+            
+            /* 🦁 追加: ツール部分のデザイン */
+            .tool-box {{ background: #222; border: 1px solid #444; border-radius: 10px; padding: 10px; margin-bottom: 15px; text-align: left; }}
+            .tool-row {{ display: flex; gap: 5px; margin-bottom: 8px; }}
+            /* 3分割入力用 */
+            .tool-select {{ flex: 1; padding: 10px; background: #000; border: 1px solid #555; color: #fff; border-radius: 5px; font-size: 14px; -webkit-appearance: none; text-align:center; }}
+            .tool-num {{ flex: 1; padding: 10px; background: #000; border: 1px solid #555; color: #fff; border-radius: 5px; font-size: 16px; width: 30%; }}
+            .tool-input {{ flex: 2; padding: 10px; background: #000; border: 1px solid #555; color: #fff; border-radius: 5px; font-size: 16px; }}
+            .tool-btn {{ flex: 1; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; }}
+            .pi-btn {{ background: #FFD700; color: #000; }}
+            .po-btn {{ background: #00BFFF; color: #000; }}
+            
+            /* 🦁 追加: Discordボタンを大きく目立たせる */
             .discord-btn {{ background: #5865F2; color: #fff; padding: 15px; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4); }}
+            
             .sub-btn-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 5px; }}
             .disclaimer {{ font-size: 12px; color: #999; text-align: left; line-height: 1.5; border-top: 1px solid #444; padding-top: 10px; margin-top: 15px; }}
             .update-btn {{ background: #FFD700; color: #000; width: 100%; border-radius: 15px; padding: 15px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; margin-bottom:20px; }}
@@ -365,6 +379,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                     document.getElementById('main-content').style.display = 'block';
                     document.body.classList.add('loading');
                     initApp();
+                    loadToolData(); // 🦁 追加: ツール用データ読み込み
                 }} else {{
                     var input = (prompt("本日のパスワードを入力してください") || "").trim();
                     if (input === "{password}" || input === "0000") {{ 
@@ -389,6 +404,70 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                 if(mode === 'DOM') document.getElementById('tab-dom').classList.add('active');
                 if(mode === 'INT') document.getElementById('tab-int').classList.add('active');
                 updateDisplay();
+            }}
+
+            // 🦁 追加: 名前読み込み機能
+            function loadToolData() {{
+                const name = localStorage.getItem("kasetack_name") || "";
+                if(name) document.getElementById('p-name').value = name;
+            }}
+
+            // 🦁 追加: クリップボードコピー機能
+            function copyToClip(text) {{
+                navigator.clipboard.writeText(text).then(function() {{
+                    const btn = document.getElementById('discord-link-btn');
+                    const originalText = btn.innerText;
+                    btn.innerText = "📋 コピー完了！DiscordへGO！";
+                    btn.style.background = "#00FF00";
+                    setTimeout(() => {{ 
+                        btn.innerText = originalText; 
+                        btn.style.background = "#5865F2";
+                    }}, 2000);
+                }});
+            }}
+
+            // 🦁 追加: プールイン処理 (3分割入力対応)
+            function handlePi() {{
+                const pool = document.getElementById('p-pool').value;
+                const lane = document.getElementById('p-lane').value;
+                const pos = document.getElementById('p-pos').value;
+                const name = document.getElementById('p-name').value;
+                
+                if(!lane || !pos) {{ alert("列と番号を入力してください"); return; }}
+                
+                // 1-2-6 の形式に結合
+                const loc = `${{pool}}-${{lane}}-${{pos}}`;
+                
+                const now = new Date();
+                localStorage.setItem("kasetack_pi_time", now.getTime());
+                if(name) localStorage.setItem("kasetack_name", name);
+
+                const h = now.getHours().toString().padStart(2, '0');
+                const m = now.getMinutes().toString().padStart(2, '0');
+                
+                // 1-2-6 プールイン 10:00 の形式でコピー
+                let text = `${{loc}} プールイン ${{h}}:${{m}}`;
+                if(name) text += ` @${{name}}`;
+                
+                copyToClip(text);
+            }}
+
+            // 🦁 追加: プールアウト処理 (自動計算)
+            function handlePo() {{
+                const piTime = localStorage.getItem("kasetack_pi_time");
+                const name = document.getElementById('p-name').value;
+                
+                if(!piTime) {{ alert("先に「プールイン」を押して時間を記録してください"); return; }}
+                
+                const now = new Date();
+                const diffMs = now.getTime() - parseInt(piTime);
+                const diffMins = Math.floor(diffMs / 60000);
+                
+                // 50分 プールアウト の形式でコピー
+                let text = `${{diffMins}}分 プールアウト`;
+                if(name) text += ` @${{name}}`;
+                
+                copyToClip(text);
             }}
 
             function updateTimeAlert() {{
@@ -638,7 +717,31 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             <div class="cam-box">
                 <div class="cam-title">💡 勝つための戦略チェック</div>
                 
-                <a href="{discord_url}" class="cam-btn discord-btn">💬 情報共有 (プールIN・OUT / 写真など)</a>
+                <div class="tool-box">
+                    <div style="font-size:14px; font-weight:bold; color:#FFD700; margin-bottom:5px;">📡 国内線プール情報共有 (Pi/Po生成)</div>
+                    
+                    <div class="tool-row" style="gap:2px;">
+                        <select id="p-pool" class="tool-select">
+                            <option value="1">1号</option>
+                            <option value="2">2号</option>
+                            <option value="3">3号</option>
+                            <option value="4">4号</option>
+                        </select>
+                        <input type="number" id="p-lane" class="tool-num" placeholder="列">
+                        <input type="number" id="p-pos" class="tool-num" placeholder="左〜">
+                    </div>
+                    
+                    <div class="tool-row">
+                        <input type="text" id="p-name" class="tool-input" placeholder="名前 (任意)">
+                    </div>
+                    
+                    <div class="tool-row">
+                        <button class="tool-btn pi-btn" onclick="handlePi()">プールイン (コピー)</button>
+                        <button class="tool-btn po-btn" onclick="handlePo()">プールアウト (コピー)</button>
+                    </div>
+                </div>
+                
+                <a href="{discord_url}" id="discord-link-btn" class="cam-btn discord-btn">💬 Discordで共有 (貼付)</a>
                 
                 <div class="train-alert-box">
                     <div class="ta-row"><span class="ta-name">🚝 モノレール終電</span><span class="ta-time">23:42</span></div>
@@ -709,8 +812,6 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
                     <strong>※最終的な稼働判断は、必ずご自身で行ってください。</strong>
                 </div>
             </div>
-            
-            <a href="{discord_url}" class="cam-btn discord-btn">💬 Discordスレッドに戻る</a>
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
