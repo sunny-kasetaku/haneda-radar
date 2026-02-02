@@ -223,27 +223,35 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
             is_dom = True
         
         if is_dom:
-            # 国内線の詳細
-            # 🦁 JAL (JL) の場合の北/南 振り分けロジック
-            if "JL" in f_num:
-                # 2号(T1北)へ行くべき出発地リスト
-                # 北海道・東北・北陸・近畿(伊丹/関空/南紀白浜)
-                # 🦁 ここに紋別(MBE)、稚内(WKJ)、中標津(SHB)も対象として含まれます（"北海道"扱いのため）
-                north_origins = ["新千歳", "函館", "旭川", "帯広", "釧路", "女満別", "紋別", "稚内", "中標津", "青森", "三沢", "秋田", "山形", "小松", "伊丹", "関空", "南紀白浜"]
-                
-                if any(place in jpn_origin for place in north_origins):
-                    exit_type = "2号(T1北)"
-                else:
-                    # それ以外（中国・四国・九州・沖縄）は1号(T1南)
-                    exit_type = "1号(T1南)"
+            # 🦁 【緊急修正】 "台北(松山)" が "松山(国内)" に誤爆するのを防ぐ
+            if "台北" in jpn_origin or "TSA" in origin_iata:
+                is_dom = False
             
-            # スカイマーク(BC), スターフライヤー(7G)などは従来通り1号
-            elif any(code in f_num for code in ["BC", "U4", "7G"]):
-                exit_type = "1号(T1南)"
-            else:
-                # ANA(NH), Solaseed, AIRDO等は3号(T2)
-                exit_type = "3号(T2)"
-        else:
+            # まだ is_dom なら国内線処理
+            if is_dom:
+                # 国内線の詳細
+                # 🦁 JAL (JL) の場合の北/南 振り分けロジック
+                if "JL" in f_num:
+                    # 2号(T1北)へ行くべき出発地リスト
+                    # 北海道・東北・北陸・近畿(伊丹/関空/南紀白浜)
+                    # 🦁 ここに紋別(MBE)、稚内(WKJ)、中標津(SHB)も対象として含まれます（"北海道"扱いのため）
+                    north_origins = ["新千歳", "函館", "旭川", "帯広", "釧路", "女満別", "紋別", "稚内", "中標津", "青森", "三沢", "秋田", "山形", "小松", "伊丹", "関空", "南紀白浜"]
+                    
+                    if any(place in jpn_origin for place in north_origins):
+                        exit_type = "2号(T1北)"
+                    else:
+                        # それ以外（中国・四国・九州・沖縄）は1号(T1南)
+                        exit_type = "1号(T1南)"
+                
+                # スカイマーク(BC), スターフライヤー(7G)などは従来通り1号
+                elif any(code in f_num for code in ["BC", "U4", "7G"]):
+                    exit_type = "1号(T1南)"
+                else:
+                    # ANA(NH), Solaseed, AIRDO等は3号(T2)
+                    exit_type = "3号(T2)"
+        
+        # is_dom が False の場合（国際線）
+        if not is_dom:
             # 国際線
             if term_raw == "2":
                 exit_type = "4号(T2)"
