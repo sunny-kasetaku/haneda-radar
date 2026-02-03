@@ -1,5 +1,6 @@
 import os
 import random
+import socket # 追加: タイムアウト設定用
 import subprocess  # 🦁 追加: GitHubへの自動保存コマンド実行用
 from datetime import datetime, timedelta
 # api_handler_v2 (中身は最新のv3ロジック) を使用
@@ -16,6 +17,9 @@ CONFIG = {
 }
 
 def main():
+    # 追加: 60秒でタイムアウトさせる（無限フリーズ防止）
+    socket.setdefaulttimeout(60)
+
     # 1. 現在時刻を「日本時間 (JST)」で確定させる
     now = datetime.utcnow() + timedelta(hours=9)
     today_str = now.strftime('%Y-%m-%d') 

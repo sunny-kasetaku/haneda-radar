@@ -1,6 +1,6 @@
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class DiscordBot:
     def __init__(self):
@@ -14,8 +14,10 @@ class DiscordBot:
             print("⚠️ Webhook URLが設定されていないため、通知をスキップします。")
             return
 
-        # 今日の日付
-        today_str = datetime.now().strftime('%Y/%m/%d')
+        # 🦁 修正: UTC(世界標準時)に9時間を足して、無理やり日本時間(JST)にする
+        # これで「日付が1日戻る」現象を防ぎます
+        jst_now = datetime.utcnow() + timedelta(hours=9)
+        today_str = jst_now.strftime('%Y/%m/%d')
 
         # 送信するメッセージ内容
         payload = {
@@ -36,9 +38,10 @@ class DiscordBot:
                 data=json.dumps(payload),
                 headers={"Content-Type": "application/json"}
             )
-            if response.status_code == 204:
+            # Discordは成功時に 204 No Content を返すことが多い
+            if response.status_code == 204 or response.status_code == 200:
                 print("✅ Discord通知送信成功")
             else:
-                print(f"⚠️ Discord通知エラー: {response.status_code}")
+                print(f"⚠️ Discord通知エラー: {response.status_code} {response.text}")
         except Exception as e:
             print(f"❌ Discord送信例外: {e}")
