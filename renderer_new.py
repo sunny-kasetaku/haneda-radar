@@ -4,7 +4,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 
-def render_html(demand_results, password, discord_url="#", current_time=None):
+def render_html(demand_results, password, discord_url="#", current_time=None, is_error=False):
     if current_time is None:
         current_time = datetime.utcnow() + timedelta(hours=9)
 
@@ -269,6 +269,19 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
         })
     
     json_data = json.dumps(final_flights_for_js, ensure_ascii=False)
+
+    # 🦁 追加: エラー時の警告HTMLブロック
+    error_block = ""
+    if is_error:
+        error_block = """
+        <div class="old-data-alert danger" style="margin-bottom:15px; font-size:16px; padding:20px; border:3px solid red;">
+            ⚠️ <strong>データ取得に失敗しました</strong><br>
+            <span style="font-size:13px; font-weight:normal;">
+                回線混雑等のため、最新情報を取得できませんでした。<br>
+                次回の自動更新（毎時03分）をお待ちください。
+            </span>
+        </div>
+        """
 
     html_content = f"""
     <!DOCTYPE html>
@@ -676,6 +689,8 @@ def render_html(demand_results, password, discord_url="#", current_time=None):
     </head>
     <body>
         <div id="main-content">
+            {error_block}
+
             <div class="info-banner">
                 データ取得: {fetch_time_str}<br>
                 <span style="font-size:12px">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: <span id="total-count">---</span>機</span>
