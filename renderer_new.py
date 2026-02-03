@@ -693,7 +693,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
 
             <div class="info-banner">
                 データ取得: {fetch_time_str}<br>
-                <span style="font-size:12px">⚠️ 範囲: 過去{val_past}分〜未来{val_future}分 | 実数: <span id="total-count">---</span>機</span>
+                <span style="font-size:12px">🎯 判定範囲: 過去60分〜未来30分 | 実数: <span id="total-count">---</span>機</span>
             </div>
             
             <div id="time-alert-box" class="old-data-alert">
