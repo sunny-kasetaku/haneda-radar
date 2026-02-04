@@ -212,7 +212,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
             if not exists:
                 with open("unknown_airports.log", "a", encoding="utf-8") as log_f:
                     log_f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {log_line}\n")
-                print(f"⚠️  NEW UNKNOWN DETECTED: {log_line}", file=sys.stderr)
+                print(f"⚠️  NEW UNKNOWN DETECTED: {log_line}", file=sys.stderr)
         except Exception as e:
             print(f"Log Error: {e}", file=sys.stderr)
             
@@ -314,8 +314,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
     <html lang="ja">
     <head>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>HANEDA RADAR v22</title>
-        <style>
+        <title>HANEDA RADAR v23 - Speedometer</title> <style>
             @keyframes flash {{ 0% {{ opacity: 0.6; }} 50% {{ opacity: 0.8; }} 100% {{ opacity: 1; }} }}
             body.loading {{ animation: flash 0.8s ease-out; }}
             body {{ background:#000; color:#fff; font-family:sans-serif; margin:0; padding:15px; display:flex; justify-content:center; }}
@@ -409,11 +408,21 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
         </style>
         
         <script>
+            // 🦁 ここにフライトデータ (17:04取得分)
             const FLIGHT_DATA = {json_data};
             const SETTING_PAST = {val_past};
             const SETTING_FUTURE = {val_future};
             const THEORY_BEST = "{theory_best}"; 
             const FETCH_TIMESTAMP = {fetch_timestamp};
+
+            // 🦁 定数：各プールの1列あたりの平均台数
+            const POOL_CONFIG = {{
+                "1": {{ cap: 9, start: 1 }},    // 1号: 9台/列 (開始1)
+                "2": {{ cap: 11, start: 9 }},   // 2号: 11台/列 (開始9)
+                "3": {{ cap: 10, start: 17 }},  // 3号: 10台/列 (開始17)
+                "4": {{ cap: 7, start: 26 }},   // 4号: 7台/列 (開始26)
+                "INT": {{ cap: 0, start: 0 }}   // 国際: 計算不能
+            }};
 
             // ランク計算の範囲設定 (-60分 〜 +30分)
             const CALC_PAST = 60;
@@ -430,9 +439,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                 }} else {{
                     var input = (prompt("本日のパスワードを入力してください") || "").trim();
                     if (input === "{password}" || input === "0000") {{ 
-                        localStorage.setItem("kasetack_auth_pass_v3", input); 
-                        location.reload(); 
-                    }} else if (input !== "") {{ alert("パスワードが違います"); }}
+                         localStorage.setItem("kasetack_auth_pass_v3", input); 
+                         location.reload(); 
+                     }} else if (input !== "") {{ alert("パスワードが違います"); }}
                 }}
             }}
             window.onload = checkPass;
@@ -467,8 +476,8 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                     btn.innerText = "📋 コピー完了！DiscordへGO！";
                     btn.style.background = "#00FF00";
                     setTimeout(() => {{ 
-                        btn.innerText = originalText; 
-                        btn.style.background = "#5865F2";
+                         btn.innerText = originalText; 
+                         btn.style.background = "#5865F2";
                     }}, 2000);
                 }});
             }}
@@ -476,17 +485,34 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
             // 🦁 追加: プールイン処理 (3分割入力対応)
             function handlePi() {{
                 const pool = document.getElementById('p-pool').value;
-                const lane = document.getElementById('p-lane').value;
-                const pos = document.getElementById('p-pos').value;
+                const laneInput = document.getElementById('p-lane').value;
+                const posInput = document.getElementById('p-pos').value;
                 const name = document.getElementById('p-name').value;
                 
-                if(!lane || !pos) {{ alert("列と番号を入力してください"); return; }}
+                if(!laneInput || !posInput) {{ alert("列と番号を入力してください"); return; }}
                 
-                // 1-2-6 の形式に結合
-                const loc = `${{pool}}-${{lane}}-${{pos}}`;
-                
+                // 待機台数の計算ロジック
+                let lane = parseInt(laneInput);
+                let pos = parseInt(posInput);
+                let totalWait = 0;
+                let waitText = "";
+
+                if (POOL_CONFIG[pool] && POOL_CONFIG[pool].cap > 0) {{
+                    const cfg = POOL_CONFIG[pool];
+                    // 入力が絶対値(例:18)か相対値(例:2)か判定
+                    // 開始番号以上なら絶対値とみなす
+                    let relativeLane = lane;
+                    if (lane >= cfg.start) {{
+                        relativeLane = lane - cfg.start + 1;
+                    }}
+                    // 計算: (前の列数 * 1列のキャパ) + 自分の番目
+                    totalWait = ((relativeLane - 1) * cfg.cap) + pos;
+                    waitText = ` (約${{totalWait}}台目)`;
+                }}
+
                 // 🦁 修正: プール番号を保存 (Po時に使用)
                 localStorage.setItem("kasetack_pi_pool", pool);
+                localStorage.setItem("kasetack_pi_wait", totalWait); // 台数を保存
 
                 const now = new Date();
                 localStorage.setItem("kasetack_pi_time", now.getTime());
@@ -496,7 +522,10 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                 const m = now.getMinutes().toString().padStart(2, '0');
                 
                 // 1-2-6 プールイン 10:00 の形式でコピー
-                let text = `${{loc}} プールイン ${{h}}:${{m}}`;
+                let laneDisp = laneInput;
+                let text = `${{pool}}号-${{laneDisp}}-${{pos}} Pi ${{h}}:${{m}}${{waitText}}`;
+                if(pool === "INT") text = `国際(T3)-${{laneDisp}}-${{pos}} Pi ${{h}}:${{m}}`;
+
                 if(name) text += ` @${{name}}`;
                 
                 copyToClip(text);
@@ -506,17 +535,31 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
             function handlePo() {{
                 const piTime = localStorage.getItem("kasetack_pi_time");
                 const piPool = localStorage.getItem("kasetack_pi_pool"); // 🦁 修正: プール番号を取得
+                const piWait = parseInt(localStorage.getItem("kasetack_pi_wait") || "0");
                 const name = document.getElementById('p-name').value;
                 
                 if(!piTime) {{ alert("先に「プールイン」を押して時間を記録してください"); return; }}
                 
                 const now = new Date();
                 const diffMs = now.getTime() - parseInt(piTime);
-                const diffMins = Math.floor(diffMs / 60000);
+                let diffMins = Math.floor(diffMs / 60000);
+                if(diffMins < 1) diffMins = 1; // 0分除算防止
                 
                 // 🦁 修正: プール番号を含めて出力
-                let poolText = piPool ? piPool + "号 " : "";
-                let text = `${{poolText}}${{diffMins}}分 プールアウト`;
+                let poolText = piPool + "号";
+                if(piPool === "INT") poolText = "国際(T3)";
+
+                // 速度計算
+                let speedText = "";
+                let countText = "";
+                if (piWait > 0) {{
+                    // 分速 (台/分)
+                    let speed = (piWait / diffMins).toFixed(1); 
+                    speedText = ` ⚡️${{speed}}台/分`;
+                    countText = ` (${{piWait}}台抜)`;
+                }}
+
+                let text = `${{poolText}} ${{diffMins}}分Po${{countText}}${{speedText}}`;
                 
                 if(name) text += ` @${{name}}`;
                 
@@ -782,6 +825,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                             <option value="2">2号</option>
                             <option value="3">3号</option>
                             <option value="4">4号</option>
+                            
                         </select>
                         <input type="number" id="p-lane" class="tool-num" placeholder="列">
                         <input type="number" id="p-pos" class="tool-num" placeholder="左〜">
