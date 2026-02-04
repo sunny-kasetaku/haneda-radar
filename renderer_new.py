@@ -36,9 +36,23 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
         return int(m.group()) if m else 99999
 
     processed_flights = {}
+    
+    # 🦁 追加: 9000番台が含まれているかどうかのフラグ
+    has_9000_warning = False
+
     for f in raw_flight_list:
         f_num = get_f_num(f.get('flight_number'))
-        if f_num >= 9000: continue
+        f_str = str(f.get('flight_number', ''))
+
+        # 🦁 修正: スマートフィルター実装
+        # 9000番台の場合の処理
+        if f_num >= 9000:
+            # 主要キャリア（ANA/JAL）の場合は通すが、警告フラグを立てる
+            if any(code in f_str for code in ['NH', 'JL', 'ANA', 'JAL']):
+                has_9000_warning = True
+            else:
+                # それ以外の9000番台はノイズとして除外
+                continue
 
         # --- 【修正箇所】タイムゾーンの完全修正 ---
         raw_arr = f.get('arrival_time', '')
@@ -62,8 +76,10 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
             jst_arr_str = raw_arr
 
         origin_iata = f.get('origin_iata', 'UNKNOWN')
-        # 重複キーに日付も含めることで、別日の同便名が消えるのを防ぐ
-        key = (jst_arr_str, origin_iata)
+        
+        # 🦁 修正: 重複キーにターミナル情報も含めることで、T1/T2の同時刻便が消えるのを防ぐ
+        term_raw_key = str(f.get('terminal', ''))
+        key = (jst_arr_str, origin_iata, term_raw_key)
 
         if key not in processed_flights or f_num < get_f_num(processed_flights[key].get('flight_number')):
             f['arrival_time_jst'] = jst_arr_str
@@ -280,6 +296,16 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                 回線混雑等のため、最新情報を取得できませんでした。<br>
                 次回の自動更新（毎時03分）をお待ちください。
             </span>
+        </div>
+        """
+
+    # 🦁 追加: 9000番台警告ブロック
+    warning_block = ""
+    if has_9000_warning:
+        warning_block = """
+        <div style="background:#333; border:2px solid #FFD700; color:#FFD700; padding:10px; margin-bottom:15px; border-radius:10px; text-align:center; font-weight:bold; animation: flash 2s infinite;">
+            ⚠️ 9000番台(臨時・貨物?)混入の可能性あり<br>
+            <span style="font-size:12px; font-weight:normal; color:#fff;">通常より便数が多い可能性があります。<br>念のため<a href="https://tokyo-haneda.com/flight/flightInfo_dms.html" target="_blank" style="color:#00BFFF;">公式サイト</a>で確認してください。</span>
         </div>
         """
 
@@ -690,6 +716,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
     <body>
         <div id="main-content">
             {error_block}
+            {warning_block}
 
             <div class="info-banner">
                 データ取得: {fetch_time_str}<br>
