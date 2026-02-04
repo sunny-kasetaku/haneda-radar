@@ -44,15 +44,10 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
         f_num = get_f_num(f.get('flight_number'))
         f_str = str(f.get('flight_number', ''))
 
-        # 🦁 修正: スマートフィルター実装
-        # 9000番台の場合の処理
-        if f_num >= 9000:
-            # 主要キャリア（ANA/JAL）の場合は通すが、警告フラグを立てる
-            if any(code in f_str for code in ['NH', 'JL', 'ANA', 'JAL']):
-                has_9000_warning = True
-            else:
-                # それ以外の9000番台はノイズとして除外
-                continue
+        # 🦁 修正: 8000番台以上(貨物・回送・臨時)は全てカット
+        # JALの貨物(8000番台)やANAの臨時(9000番台)をノイズとして除外
+        if f_num >= 8000:
+            continue
 
         # --- 【修正箇所】タイムゾーンの完全修正 ---
         raw_arr = f.get('arrival_time', '')
@@ -274,12 +269,21 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
             else:
                 exit_type = "国際(T3)"
 
+        # 🦁 修正: 人数調整 (松竹梅ロジック)
+        calc_pax = 180 # 竹 (標準)
+        # 松 (幹線: 大型機)
+        if any(k in jpn_origin for k in ["新千歳","福岡","那覇","伊丹"]):
+            calc_pax = 350
+        # 梅 (地方: 小型機)
+        elif any(k in jpn_origin for k in ["山形","南紀白浜","出雲","三沢","大館","能代","但馬","隠岐","天草"]):
+            calc_pax = 120
+
         final_flights_for_js.append({
             'arrival_time': f.get('arrival_time_jst'),
             'scheduled_time': f.get('scheduled_time'), # 🦁 追加
             'flight_number': f.get('flight_number', '---'),
             'origin': jpn_origin,
-            'pax': int(f.get('pax_estimated', 200)),
+            'pax': int(f.get('pax_estimated', calc_pax)), # 🦁 修正: 調整後人数
             'exit_type': exit_type,
             'terminal': term_raw
         })
@@ -300,6 +304,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
         """
 
     # 🦁 追加: 9000番台警告ブロック
+    # (注意: 8000以上を除外したため、この警告フラグはTrueになりませんが、コード構造維持のため残します)
     warning_block = ""
     if has_9000_warning:
         warning_block = """
