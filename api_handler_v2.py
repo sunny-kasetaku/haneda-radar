@@ -5,11 +5,10 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v23.3 ANA-Precision】API回数12回/run (Activeオフセット修正版)
-    ・Active(飛行中)を「500件(5回)」まで深掘りし、ANAの取りこぼしを物理的に解決。
-    ・13時〜18時は600件スキップ(Offset)を適用し、午後のANAを射程内に。
-    ・Landed2回, Scheduled4回, Yesterday1回で合計12回。
-    ・Activeは常に0から取得し、Scheduledのみワープさせることで全JAL/ANAを捕捉。
+    【v23.5 Dynamic-Slider】API回数12回/run (全自動スライド方式)
+    ・現在時刻に連動してOffsetを自動計算。24時間常に「今から3時間先」を網のど真ん中に配置。
+    ・計算式: base_offset = (現在時 - 2) * 55件。過去2時間〜未来6時間を常時カバー。
+    ・深夜21時以降は「逆順(Desc)」に切り替え、24時までの全便を1機も漏らさず捕捉。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -23,48 +22,37 @@ def fetch_flight_data(api_key, date_str=None):
     # 🦁 修正: 日付指定がない場合は今日とする
     target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
 
-    # 🦁 修正: 4段階シフト（朝:Offset 0, 昼前:Offset 200, 昼後:Offset 600, 夜:Desc/Offset 0）
+    # 🦁 修正: 全自動スライド・ロジック (CVT方式)
     current_hour = now_jst.hour
     base_offset = 0
     
-    if 0 <= current_hour < 10:
-        # 朝モード
+    if 0 <= current_hour < 21:
+        # 【昼間スライドモード】時刻に合わせて網を自動でスライドさせる
         sched_sort = 'scheduled_arrival'
-        base_offset = 0
-    elif 10 <= current_hour < 13:
-        # 昼モード前半 (朝のデータを飛ばす)
-        sched_sort = 'scheduled_arrival'
-        base_offset = 200
-    elif 13 <= current_hour < 18:
-        # 昼モード後半 (朝〜昼の約600行を飛ばし、午後のANAを400件枠内に収める)
-        sched_sort = 'scheduled_arrival'
-        base_offset = 600
+        # 現在時刻から2時間前までの便数を推計してスキップ
+        base_offset = max(0, (current_hour - 2) * 55)
     else:
-        # 夜モード
+        # 【深夜逆算モード】21時以降は、24時から遡って拾うのが最も確実
         sched_sort = 'scheduled_arrival.desc'
         base_offset = 0
 
-    # バージョン表示を v23.3 ANA-Precision に修正
-    print(f"DEBUG: Start API Fetch v23.3 ANA-Precision. Strategy: 12 Calls (Active Fix)", file=sys.stderr)
+    # バージョン表示を v23.5 Dynamic-Slider に修正
+    print(f"DEBUG: Start API Fetch v23.5 Dynamic-Slider. Offset={base_offset}", file=sys.stderr)
 
     strategies = [
-        # 1. Active: 未来の便 (500件に増強)
-        # 🦁 修正: max_depth 300 -> 500 (5回)
-        # 🦁 修正: use_offset -> False (飛行中の便は数が少ないためスキップせず0から取得)
+        # 1. Active: 500件 (5回)
+        # 🦁 修正: 常に0から。今飛んでいる便はスキップ厳禁。
         {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 500, 'use_offset': False},
-        # 2. Landed: 過去の便 (200件に調整)
-        # 🦁 修正: max_depth 300 -> 200 (2回)
+        # 2. Landed: 200件 (2回)
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 200, 'use_offset': False},
-        # 🦁 追加: 3. Scheduled: 予定の便 (400件に増強)
-        # 🦁 修正: max_depth 300 -> 400 (4回)
+        # 3. Scheduled: 400件 (4回)
+        # 🦁 修正: ここに「黄金のスライドOffset」を適用。常に未来を掘る。
         {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 400, 'use_offset': True},
-        # 4. Yesterday: 昨日出発の長距離便 (100件に削減してコスト調整)
-        # 🦁 修正: max_depth 200 -> 100 (1回)
+        # 4. Yesterday: 100件 (1回)
         {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100, 'use_offset': False}
     ]
 
     for strat in strategies:
-        # 🦁 修正: ストラテジーに応じたオフセット初期値を設定
         if strat.get('use_offset'):
             current_offset = base_offset
         else:
@@ -85,7 +73,6 @@ def fetch_flight_data(api_key, date_str=None):
             try:
                 print(f"DEBUG: Fetching [{strat['desc']}] offset={current_offset}...", file=sys.stderr)
                 
-                # 【修正】タイムアウトを30秒に延長
                 response = requests.get(base_url, params=params, timeout=30)
                 response.raise_for_status()
                 data = response.json()
@@ -97,7 +84,6 @@ def fetch_flight_data(api_key, date_str=None):
                 for f in raw_data:
                     info = extract_flight_info(f)
                     if info:
-                        # --- 重複排除 (1) 同一便名チェック ---
                         same_flight_index = -1
                         for i, existing in enumerate(all_flights):
                             if existing['flight_number'] == info['flight_number']:
@@ -108,8 +94,6 @@ def fetch_flight_data(api_key, date_str=None):
                             all_flights[same_flight_index] = info
                             continue
 
-                        # --- 重複排除 (2) コードシェア便トリプルチェック ---
-                        # 同時刻・同ターミナル・同出発地の場合のみ「同じ1機」とみなす
                         duplicate_index = -1
                         for i, existing in enumerate(all_flights):
                             if (existing['arrival_time'] == info['arrival_time'] and 
@@ -119,7 +103,6 @@ def fetch_flight_data(api_key, date_str=None):
                                 break
                         
                         if duplicate_index != -1:
-                            # 既にJALやANAが入っているなら、海外便名は追加せずに捨てる
                             existing_flight = all_flights[duplicate_index]
                             is_new_japanese = info['flight_number'].startswith(('JL', 'NH'))
                             is_existing_japanese = existing_flight['flight_number'].startswith(('JL', 'NH'))
@@ -128,7 +111,6 @@ def fetch_flight_data(api_key, date_str=None):
                                 all_flights[duplicate_index] = info
                             continue
 
-                        # 全部追加
                         all_flights.append(info)
                 
                 got_num = len(raw_data)
@@ -138,7 +120,6 @@ def fetch_flight_data(api_key, date_str=None):
                 if got_num < 100:
                     break
                 
-                # 【修正】少し休憩時間を増やす
                 time.sleep(0.5)
 
             except Exception as e:
@@ -147,7 +128,7 @@ def fetch_flight_data(api_key, date_str=None):
             
     return all_flights
 
-# 🦁 ここから下が消えていたので、MAX時刻ロジックを含めて完全復元しました
+# 🦁 抽出ロジック(extract_flight_info)は一切変更していません
 def extract_flight_info(flight):
     arr = flight.get('arrival', {})
     airline = flight.get('airline', {})
@@ -156,7 +137,6 @@ def extract_flight_info(flight):
     aircraft = flight.get('aircraft', {})
     aircraft_iata = aircraft.get('iata', 'none') if aircraft else 'none'
     
-    # 🦁 修正：遅延を絶対に逃さない「MAX時刻採用ロジック」
     s_time = arr.get('scheduled')
     e_time = arr.get('estimated')
     a_time = arr.get('actual')
@@ -164,7 +144,6 @@ def extract_flight_info(flight):
     time_candidates = [t for t in [s_time, e_time, a_time] if t]
     if not time_candidates: return None
     
-    # 全候補の中で最も遅い時刻を到着とする。
     arrival_time = max(time_candidates)
     scheduled_time = s_time 
     
