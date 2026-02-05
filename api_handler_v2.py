@@ -72,12 +72,15 @@ def fetch_flight_data(api_key, date_str=None):
     ]
 
     # 🦁 4番目の枠（100件分）を、サニーさんのロジックで昼夜切り替え
-    if current_hour >= 21:
+    # [2026-02-06] 🦁 修正：JST深夜0時〜9時の間も「明日(APIにとっての当日)」を拾い続けるよう条件を拡張
+    # if current_hour >= 21:
+    if current_hour >= 21 or current_hour < 9:
         # 夜間：日付の壁を越えるため「明日出発」の便を拾う
         strategies.append({'desc': '4. Tomorrow', 'params': {'flight_date': tomorrow_str, 'sort': 'scheduled_arrival'}, 'max_depth': 100, 'use_offset': False})
     else:
         # 昼間：昨日分の振り返りを入れる
         strategies.append({'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100, 'use_offset': False})
+    # [2026-02-06] 修正終了
 
     for strat in strategies:
         if strat.get('use_offset'):
