@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v23.1 ANA-Rescue】API回数12回/run (品質最優先・ANA救出設定)
+    【v23.2 ANA-Precision】API回数12回/run (品質最優先・ANA救出設定)
     ・Active(飛行中)を「500件(5回)」まで深掘りし、ANAの取りこぼしを物理的に解決。
-    ・10時〜18時は200件スキップ(Offset)を適用し、午後のANAを射程内に。
+    ・13時〜18時は600件スキップ(Offset)を適用し、午後のANAを射程内に。
     ・Landed2回, Scheduled4回, Yesterday1回で合計12回。
-    ・昼間のオフセットスキップを復活させ、午後の国内線消失バグを根本修正。
+    ・オフセット値を時間帯で最適化し、午後の国内線消失バグを根本修正。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -23,7 +23,7 @@ def fetch_flight_data(api_key, date_str=None):
     # 🦁 修正: 日付指定がない場合は今日とする
     target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
 
-    # 🦁 修正: 3段階シフト（朝:Offset 0, 昼:Offset 200, 夜:Desc/Offset 0）
+    # 🦁 修正: 4段階シフト（朝:Offset 0, 昼前:Offset 200, 昼後:Offset 600, 夜:Desc/Offset 0）
     current_hour = now_jst.hour
     base_offset = 0
     
@@ -31,17 +31,21 @@ def fetch_flight_data(api_key, date_str=None):
         # 朝モード
         sched_sort = 'scheduled_arrival'
         base_offset = 0
-    elif 10 <= current_hour < 18:
-        # 昼モード (朝の約200行を飛ばし、午後のANAを400件枠内に収める)
+    elif 10 <= current_hour < 13:
+        # 昼モード前半 (朝のデータを飛ばす)
         sched_sort = 'scheduled_arrival'
         base_offset = 200
+    elif 13 <= current_hour < 18:
+        # 昼モード後半 (朝〜昼の約600行を飛ばし、午後のANAを400件枠内に収める)
+        sched_sort = 'scheduled_arrival'
+        base_offset = 600
     else:
         # 夜モード
         sched_sort = 'scheduled_arrival.desc'
         base_offset = 0
 
-    # バージョン表示を v23.1 ANA-Rescue に修正
-    print(f"DEBUG: Start API Fetch v23.1 ANA-Rescue. Strategy: 12 Calls (Active Boost)", file=sys.stderr)
+    # バージョン表示を v23.2 ANA-Precision に修正
+    print(f"DEBUG: Start API Fetch v23.2 ANA-Precision. Strategy: 12 Calls (Active Boost)", file=sys.stderr)
 
     strategies = [
         # 1. Active: 未来の便 (500件に増強)
