@@ -9,6 +9,10 @@ def fetch_flight_data(api_key, date_str=None):
     ・現在時刻に連動してOffsetを自動計算（スライド方式）。
     ・夜21時以降は「明日出発(Tomorrow)」の100件をブリッジし、0時〜1時の欠落を完全解消。
     ・サニーさんの以前の知見（出発日基準）に基づき、日付の壁を突破するロジック。
+    [2026-02-06] 🦁 v23.7追記: UTC基準に同期。JST深夜のOffsetリセットを防止。
+    [2026-02-06 02:40] 🦁 v23.8追記: 深夜の取りこぼしを防ぐためOffsetに上限(Cap)を設定。
+    [2026-02-06 03:15] 🦁 v23.9追記: Cap700でも3時台を取りこぼしたため、Cap500/Depth600に拡張。
+    [2026-02-06 03:30] 🦁 v23.9b追記: API回数を12回に戻すため、ActiveのDepthを500→300に削減(相殺)。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -24,12 +28,12 @@ def fetch_flight_data(api_key, date_str=None):
     tomorrow_str = tomorrow_jst.strftime('%Y-%m-%d')
     
     # 🦁 修正: 日付指定がない場合は今日とする
-    target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
+    # target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
 
     # [2026-02-06] 🦁 追記: APIのUTC基準に合わせるための補正ロジック
     # APIの日付更新はUTC 0時(日本時間9時)のため、JST 0時の切り替わりでOffsetをリセットさせない
     now_utc = datetime.utcnow()
-    target_date = now_utc.strftime('%Y-%m-%d') # APIが現在「当日」と認識している日付
+    target_date = date_str if date_str else now_utc.strftime('%Y-%m-%d') # APIが現在「当日」と認識している日付
     yesterday_str = (now_utc - timedelta(days=1)).strftime('%Y-%m-%d')
     # [2026-02-06] 終
 
@@ -37,23 +41,26 @@ def fetch_flight_data(api_key, date_str=None):
     current_hour = now_jst.hour
     base_offset = 0
     
-    if 0 <= current_hour < 21:
-        # 【昼間スライドモード】時刻に合わせて網を自動でスライドさせる
-        sched_sort = 'scheduled_arrival'
-        base_offset = max(0, (current_hour - 2) * 55)
-    else:
-        # 【深夜逆算モード】21時以降は、24時から遡って拾うのが最も確実
-        sched_sort = 'scheduled_arrival.desc'
-        base_offset = 0
+    # if 0 <= current_hour < 21:
+    #     # 【昼間スライドモード】時刻に合わせて網を自動でスライドさせる
+    #     sched_sort = 'scheduled_arrival'
+    #     base_offset = max(0, (current_hour - 2) * 55)
+    # else:
+    #     # 【深夜逆算モード】21時以降は、24時から遡って拾うのが最も確実
+    #     sched_sort = 'scheduled_arrival.desc'
+    #     base_offset = 0
 
     # [2026-02-06] 🦁 追記: UTC基準のOffset計算 (JST深夜のデータ消失を防止)
     # UTC基準(朝9時=0時)でOffsetを計算することで、24時間連続したスライドを実現する
     current_hour_utc = now_utc.hour
     
     # [2026-02-06 02:50] 🦁 修正: Offset上限(Cap)とソート順の強制
-    # [2026-02-06 03:15] 🦁 再修正: 700だと04:00着(IT216)をまたぐため、500まで下げる
+    # 計算値が900を超えると、リスト末尾にある深夜便(JL78等)をスキップしてしまうため、上限を700に固定する
+    # また、深夜帯もスライド方式を維持するため、JST側で設定された .desc を昇順に上書きする
     calc_offset = current_hour_utc * 55
     # base_offset = min(700, max(0, calc_offset)) 
+    
+    # [2026-02-06 03:15] 🦁 再修正: 700だと04:00着(IT216)をまたぐため、500まで下げる
     base_offset = min(500, max(0, calc_offset)) 
     # [2026-02-06 03:15] 修正終了
 
@@ -67,17 +74,25 @@ def fetch_flight_data(api_key, date_str=None):
         pass 
     # [2026-02-06] 終
 
-    print(f"DEBUG: Start API Fetch v23.9 Deep-Sweep. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
+    print(f"DEBUG: Start API Fetch v23.9b Cost-Adjusted. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
 
     # 🦁 修正：戦略リストを動的に構築
     strategies = [
         # 1. Active: 今飛んでいる便（絶対削らない）
-        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 500, 'use_offset': False},
+        # [2026-02-06 03:30] 🦁 コメントアウト: コスト削減のため300に減らす(-2回)
+        # {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 500, 'use_offset': False},
+        
+        # [2026-02-06 03:30] 🦁 追記: 12回/run維持のためActiveを縮小
+        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300, 'use_offset': False},
+        
         # 2. Landed: 着いたばかりの便（振り返り用）
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 200, 'use_offset': False},
+        
         # 3. Scheduled: これからの便（スライド方式適用）
-        # [2026-02-06 03:15] 🦁 修正: Offsetを500に下げた分、末尾まで届くようにDepthを400→600に拡張
+        # [2026-02-06 03:15] 🦁 コメントアウト: 深夜便捕捉のため拡張
         # {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 400, 'use_offset': True},
+        
+        # [2026-02-06 03:15] 🦁 追記: Offsetを下げた分、Depthを600に拡張(+2回)
         {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 600, 'use_offset': True},
     ]
 
