@@ -49,8 +49,14 @@ def fetch_flight_data(api_key, date_str=None):
     # [2026-02-06] 🦁 追記: UTC基準のOffset計算 (JST深夜のデータ消失を防止)
     # UTC基準(朝9時=0時)でOffsetを計算することで、24時間連続したスライドを実現する
     current_hour_utc = now_utc.hour
-    # UTC 0時(JST 9時)を起点に、2時間前からの便をスキップ
-    base_offset = max(0, (current_hour_utc) * 55)
+    
+    # [2026-02-06 02:50] 🦁 修正: Offset上限(Cap)とソート順の強制
+    # 計算値が900を超えると、リスト末尾にある深夜便(JL78等)をスキップしてしまうため、上限を700に固定する
+    # また、深夜帯もスライド方式を維持するため、JST側で設定された .desc を昇順に上書きする
+    calc_offset = current_hour_utc * 55
+    base_offset = min(700, max(0, calc_offset)) 
+    sched_sort = 'scheduled_arrival'
+    # [2026-02-06] 終
     
     # 深夜21時〜翌9時の間、Offsetがリセットされるのを防ぐための最終防衛ライン
     if current_hour >= 21 or current_hour < 9:
@@ -59,7 +65,7 @@ def fetch_flight_data(api_key, date_str=None):
         pass 
     # [2026-02-06] 終
 
-    print(f"DEBUG: Start API Fetch v23.7 UTC-Synchronized. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
+    print(f"DEBUG: Start API Fetch v23.8 Safety-Cap. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
 
     # 🦁 修正：戦略リストを動的に構築
     strategies = [
@@ -158,6 +164,7 @@ def fetch_flight_data(api_key, date_str=None):
             
     return all_flights
 
+# extract_flight_info は変更なし
 def extract_flight_info(flight):
     arr = flight.get('arrival', {})
     airline = flight.get('airline', {})
