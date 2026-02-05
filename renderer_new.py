@@ -15,9 +15,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
 
     raw_flight_list = demand_results.get("flights", [])
     
-    # 🦁 修正: UI革命用に表示範囲を拡張 (スクロール対応)
-    val_past = 120 
-    val_future = 180
+    # 🦁 修正: 表示範囲を拡張 (3時間先が見えるように余裕を持って4時間に設定)
+    val_past = 60       # 過去1時間
+    val_future = 240    # 未来4時間 (これなら3時間先も確実に表示されます)
 
     # ---------------------------------------------------------
     # 🦁 修正1: 時差統一 & 重複排除
@@ -422,11 +422,11 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
 
             // 🦁 定数：各プールの1列あたりの平均台数
             const POOL_CONFIG = {{
-                "1": {{ cap: 9, start: 1 }},    // 1号: 9台/列 (開始1)
-                "2": {{ cap: 11, start: 9 }},   // 2号: 11台/列 (開始9)
-                "3": {{ cap: 10, start: 17 }},  // 3号: 10台/列 (開始17)
-                "4": {{ cap: 7, start: 26 }},   // 4号: 7台/列 (開始26)
-                "INT": {{ cap: 0, start: 0 }}   // 国際: 計算不能
+                "1": {{ cap: 9, start: 1 }},    # 1号: 9台/列 (開始1)
+                "2": {{ cap: 11, start: 9 }},   # 2号: 11台/列 (開始9)
+                "3": {{ cap: 10, start: 17 }},  # 3号: 10台/列 (開始17)
+                "4": {{ cap: 7, start: 26 }},   # 4号: 7台/列 (開始26)
+                "INT": {{ cap: 0, start: 0 }}   # 国際: 計算不能
             }};
 
             // ランク計算の範囲設定 (-60分 〜 +30分)
@@ -614,8 +614,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                     let diffMs = fDate - now;
                     let diffMins = diffMs / 60000;
                     
-                    // リスト表示条件: -60分以降 〜 +180分以内
-                    if (diffMins >= -60 && diffMins <= 180 && isVisible) {{
+                    // 🦁 修正: JS側のハードコーディングを廃止して変数を適用
+                    // 過去: SETTING_PAST, 未来: SETTING_FUTURE まで表示
+                    if (diffMins >= -SETTING_PAST && diffMins <= SETTING_FUTURE && isVisible) {{
                         // ランク計算対象か？（-60 〜 +30）
                         let isTarget = (diffMins >= -60 && diffMins <= 30);
                         if (isTarget) {{
