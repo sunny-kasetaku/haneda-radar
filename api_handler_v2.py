@@ -26,6 +26,13 @@ def fetch_flight_data(api_key, date_str=None):
     # 🦁 修正: 日付指定がない場合は今日とする
     target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
 
+    # [2026-02-06] 🦁 追記: APIのUTC基準に合わせるための補正ロジック
+    # APIの日付更新はUTC 0時(日本時間9時)のため、JST 0時の切り替わりでOffsetをリセットさせない
+    now_utc = datetime.utcnow()
+    target_date = now_utc.strftime('%Y-%m-%d') # APIが現在「当日」と認識している日付
+    yesterday_str = (now_utc - timedelta(days=1)).strftime('%Y-%m-%d')
+    # [2026-02-06] 終
+
     # 🦁 修正: 全自動スライド・ロジック (CVT方式)
     current_hour = now_jst.hour
     base_offset = 0
@@ -39,7 +46,20 @@ def fetch_flight_data(api_key, date_str=None):
         sched_sort = 'scheduled_arrival.desc'
         base_offset = 0
 
-    print(f"DEBUG: Start API Fetch v23.6 Midnight-Bridge. Hour={current_hour}, Offset={base_offset}", file=sys.stderr)
+    # [2026-02-06] 🦁 追記: UTC基準のOffset計算 (JST深夜のデータ消失を防止)
+    # UTC基準(朝9時=0時)でOffsetを計算することで、24時間連続したスライドを実現する
+    current_hour_utc = now_utc.hour
+    # UTC 0時(JST 9時)を起点に、2時間前からの便をスキップ
+    base_offset = max(0, (current_hour_utc) * 55)
+    
+    # 深夜21時〜翌9時の間、Offsetがリセットされるのを防ぐための最終防衛ライン
+    if current_hour >= 21 or current_hour < 9:
+        # 夜間は「今日(UTC)」の後半を狙い撃つため、Offsetを固定気味に維持
+        # Scheduled(400件)で「今日(UTC)」の終わり=JST 09:00までを確実にカバー
+        pass 
+    # [2026-02-06] 終
+
+    print(f"DEBUG: Start API Fetch v23.7 UTC-Synchronized. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
 
     # 🦁 修正：戦略リストを動的に構築
     strategies = [
