@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v23 Professional】API回数12回/run (品質最優先設定)
-    ・Active(飛行中)を「500件(5回)」まで深掘りし、取りこぼしを完全防止。
-    ・Landed2回, Scheduled4回, Yesterday1回。
-    ・合計12回コールで、プラン内に収めつつ最大のデータ精度を確保。
-    ・昼間のオフセットスキップを廃止し、国内線消失バグを修正。
+    【v23.1 ANA-Rescue】API回数12回/run (品質最優先・ANA救出設定)
+    ・Active(飛行中)を「500件(5回)」まで深掘りし、ANAの取りこぼしを物理的に解決。
+    ・10時〜18時は200件スキップ(Offset)を適用し、午後のANAを射程内に。
+    ・Landed2回, Scheduled4回, Yesterday1回で合計12回。
+    ・昼間のオフセットスキップを復活させ、午後の国内線消失バグを根本修正。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -23,23 +23,25 @@ def fetch_flight_data(api_key, date_str=None):
     # 🦁 修正: 日付指定がない場合は今日とする
     target_date = date_str if date_str else now_jst.strftime('%Y-%m-%d')
 
-    # 🦁 修正: 3段階シフト（朝:Asc/0, 昼:Asc/100, 夜:Desc/0）
+    # 🦁 修正: 3段階シフト（朝:Offset 0, 昼:Offset 200, 夜:Desc/Offset 0）
     current_hour = now_jst.hour
     base_offset = 0
     
-    if 0 <= current_hour < 13:
+    if 0 <= current_hour < 10:
         # 朝モード
         sched_sort = 'scheduled_arrival'
-    elif 13 <= current_hour < 18:
-        # 昼モード (朝のデータを飛ばす -> 廃止。常に0から)
+        base_offset = 0
+    elif 10 <= current_hour < 18:
+        # 昼モード (朝の約200行を飛ばし、午後のANAを400件枠内に収める)
         sched_sort = 'scheduled_arrival'
-        # base_offset = 100  <-- ★削除 (これが国内線消失バグの原因だったため)
+        base_offset = 200
     else:
         # 夜モード
         sched_sort = 'scheduled_arrival.desc'
+        base_offset = 0
 
-    # バージョン表示を v23 Professional に修正
-    print(f"DEBUG: Start API Fetch v23 Professional. Strategy: 12 Calls (Full Power)", file=sys.stderr)
+    # バージョン表示を v23.1 ANA-Rescue に修正
+    print(f"DEBUG: Start API Fetch v23.1 ANA-Rescue. Strategy: 12 Calls (Active Boost)", file=sys.stderr)
 
     strategies = [
         # 1. Active: 未来の便 (500件に増強)
@@ -47,12 +49,13 @@ def fetch_flight_data(api_key, date_str=None):
         # 🦁 修正: use_offset -> False (昼でも必ず0から取得し、国内線を確保)
         {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 500, 'use_offset': False},
         # 2. Landed: 過去の便 (200件に調整)
-        # 🦁 修正: flight_dateを指定して「今日の」新しい順にすることで、23時台の到着漏れを防ぐ
+        # 🦁 修正: max_depth 300 -> 200 (2回)
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 200, 'use_offset': False},
         # 🦁 追加: 3. Scheduled: 予定の便 (400件に増強)
-        # 🦁 追加: use_offset フラグを追加
+        # 🦁 修正: max_depth 300 -> 400 (4回)
         {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 400, 'use_offset': True},
         # 4. Yesterday: 昨日出発の長距離便 (100件に削減してコスト調整)
+        # 🦁 修正: max_depth 200 -> 100 (1回)
         {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100, 'use_offset': False}
     ]
 
