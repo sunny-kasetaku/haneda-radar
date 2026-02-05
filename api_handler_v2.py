@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v23.2 ANA-Precision】API回数12回/run (品質最優先・ANA救出設定)
+    【v23.3 ANA-Precision】API回数12回/run (Activeオフセット修正版)
     ・Active(飛行中)を「500件(5回)」まで深掘りし、ANAの取りこぼしを物理的に解決。
     ・13時〜18時は600件スキップ(Offset)を適用し、午後のANAを射程内に。
     ・Landed2回, Scheduled4回, Yesterday1回で合計12回。
-    ・オフセット値を時間帯で最適化し、午後の国内線消失バグを根本修正。
+    ・Activeは常に0から取得し、Scheduledのみワープさせることで全JAL/ANAを捕捉。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -44,13 +44,13 @@ def fetch_flight_data(api_key, date_str=None):
         sched_sort = 'scheduled_arrival.desc'
         base_offset = 0
 
-    # バージョン表示を v23.2 ANA-Precision に修正
-    print(f"DEBUG: Start API Fetch v23.2 ANA-Precision. Strategy: 12 Calls (Active Boost)", file=sys.stderr)
+    # バージョン表示を v23.3 ANA-Precision に修正
+    print(f"DEBUG: Start API Fetch v23.3 ANA-Precision. Strategy: 12 Calls (Active Fix)", file=sys.stderr)
 
     strategies = [
         # 1. Active: 未来の便 (500件に増強)
         # 🦁 修正: max_depth 300 -> 500 (5回)
-        # 🦁 修正: use_offset -> False (昼でも必ず0から取得し、国内線を確保)
+        # 🦁 修正: use_offset -> False (飛行中の便は数が少ないためスキップせず0から取得)
         {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 500, 'use_offset': False},
         # 2. Landed: 過去の便 (200件に調整)
         # 🦁 修正: max_depth 300 -> 200 (2回)
