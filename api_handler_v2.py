@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
     """
-    【v19 High-Spec】API回数11回/run (月間8,184回使用 / 上限10,000回)
-    ・Active(飛行中)を「300件(3回)」まで深掘りし、取りこぼしを完全防止。
-    ・Landed3回, Scheduled3回, Yesterday2回。
-    ・合計11回コールで、プラン内に収めつつ最大のデータ精度を確保。
+    【v23 Professional】API回数12回/run (品質最優先設定)
+    ・Active(飛行中)を「500件(5回)」まで深掘りし、取りこぼしを完全防止。
+    ・Landed2回, Scheduled4回, Yesterday1回。
+    ・合計12回コールで、プラン内に収めつつ最大のデータ精度を確保。
     ・昼間のオフセットスキップを廃止し、国内線消失バグを修正。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
@@ -38,22 +38,22 @@ def fetch_flight_data(api_key, date_str=None):
         # 夜モード
         sched_sort = 'scheduled_arrival.desc'
 
-    # バージョン表示を v19 High-Spec に修正
-    print(f"DEBUG: Start API Fetch v19 High-Spec. Strategy: 11 Calls (Active Boost)", file=sys.stderr)
+    # バージョン表示を v23 Professional に修正
+    print(f"DEBUG: Start API Fetch v23 Professional. Strategy: 12 Calls (Full Power)", file=sys.stderr)
 
     strategies = [
-        # 1. Active: 未来の便 (300件に増強)
-        # 🦁 修正: max_depth 100 -> 300 (3回)
+        # 1. Active: 未来の便 (500件に増強)
+        # 🦁 修正: max_depth 300 -> 500 (5回)
         # 🦁 修正: use_offset -> False (昼でも必ず0から取得し、国内線を確保)
-        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300, 'use_offset': False},
-        # 2. Landed: 過去の便 (300件で維持)
+        {'desc': '1. Active', 'params': {'flight_status': 'active', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 500, 'use_offset': False},
+        # 2. Landed: 過去の便 (200件に調整)
         # 🦁 修正: flight_dateを指定して「今日の」新しい順にすることで、23時台の到着漏れを防ぐ
-        {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 300, 'use_offset': False},
-        # 🦁 追加: 3. Scheduled: 予定の便 (300件で維持)
+        {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 200, 'use_offset': False},
+        # 🦁 追加: 3. Scheduled: 予定の便 (400件に増強)
         # 🦁 追加: use_offset フラグを追加
-        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 300, 'use_offset': True},
-        # 4. Yesterday: 昨日出発の長距離便 (200件に削減してコスト調整)
-        {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 200, 'use_offset': False}
+        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 400, 'use_offset': True},
+        # 4. Yesterday: 昨日出発の長距離便 (100件に削減してコスト調整)
+        {'desc': '4. Yesterday', 'params': {'flight_date': yesterday_str, 'sort': 'scheduled_arrival.desc'}, 'max_depth': 100, 'use_offset': False}
     ]
 
     for strat in strategies:
