@@ -51,10 +51,12 @@ def fetch_flight_data(api_key, date_str=None):
     current_hour_utc = now_utc.hour
     
     # [2026-02-06 02:50] 🦁 修正: Offset上限(Cap)とソート順の強制
-    # 計算値が900を超えると、リスト末尾にある深夜便(JL78等)をスキップしてしまうため、上限を700に固定する
-    # また、深夜帯もスライド方式を維持するため、JST側で設定された .desc を昇順に上書きする
+    # [2026-02-06 03:15] 🦁 再修正: 700だと04:00着(IT216)をまたぐため、500まで下げる
     calc_offset = current_hour_utc * 55
-    base_offset = min(700, max(0, calc_offset)) 
+    # base_offset = min(700, max(0, calc_offset)) 
+    base_offset = min(500, max(0, calc_offset)) 
+    # [2026-02-06 03:15] 修正終了
+
     sched_sort = 'scheduled_arrival'
     # [2026-02-06] 終
     
@@ -65,7 +67,7 @@ def fetch_flight_data(api_key, date_str=None):
         pass 
     # [2026-02-06] 終
 
-    print(f"DEBUG: Start API Fetch v23.8 Safety-Cap. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
+    print(f"DEBUG: Start API Fetch v23.9 Deep-Sweep. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
 
     # 🦁 修正：戦略リストを動的に構築
     strategies = [
@@ -74,7 +76,9 @@ def fetch_flight_data(api_key, date_str=None):
         # 2. Landed: 着いたばかりの便（振り返り用）
         {'desc': '2. Landed', 'params': {'flight_status': 'landed', 'sort': 'scheduled_arrival.desc', 'flight_date': target_date}, 'max_depth': 200, 'use_offset': False},
         # 3. Scheduled: これからの便（スライド方式適用）
-        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 400, 'use_offset': True},
+        # [2026-02-06 03:15] 🦁 修正: Offsetを500に下げた分、末尾まで届くようにDepthを400→600に拡張
+        # {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 400, 'use_offset': True},
+        {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 600, 'use_offset': True},
     ]
 
     # 🦁 4番目の枠（100件分）を、サニーさんのロジックで昼夜切り替え
