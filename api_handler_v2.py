@@ -13,6 +13,7 @@ def fetch_flight_data(api_key, date_str=None):
     [2026-02-06 02:40] 🦁 v23.8追記: 深夜の取りこぼしを防ぐためOffsetに上限(Cap)を設定。
     [2026-02-06 03:15] 🦁 v23.9追記: Cap700でも3時台を取りこぼしたため、Cap500/Depth600に拡張。
     [2026-02-06 03:30] 🦁 v23.9b追記: API回数を12回に戻すため、ActiveのDepthを500→300に削減(相殺)。
+    [2026-02-06 12:50] 🦁 v23.9c追記: 午前中にOffsetが効きすぎて当日分を通り越すバグ修正。14:00まではOffset0固定。
     """
     base_url = "http://api.aviationstack.com/v1/flights"
     
@@ -57,12 +58,19 @@ def fetch_flight_data(api_key, date_str=None):
     # [2026-02-06 02:50] 🦁 修正: Offset上限(Cap)とソート順の強制
     # 計算値が900を超えると、リスト末尾にある深夜便(JL78等)をスキップしてしまうため、上限を700に固定する
     # また、深夜帯もスライド方式を維持するため、JST側で設定された .desc を昇順に上書きする
-    calc_offset = current_hour_utc * 55
+    # calc_offset = current_hour_utc * 55
     # base_offset = min(700, max(0, calc_offset)) 
     
     # [2026-02-06 03:15] 🦁 再修正: 700だと04:00着(IT216)をまたぐため、500まで下げる
-    base_offset = min(500, max(0, calc_offset)) 
-    # [2026-02-06 03:15] 修正終了
+    # base_offset = min(500, max(0, calc_offset)) 
+    
+    # [2026-02-06 12:50] 🦁 v23.9c 修正: 午前中のスライド禁止 (Morning-Safety)
+    # UTC 0時〜5時（JST 9:00〜14:00）は、リストがまだ短いのでOffsetをかけると当日分を通り越してしまう。
+    # よって、JST 14:00までは強制的にOffset 0とし、それ以降からスライドを開始する。
+    safe_slide_hour = max(0, current_hour_utc - 5) # UTC 5時までは0、6時から1,2...と増える
+    calc_offset = safe_slide_hour * 55
+    base_offset = min(500, calc_offset) # 上限は500のまま維持
+    # [2026-02-06 12:50] 修正終了
 
     sched_sort = 'scheduled_arrival'
     # [2026-02-06] 終
@@ -74,7 +82,7 @@ def fetch_flight_data(api_key, date_str=None):
         pass 
     # [2026-02-06] 終
 
-    print(f"DEBUG: Start API Fetch v23.9b Cost-Adjusted. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
+    print(f"DEBUG: Start API Fetch v23.9c Morning-Safety. Hour_JST={current_hour}, Offset={base_offset}", file=sys.stderr)
 
     # 🦁 修正：戦略リストを動的に構築
     strategies = [
@@ -98,7 +106,6 @@ def fetch_flight_data(api_key, date_str=None):
 
     # 🦁 4番目の枠（100件分）を、サニーさんのロジックで昼夜切り替え
     # [2026-02-06] 🦁 修正：JST深夜0時〜9時の間も「明日(APIにとっての当日)」を拾い続けるよう条件を拡張
-    # if current_hour >= 21:
     if current_hour >= 21 or current_hour < 9:
         # 夜間：日付の壁を越えるため「明日出発」の便を拾う
         strategies.append({'desc': '4. Tomorrow', 'params': {'flight_date': tomorrow_str, 'sort': 'scheduled_arrival'}, 'max_depth': 100, 'use_offset': False})
