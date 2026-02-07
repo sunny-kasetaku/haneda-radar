@@ -59,7 +59,7 @@ def fetch_flight_data(api_key, date_str=None):
     # #     sched_sort = 'scheduled_arrival.desc'
     # #     base_offset = 0
     # 
-    # # [2026-02-06] 🦁 追記: UTC基準のOffset計算 (JST深夜のデータ消失を防止)
+    # # [2026-02-06] 🦁 追記: UTC基準のOffset計算 (JST深夜의 データ消失を防止)
     # # UTC基準(朝9時=0時)でOffsetを計算することで、24時間連続したスライドを実現する
     # current_hour_utc = now_utc.hour
     # 
@@ -337,7 +337,7 @@ def extract_flight_info(flight):
     delay_min = arr.get('delay')
     if delay_min and isinstance(delay_min, int) and delay_min > 0 and s_time:
         try:
-            # s_timeが "2026-02-07T12:00:00+00:00" のような形式を想定し、Zやタイムゾーンを除去して計算
+            # s_time가 "2026-02-07T12:00:00+00:00" のような形式を想定し、Zやタイムゾーンを除去して計算
             clean_time = s_time.replace("Z", "").split("+")[0]
             dt = datetime.fromisoformat(clean_time)
             dt_delayed = dt + timedelta(minutes=delay_min)
@@ -484,6 +484,35 @@ def extract_flight_info(flight):
     trunk_target_list = ["福岡", "FUKUOKA", "伊丹", "ITAMI", "那覇", "NAHA", "沖縄", "OKINAWA", "鹿児島", "KAGOSHIMA", "広島", "HIROSHIMA", "熊本", "KUMAMOTO", "松山", "MATSUYAMA", "岡山", "OKAYAMA"]
     if any(kw in check_name_final for kw in trunk_target_list):
         if p_count < 280: p_count = 280
+
+    # =========================================================================
+    # [2026-02-07] 🦁 v24.15 最終ロック：else漏れを許さない「完全指名制」
+    # 既存の判定に頼らず、ターミナル番号（3, 2, 1）ごとに正解の出口を「指名」します。
+    # =========================================================================
+    # 判定用の全キーワード（日本語名・空港コード・API名を合体）
+    f_key = (str(final_origin) + str(dep.get('airport', '')) + str(origin_iata)).upper()
+
+    # 第3ターミナルの場合：100%「国際(T3)」として固定
+    if term == "3":
+        e_type = "国際(T3)"
+        if airline_iata == "IJ": p_count = max(p_count, 180)
+        else: p_count = max(p_count, 250)
+
+    # 第2ターミナルの場合：4号か3号かを「指名」で分ける
+    elif term == "2":
+        # 4号指名リスト：北日本キーワード または T2到着の国際線
+        is_n = any(kw in f_key for kw in ["函館","HAKODATE","千歳","CHITOSE","札幌","SAPPORO","旭川","ASAHIKAWA","青森","AOMORI","秋田","AKITA","女満別","MEMANBETSU","釧路","KUSHIRO","三沢","MISAWA","KUH","HKD","CTS","AKJ","MMB"])
+        # 国内幹線リストに含まれないコード（かつ空でない）ならT2国際線(4号)とみなす
+        is_i = (origin_iata != "UNK" and origin_iata != "" and origin_iata not in ["FUK","ITM","OKA","HIJ","KGS","MYJ","OKJ","KMQ","TKS","KUM","NGS","OIT","KMI","UKB","NGO","KIX","TOTTORI","YONAGO","IWAKUNI","TOYAMA","SHONAI","NOTO","HACHIJOJIMA","IZUMO"])
+        
+        if is_n or is_i:
+            e_type = "4号(T2)"
+            p_count = max(p_count, 240)
+        else:
+            # それ以外（西日本幹線・地方便）は3号(T2)として指名
+            e_type = "3号(T2)"
+            if any(kw in f_seed for kw in ["FUK","ITM","OKA","HIJ","KGS","FUKUOKA","ITAMI","NAHA","沖縄","OKINAWA"]):
+                p_count = max(p_count, 280)
 
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
