@@ -189,7 +189,7 @@ def analyze_demand(flights, current_time=None):
         raw_t_str = str(f.get('terminal', ''))
         airline = str(f.get('airline', '')).lower()
         pax = f.get('pax_estimated', 0)
-        is_domestic = f.get('is_domestic', True)
+        is_domestic = f.get('is_domestic', True) # 🦁【復元】ここに戻しました
         
         origin_code = f.get('origin_iata') or ""
         origin_name = f.get('origin') or ""
@@ -199,7 +199,8 @@ def analyze_demand(flights, current_time=None):
 
         # 【ロジック修正】
         # 1. 国際線判定 (出身地リストにない場合は強制T3)
-        if not is_domestic:
+        # 🦁【修正】ただしAPIが「2」と言っている場合(ANA国際線)は除外して、後続のT2処理に回す
+        if not is_domestic and raw_t_str != "2":
             target_terminal = "3"
         
         # 2. APIの明示的な値を尊重 (ただし国際線判定されたらT3優先)
@@ -221,18 +222,23 @@ def analyze_demand(flights, current_time=None):
             f['exit_type'] = "国際(T3)"
             
         elif target_terminal == "2":
-            # ANA系 (T2) の偶数/奇数判定
-            try: 
-                f_num_raw = str(f.get('flight_number', '0'))
-                num = int(''.join(filter(str.isdigit, f_num_raw)))
-            except: num = 0
-            
-            if num % 2 == 0: 
-                terminal_counts["3号(T2)"] += pax
-                f['exit_type'] = "3号(T2)"
-            else: 
+            # 🦁【重要修正】T2着だが「国際線」と判定された場合(シドニー等)は、強制的に4号(T2)へ
+            if not is_domestic:
                 terminal_counts["4号(T2)"] += pax
                 f['exit_type'] = "4号(T2)"
+            else:
+                # ANA系 (T2) の偶数/奇数判定
+                try: 
+                    f_num_raw = str(f.get('flight_number', '0'))
+                    num = int(''.join(filter(str.isdigit, f_num_raw)))
+                except: num = 0
+                
+                if num % 2 == 0: 
+                    terminal_counts["3号(T2)"] += pax
+                    f['exit_type'] = "3号(T2)"
+                else: 
+                    terminal_counts["4号(T2)"] += pax
+                    f['exit_type'] = "4号(T2)"
             
         elif target_terminal == "1":
             # JAL系 (T1) の北/南判定
@@ -296,7 +302,8 @@ def estimate_pax_and_type(flight):
     term = str(flight.get('terminal', ''))
     origin_val = flight.get('origin_iata', '')
     origin_name = flight.get('origin', '')
-    check_str = (str(origin_val) + " " + str(origin_name)).lower()
+    # 🦁【修正】全角・半角を統一して小文字化チェック (表記ゆれ対策)
+    check_str = (str(origin_val) + " " + str(origin_name)).lower().replace('｡', '。').replace('ﾞ', '゛').replace('ﾟ', '゜')
     
     # 1. 国内線判定 (厳密化)
     is_domestic = False
@@ -319,10 +326,28 @@ def estimate_pax_and_type(flight):
     # 【追加】国際線コードの明示的チェック (誤判定防止)
     # ジャカルタ(CGK/Jakarta), シンガポール(SIN/Singapore), ロンドン(LHR/London), ソウル(GMP/SEL/Seoul)
     # これらが含まれていたら、上記でDomestic判定されていても強制的にFalseにする
+    # 🦁【修正】国際線コード・キーワードの超強化 (カタカナ・漢字・半角カナ対応)
     INTERNATIONAL_KEYWORDS = [
+        # 英語コード・都市名
         "jakarta", "cgk", "singapore", "sin", "london", "lhr", "seoul", "gmp", "icn", 
         "bangkok", "bkk", "taipei", "tpe", "tsa", "shanghai", "pvg", "sha", "hong kong", "hkg",
-        "paris", "cdg", "frankfurt", "fra", "los angeles", "lax", "new york", "jfk", "honolulu", "hnl"
+        "paris", "cdg", "frankfurt", "fra", "los angeles", "lax", "new york", "jfk", "honolulu", "hnl",
+        "sydney", "syd", "melbourne", "mel", "beijing", "pek", "munich", "muc", "kuala lumpur", "kul",
+        "hanoi", "han", "ho chi minh", "sgn", "manila", "mnl", "delhi", "del", "vienna", "vie",
+        "istanbul", "ist", "vancouver", "yvr", "toronto", "yyz", "san francisco", "sfo", "seattle", "sea",
+        "dallas", "dfw", "houston", "iah", "atlanta", "atl", "detroit", "dtw", "guam", "gum", "helsinki", "hel",
+        "cairns", "cns", "brisbane", "bne", "perth", "per", "doha", "doh", "dubai", "dxb",
+        
+        # 🦁 日本語（カタカナ・漢字・半角カナ）
+        "シドニー", "ｼﾄﾞﾆｰ", "メルボルン", "ﾒﾙﾎﾞﾙﾝ", "ロンドン", "ﾛﾝﾄﾞﾝ", "パリ", "ﾊﾟﾘ",
+        "フランクフルト", "ﾌﾗﾝｸﾌﾙﾄ", "ミュンヘン", "ﾐｭﾝﾍﾝ", "ヘルシンキ", "ﾍﾙｼﾝｷ", "ウィーン", "ｳｨｰﾝ",
+        "イスタンブール", "ｲｽﾀﾝﾌﾞｰﾙ", "ドバイ", "ﾄﾞﾊﾞｲ", "ドーハ", "ﾄﾞｰﾊ",
+        "ニューヨーク", "ﾆｭｰﾖｰｸ", "ロサンゼルス", "ロス", "ﾛｻﾝｾﾞﾙｽ", "サンフランシスコ", "ｻﾝﾌﾗﾝｼｽｺ",
+        "シカゴ", "ｼｶｺﾞ", "ダラス", "ﾀﾞﾗｽ", "ヒューストン", "ﾋｭｰｽﾄﾝ", "ワシントン", "ﾜｼﾝﾄﾝ",
+        "ホノルル", "ﾎﾉﾙﾙ", "バンクーバー", "ﾊﾞﾝｸｰﾊﾞｰ", "トロント", "ﾄﾛﾝﾄ",
+        "バンコク", "ﾊﾞﾝｺｸ", "シンガポール", "ｼﾝｶﾞﾎﾟｰﾙ", "クアラルンプール", "ｸｱﾗﾙﾝﾌﾟｰﾙ",
+        "ジャカルタ", "ｼﾞｬｶﾙﾀ", "マニラ", "ﾏﾆﾗ", "ハノイ", "ﾊﾉｲ", "ホーチミン", "ﾎｰﾁﾐﾝ",
+        "デリー", "ﾃﾞﾘｰ", "北京", "上海", "香港", "台北", "ソウル", "金浦", "仁川", "広州", "大連", "天津", "青島", "深セン"
     ]
     for kw in INTERNATIONAL_KEYWORDS:
         if kw in check_str:
