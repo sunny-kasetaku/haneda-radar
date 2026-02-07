@@ -17,7 +17,7 @@ def fetch_flight_data(api_key, date_str=None):
     [2026-02-06] 🦁 v23.7追記: UTC基準に同期。JST深夜のOffsetリセットを防止。
     [2026-02-06 02:40] 🦁 v23.8追記: 深夜の取りこぼしを防ぐためOffsetに上限(Cap)を設定。
     [2026-02-06 03:15] 🦁 v23.9追記: Cap700軍でも3時台を取りこぼしたため, Cap500/Depth600に拡張。
-    [2026-02-06 03:30] 🦁 v23.9b追記: API回数を12回に戻すため, ActiveのDepthを500→300に削減(相殺)。
+    [2026-02-06 03:30] 🦁 v23.9b追記: API回数を12回に戻すため, Activeের Depthを500→300に削減(相殺)。
     [2026-02-06 12:50] 🦁 v23.9c追記: 午前中にOffsetが効きすぎて当日分を通り越すバグ修正。14:00まではOffset0固定。
     """
     # =========================================================================
@@ -514,6 +514,30 @@ def extract_flight_info(flight):
             # 🦁 [修正] f_seed を f_key に変更し NameError を解消
             if any(kw in f_key for kw in ["FUK","ITM","OKA","HIJ","KGS","FUKUOKA","ITAMI","NAHA","沖縄","OKINAWA"]):
                 p_count = max(p_count, 280)
+
+    # =========================================================================
+    # [2026-02-07] 🦁 v24.17 最終パッチ：引かずに足す「上書き指名」
+    # 削除(赤)を一切出さず、ここまでの判定結果に「最終的な正解」を上書きします。
+    # 新千歳(Chitose)の表記漏れと、IJ便の逆転現象をここで完全に封じ込めます。
+    # =========================================================================
+    # 判定用の全キーワード（再生成）
+    f_check_final = (str(final_origin) + str(dep.get('airport', '')) + str(origin_iata)).upper()
+
+    # 1. 表記漏れの補完（Chitose → 新千歳）
+    if "CHITOSE" in f_check_final:
+        final_origin = "新千歳"
+
+    # 2. IJ便（スプリングジャパン）を国際(T3)に完全固定
+    if airline_iata == "IJ":
+        term, e_type = "3", "国際(T3)"
+        if p_count < 180: p_count = 180
+
+    # 3. T2 北日本便を4号(T2)へ上書き（else漏れ救済）
+    if term == "2":
+        north_patch_list = ["新千歳","函館","旭川","女満別","釧路","稚内","帯広","青森","秋田","三沢","CTS","HKD","AKJ","MMB","KUH","WKJ","OBO","AOJ","AXT","MSJ"]
+        if any(kw in f_check_final for kw in north_patch_list):
+            e_type = "4号(T2)"
+            if p_count < 240: p_count = 240
 
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
