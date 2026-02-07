@@ -467,6 +467,24 @@ def extract_flight_info(flight):
             final_origin = v
             break
 
+    # =========================================================================
+    # [2026-02-07] 🦁 v24.14 最終決定：名前ベースの「出口・人数」絶対確定ロジック
+    # 「if p_count == 150」の関所を撤去し、地名が合致すれば人数に関わらず 100% 4号(T2) や 幹線大型機 に仕分けます。
+    # =========================================================================
+    # 判定用の名前文字列（日本語と英語の両方に対応）
+    check_name_final = (str(final_origin) + str(dep.get('airport', ''))).upper()
+    
+    # 1. 【北日本便】を強制的に4号(T2)へ、人数も最低240名へ引き上げる
+    north_target_list = ["函館", "HAKODATE", "千歳", "CHITOSE", "札幌", "SAPPORO", "旭川", "ASAHIKAWA", "青森", "AOMORI", "秋田", "AKITA", "女満別", "MEMANBETSU", "釧路", "KUSHIRO", "稚内", "WAKKANAI", "帯広", "OBIHIRO", "三沢", "MISAWA"]
+    if term == "2" and any(kw in check_name_final for kw in north_target_list):
+        e_type = "4号(T2)"
+        if p_count < 240: p_count = 240
+
+    # 2. 【主要幹線便】を強制的に最低280名へ引き上げる
+    trunk_target_list = ["福岡", "FUKUOKA", "伊丹", "ITAMI", "那覇", "NAHA", "沖縄", "OKINAWA", "鹿児島", "KAGOSHIMA", "広島", "HIROSHIMA", "熊本", "KUMAMOTO", "松山", "MATSUYAMA", "岡山", "OKAYAMA"]
+    if any(kw in check_name_final for kw in trunk_target_list):
+        if p_count < 280: p_count = 280
+
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
         "airline": airline.get('name', 'Unknown'),
