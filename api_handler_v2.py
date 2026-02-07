@@ -511,7 +511,8 @@ def extract_flight_info(flight):
         else:
             # それ以外（西日本幹線・地方便）は3号(T2)として指名
             e_type = "3号(T2)"
-            if any(kw in f_seed for kw in ["FUK","ITM","OKA","HIJ","KGS","FUKUOKA","ITAMI","NAHA","沖縄","OKINAWA"]):
+            # 🦁 [修正] f_seed を f_key に変更し NameError を解消
+            if any(kw in f_key for kw in ["FUK","ITM","OKA","HIJ","KGS","FUKUOKA","ITAMI","NAHA","沖縄","OKINAWA"]):
                 p_count = max(p_count, 280)
 
     return {
