@@ -16,8 +16,8 @@ def fetch_flight_data(api_key, date_str=None):
     ・サニーさんの以前の知見（出発日基準）に基づき、日付の壁を突破するロジック。
     [2026-02-06] 🦁 v23.7追記: UTC基準に同期。JST深夜のOffsetリセットを防止。
     [2026-02-06 02:40] 🦁 v23.8追記: 深夜の取りこぼしを防ぐためOffsetに上限(Cap)を設定。
-    [2026-02-06 03:15] 🦁 v23.9追記: Cap700でも3時台を取りこぼしたため、Cap500/Depth600に拡張。
-    [2026-02-06 03:30] 🦁 v23.9b追記: API回数を12回に戻すため、ActiveのDepthを500→300に削減(相殺)。
+    [2026-02-06 03:15] 🦁 v23.9追記: Cap700でも3時台を取りこぼしたため, Cap500/Depth600に拡張。
+    [2026-02-06 03:30] 🦁 v23.9b追記: API回数を12回に戻すため, ActiveのDepthを500→300に削減(相殺)。
     [2026-02-06 12:50] 🦁 v23.9c追記: 午前中にOffsetが効きすぎて当日分を通り越すバグ修正。14:00まではOffset0固定。
     """
     # =========================================================================
@@ -112,7 +112,7 @@ def fetch_flight_data(api_key, date_str=None):
     #     {'desc': '3. Scheduled', 'params': {'flight_status': 'scheduled', 'sort': sched_sort, 'flight_date': target_date}, 'max_depth': 600, 'use_offset': True},
     # ]
     # 
-    # # 🦁 4番目の枠（100件分）を、サニーさんのロジックで昼夜切り替え
+    # # 🦁 4番目の枠（100件分）を, サニーさんのロジックで昼夜切り替え
     # # [2026-02-06] 🦁 修正：JST深夜0時〜9時の間も「明日(APIにとっての当日)」を拾い続けるよう条件を拡張
     # if current_hour >= 21 or current_hour < 9:
     #     # 夜間：日付の壁を越えるため「明日出発」の便を拾う
@@ -368,12 +368,34 @@ def extract_flight_info(flight):
         else:
             term = "3"
 
+    # 🦁 [2026-02-07] 追加：4号振り分けと人数精緻化ロジック
+    e_type = f"その他(T{term})"
+    if term == "1":
+        e_type = "1号(T1南)"
+        if airline_iata == "JL" and (f_num_str.startswith("5") or f_num_str.startswith("1")):
+            e_type = "2号(T1北)"
+    elif term == "2":
+        north_codes = ["CTS", "HKD", "AKJ", "MMB", "KUH", "OBO", "WKJ", "SHB", "AOJ", "MSJ", "AXT", "ODA", "SYO", "HNA", "FKS", "GAJ"]
+        if origin_iata in north_codes or (arr.get('iata') == "HND" and flight.get('airline', {}).get('name') == "International"):
+            e_type = "4号(T2)"
+        else:
+            e_type = "3号(T2)"
+    elif term == "3":
+        e_type = "国際(T3)"
+
+    p_count = 150
+    pax_m = {"B773":400, "B772":400, "B77L":400, "B77W":400, "A359":320, "B789":320, "B781":320, "B788":240, "B763":240, "A333":240, "B738":136, "A321":150, "A320":130}
+    if aircraft_iata in pax_m: p_count = pax_m[aircraft_iata]
+    elif term == "3": p_count = 250
+
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
         "airline": airline.get('name', 'Unknown'),
         "origin": dep.get('airport', 'Unknown'),
         "origin_iata": origin_iata,
         "terminal": str(term),
+        "exit_type": e_type, # 🦁 追加項目
+        "pax": p_count,      # 🦁 追加項目
         "arrival_time": arrival_time,
         "scheduled_time": scheduled_time,
         "status": flight.get('flight_status', 'unknown'),
