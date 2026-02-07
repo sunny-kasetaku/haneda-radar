@@ -279,8 +279,34 @@ function getRecentDetails() {
   return unique.slice(0, 50);
 }
 
+// ---------------------------------------------------------
+// 🦁 sendToDiscord (Ver 5.8 改良版)
+// [2026-02-07] Discord 2000文字制限エラー（400）対策
+// 元のコードを保持しつつ、文字数オーバー時に自動分割するロジックに変更しました。
+// ---------------------------------------------------------
 function sendToDiscord(text) {
-  UrlFetchApp.fetch(DISCORD_WEBHOOK_URL, { "method": "post", "contentType": "application/json", "payload": JSON.stringify({ "content": text }) });
+  // 文字数が2000文字以内の場合は、既存の通りそのまま送信
+  if (text.length <= 2000) {
+    UrlFetchApp.fetch(DISCORD_WEBHOOK_URL, { 
+      "method": "post", 
+      "contentType": "application/json", 
+      "payload": JSON.stringify({ "content": text }) 
+    });
+  } else {
+    // 2000文字を超える場合は、1900文字ずつに分割して送信（安全マージン確保）
+    let remainingText = text;
+    while (remainingText.length > 0) {
+      let chunk = remainingText.substring(0, 1900);
+      UrlFetchApp.fetch(DISCORD_WEBHOOK_URL, { 
+        "method": "post", 
+        "contentType": "application/json", 
+        "payload": JSON.stringify({ "content": chunk }) 
+      });
+      remainingText = remainingText.substring(1900);
+      // Discordの連投制限を避けるため1秒待機
+      if (remainingText.length > 0) Utilities.sleep(1000);
+    }
+  }
 }
 
 // 念のため残している空関数（HTML側から呼ばれる可能性があるため）
