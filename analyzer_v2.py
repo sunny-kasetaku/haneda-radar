@@ -56,10 +56,15 @@ JAL_SOUTH_ORIGINS = [
 ]
 
 # 🦁【追加】ANA(T2)で確実に「3号」に入れるべき西日本エリアリスト (4号誤爆防止)
+# ※ここを修正しました（鳥取・山陰・北陸を追加）
 ANA_WEST_FORCE_3 = [
     "FUK", "KOJ", "KMJ", "NGS", "OIT", "KMI", "HIJ", "UBJ", "IWK", "MYJ", "KCZ", "TAK", "TKS", "OKJ", "OKA", "ISG", "MMY", "UKB", "KIX", "ITM",
     "FUKUOKA", "KAGOSHIMA", "KUMAMOTO", "NAGASAKI", "OITA", "MIYAZAKI", "HIROSHIMA", "YAMAGUCHI", "IWAKUNI", "MATSUYAMA", "KOCHI", "TAKAMATSU", "TOKUSHIMA", "OKAYAMA", "OKINAWA", "NAHA", "ISHIGAKI", "MIYAKO", "KOBE", "KANSAI", "ITAMI", "OSAKA",
-    "福岡", "鹿児島", "熊本", "長崎", "大分", "宮崎", "広島", "山口", "岩国", "松山", "高知", "高松", "徳島", "岡山", "沖縄", "那覇", "石垣", "宮古", "神戸", "関西", "伊丹", "大阪"
+    "福岡", "鹿児島", "熊本", "長崎", "大分", "宮崎", "広島", "山口", "岩国", "松山", "高知", "高松", "徳島", "岡山", "沖縄", "那覇", "石垣", "宮古", "神戸", "関西", "伊丹", "大阪",
+    # 🦁 追加: 山陰・北陸エリア
+    "TTJ", "YGJ", "IWJ", "NTQ", "TOY", "KMQ",
+    "TOTTORI", "YONAGO", "IWAMI", "NOTO", "TOYAMA", "KOMATSU",
+    "鳥取", "米子", "石見", "能登", "富山", "小松"
 ]
 
 def analyze_demand(flights, current_time=None):
@@ -154,6 +159,26 @@ def analyze_demand(flights, current_time=None):
             if is_west:
                 pre_determined_exit = "3号(T2)"
                 f['exit_type'] = "3号(T2)"
+
+        # 🦁【さらに追加】ANAスターフライヤー便(3800番台)の正確な1号振り分け
+        # APIが「1」と言っているが、ANA名義なので独自判定で「2号(T1北)」にされがちなものを救済
+        try:
+            fn_str = str(f.get('flight_number', '0'))
+            fn_num = int(''.join(filter(str.isdigit, fn_str)))
+            # ANA便名で3800番台はSFJ運航 (T1発着)
+            if 'ANA' in str(f.get('airline', '')).upper() and 3800 <= fn_num <= 3899:
+                # SFJの南/北判定
+                # 南: 北九州(KKJ), 福岡(FUK), 那覇(OKA), 中部(NGO)
+                # 北: 関空(KIX), 山口宇部(UBJ)
+                check_sfj = (str(f.get('origin_iata', '')) + str(f.get('origin', ''))).upper()
+                if any(x in check_sfj for x in ["KKJ", "FUK", "OKA", "NGO", "北九州", "福岡", "那覇", "中部"]):
+                    pre_determined_exit = "1号(T1南)"
+                    f['exit_type'] = "1号(T1南)"
+                else:
+                    pre_determined_exit = "2号(T1北)"
+                    f['exit_type'] = "2号(T1北)"
+        except:
+            pass
 
         # 2. 決定済みの場合はカウントして、下の独自判定ロジックをスキップ(continue)する
         if pre_determined_exit and pre_determined_exit in terminal_counts:
