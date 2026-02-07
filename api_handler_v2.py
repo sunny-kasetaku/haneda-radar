@@ -368,6 +368,10 @@ def extract_flight_info(flight):
         else:
             term = "3"
 
+    # =========================================================================
+    # [HISTORY] 🦁 過去の思考プロセスを封印：ここから重複ロジックのコメントアウト開始
+    # =========================================================================
+    """
     # 🦁 [2026-02-07] 追加：4号振り分けと人数精緻化ロジック
     e_type = f"その他(T{term})"
     if term == "1":
@@ -571,6 +575,67 @@ def extract_flight_info(flight):
     elif term == "3":
         e_type = "国際(T3)"
         p_count = max(p_count, 250)
+    """
+    # =========================================================================
+    # [HISTORY] 🦁 ここまで重複ロジックのコメントアウト終了
+    # =========================================================================
+
+    # =========================================================================
+    # 🦁 [2026-02-07] v24.25 最終交通整理統合：唯一の正解ロジック
+    # これまでのすべての試行錯誤をコメントアウトで残しつつ、
+    # 渋滞を解消するためにここで一括判定します。
+    # =========================================================================
+    # 基本情報の再整理（日本語名などを適用した最新の状態を使用）
+    p_count = 150
+    pax_m = {"B773":400, "B772":400, "B77L":400, "B77W":400, "A359":320, "B789":320, "B781":320, "B788":240, "B763":240, "A333":240, "B738":136, "A321":150, "A320":130}
+    if aircraft_iata in pax_m: p_count = pax_m[aircraft_iata]
+
+    origin_jp_map = {"GIMPO": "ソウル(金浦)", "INCHEON": "ソウル(仁川)", "松山": "台北(松山)", "TAIPEI": "台北(松山)", "PUDONG": "上海(浦東)", "CHITOSE": "新千歳", "HAKODATE": "函館"}
+    final_origin = dep.get('airport', 'Unknown')
+    for eng, jap in origin_jp_map.items():
+        if eng in str(final_origin).upper(): 
+            final_origin = jap
+            break
+
+    f_key = (str(final_origin) + str(dep.get('airport', '')) + str(origin_iata)).upper()
+    north_list = ["新千歳","函館","旭川","女満別","釧路","稚内","帯広","青森","秋田","三沢","CTS","HKD","AKJ","MMB","KUH","WKJ","OBO","AOJ","AXT","MSJ"]
+    # 国内幹線コード
+    domestic_trunk = ["FUK","ITM","OKA","HIJ","KGS","MYJ","OKJ","KMQ","TKS","KUM","NGS","OIT","KMI","UKB","NGO","KIX","TOTTORI","YONAGO","IWAKUNI","TOYAMA","SHONAI","NOTO","HACHIJOJIMA","IZUMO","ODA","GAJ","SHB","SYO","HNA","FKS"]
+
+    # 1. 第3ターミナル(T3)判定
+    if term == "3":
+        # 救済：もし地名が「北日本」なら、国内線(T2/T1)へ引き戻す
+        if any(kw in f_key for kw in north_list):
+            if airline_iata in ["NH", "IJ", "HD"]: term, e_type = "2", "4号(T2)"
+            else: term, e_type = "1", "2号(T1北)"
+        else:
+            e_type = "国際(T3)"
+            p_count = max(p_count, 250)
+            if airline_iata == "IJ": p_count = 180 # IJ補正
+
+    # 2. 第2ターミナル(T2)判定（ANA・4号国際・北日本）
+    elif term == "2":
+        # 国際線判定（国内幹線・北日本以外を国際とみなす＝昔の正常な形）
+        is_intl = (origin_iata != "UNK" and origin_iata != "" and origin_iata not in domestic_trunk and origin_iata not in north_list)
+        is_north = any(kw in f_key for kw in north_list)
+
+        if is_intl or is_north:
+            e_type = "4号(T2)"
+            p_count = max(p_count, 240)
+        else:
+            e_type = "3号(T2)"
+            if any(kw in f_key for kw in ["福岡","FUK","伊丹","ITM","那覇","OKA"]): p_count = max(p_count, 280)
+
+    # 3. 第1ターミナル(T1)判定
+    elif term == "1":
+        if airline_iata == "JL" and (f_num_str.startswith("5") or f_num_str.startswith("1") or any(kw in f_key for kw in north_list)):
+            e_type = "2号(T1北)"
+        else:
+            e_type = "1号(T1南)"
+            if any(kw in f_key for kw in ["福岡","FUK","伊丹","ITM","那覇","OKA"]): p_count = max(p_count, 280)
+
+    else:
+        e_type = f"その他(T{term})"
 
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
