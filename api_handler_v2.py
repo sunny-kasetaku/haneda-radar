@@ -311,7 +311,6 @@ def fetch_flight_data(api_key, date_str=None):
 
     return all_flights
 
-# extract_flight_info は変更なし
 def extract_flight_info(flight):
     arr = flight.get('arrival', {})
     airline = flight.get('airline', {})
@@ -330,6 +329,9 @@ def extract_flight_info(flight):
     arrival_time = max(time_candidates)
     scheduled_time = s_time 
     
+    # [2026-02-07] 🦁 追加: JS側での時差計算(UTC/JST)の狂いを防ぐため、タイムゾーン表記を強制除去
+    if scheduled_time: scheduled_time = str(scheduled_time).split("+")[0].replace("Z", "")
+
     # [2026-02-07] 🦁 追加: 遅延(delay)を考慮した「真の到着時刻」計算ロジック
     # APIのdelayフィールド(分)が存在する場合、定刻に加算してarrival_timeを補正する
     delay_min = arr.get('delay')
