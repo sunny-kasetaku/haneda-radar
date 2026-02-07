@@ -602,7 +602,21 @@ def extract_flight_info(flight):
             break
 
     f_key = (str(final_origin) + str(dep.get('airport', '')) + str(origin_iata)).upper()
-    north_list = ["新千歳","函館","旭川","女満別","釧路","稚内","帯広","青森","秋田","三沢","CTS","HKD","AKJ","MMB","KUH","WKJ","OBO","AOJ","AXT","MSJ"]
+    
+    # 🦁【修正】北日本リストの完全網羅版
+    north_list = [
+        "新千歳", "CHITOSE", "CTS", 
+        "函館", "HAKODATE", "HKD", 
+        "旭川", "ASAHIKAWA", "AKJ", 
+        "女満別", "MEMANBETSU", "MMB", 
+        "釧路", "KUSHIRO", "KUH", 
+        "稚内", "WAKKANAI", "WKJ", 
+        "帯広", "OBIHIRO", "OBO", 
+        "青森", "AOMORI", "AOJ", 
+        "秋田", "AKITA", "AXT", 
+        "三沢", "MISAWA", "MSJ", 
+        "札幌", "SAPPORO"
+    ]
     # 国内幹線コード
     domestic_trunk = ["FUK","ITM","OKA","HIJ","KGS","MYJ","OKJ","KMQ","TKS","KUM","NGS","OIT","KMI","UKB","NGO","KIX","TOTTORI","YONAGO","IWAKUNI","TOYAMA","SHONAI","NOTO","HACHIJOJIMA","IZUMO","ODA","GAJ","SHB","SYO","HNA","FKS"]
 
@@ -641,11 +655,17 @@ def extract_flight_info(flight):
     else:
         e_type = f"その他(T{term})"
 
-    # 🦁【修正3】最終防衛ライン (ロジック漏れ絶対防止: T2国際線を強制的に4号へ)
+    # 🦁【修正3】最終防衛ライン (ロジック漏れ絶対防止: T2北日本 & 国際線を強制的に4号へ)
     if str(term) == "2":
-        # 判定用キーワード(f_key)に海外都市が含まれていれば4号確定
-        intl_keywords = ["TAIPEI", "台北", "GIMPO", "金浦", "INCHEON", "仁川", "SHANGHAI", "上海", "TSA", "GMP", "SHA", "PVG"]
-        if any(k in f_key for k in intl_keywords):
+        # 国際線キーワード + 北日本キーワード
+        force_4_keywords = [
+            "TAIPEI", "台北", "GIMPO", "金浦", "INCHEON", "仁川", "SHANGHAI", "上海", "TSA", "GMP", "SHA", "PVG",
+            "HAKODATE", "函館", "HKD", "CHITOSE", "新千歳", "CTS", "SAPPORO", "札幌",
+            "ASAHIKAWA", "旭川", "AKJ", "MEMANBETSU", "女満別", "MMB", "KUSHIRO", "釧路", "KUH",
+            "WAKKANAI", "稚内", "WKJ", "OBIHIRO", "帯広", "OBO", "AOMORI", "青森", "AOJ",
+            "AKITA", "秋田", "AXT", "MISAWA", "三沢", "MSJ"
+        ]
+        if any(k in f_key for k in force_4_keywords):
             e_type = "4号(T2)"
             p_count = max(p_count, 240)
 
