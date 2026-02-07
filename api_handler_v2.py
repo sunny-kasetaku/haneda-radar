@@ -445,6 +445,28 @@ def extract_flight_info(flight):
         e_type = "国際(T3)"
         if p_count == 150: p_count = 180
 
+    # =========================================================================
+    # [2026-02-07] 🦁 v24.13 最終付け足し：判定漏れ都市の救済と表示日本語化の補完
+    # 既存のロジック・リストには一切触れず、不足分をここで「足し算」して最終確定させます。
+    # =========================================================================
+    if p_count == 150:
+        # 北日本の追加キーワード救済（既存のrescue_dictを補完）
+        v24_north_extra = ["MEMANBETSU", "女満別", "KUSHIRO", "釧路", "WAKKANAI", "稚内", "OBIHIRO", "帯広", "MISAWA", "三沢"]
+        if any(kw in airport_full_name for kw in v24_north_extra):
+            e_type, p_count = "4号(T2)", 240
+        # 幹線の追加キーワード救済（既存のtrunk_rescue_dictを補完）
+        v24_trunk_extra = ["KAGOSHIMA", "鹿児島", "HIROSHIMA", "広島", "KUMAMOTO", "熊本", "MATSUYAMA", "松山", "OKAYAMA", "岡山"]
+        if any(kw in airport_full_name for kw in v24_trunk_extra):
+            p_count = 280
+
+    # 表示地名の最終翻訳（イベント表示用）
+    # return行の赤（削除）を避けるため、ここでfinal_origin変数を最終補正します
+    v24_extra_jp = {"FUKUOKA": "福岡", "ITAMI": "伊丹", "NAHA": "那覇", "OKINAWA": "沖縄", "KAGOSHIMA": "鹿児島", "HIROSHIMA": "広島", "SAPPORO": "札幌"}
+    for k, v in v24_extra_jp.items():
+        if k in airport_full_name:
+            final_origin = v
+            break
+
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
         "airline": airline.get('name', 'Unknown'),
