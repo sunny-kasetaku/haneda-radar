@@ -102,6 +102,11 @@ def analyze_demand(flights, current_time=None):
         if True:
             # 優先度1: estimate_pax で国内/国際判定も含めて計算
             pax, is_domestic = estimate_pax_and_type(f)
+            
+            # 🦁【追加】APIハンドラーのpaxを尊重
+            if f.get('pax') and f.get('pax') > 150:
+                pax = f.get('pax')
+                
             f['pax_estimated'] = pax
             f['is_domestic'] = is_domestic # 判定結果を保存
             filtered_flights.append(f)
@@ -126,9 +131,20 @@ def analyze_demand(flights, current_time=None):
     }
     
     for f in filtered_flights:
+        # 🦁【追加】APIハンドラーが決めた出口情報(exit_type)があれば、それを絶対優先する
+        pre_determined_exit = f.get('exit_type')
+        pax = f.get('pax_estimated', 0)
+
+        # APIハンドラーが既に決めている場合、既存ロジックをスキップして採用
+        if pre_determined_exit and pre_determined_exit in terminal_counts:
+            terminal_counts[pre_determined_exit] += pax
+            # f['exit_type'] は既にセットされているのでそのまま
+            continue
+
+        # --- 以下、既存のバックアップロジック (変更なし) ---
         raw_t_str = str(f.get('terminal', ''))
         airline = str(f.get('airline', '')).lower()
-        pax = f.get('pax_estimated', 0)
+        # pax = f.get('pax_estimated', 0) # 上で取得済み
         is_domestic = f.get('is_domestic', True)
         
         origin_code = f.get('origin_iata') or ""
