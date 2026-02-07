@@ -1,6 +1,7 @@
 import requests
 import time
 import sys
+import json # [2026-02-07] 🦁 追加: ログ保存用
 from datetime import datetime, timedelta
 
 def fetch_flight_data(api_key, date_str=None):
@@ -212,6 +213,9 @@ def fetch_flight_data(api_key, date_str=None):
     has_more = True
     SAFETY_BREAK = 6000 # ループ暴走防止用
     
+    # [2026-02-07] 🦁 追加: 生ログ保存用のバッファ
+    raw_log_buffer = []
+
     while has_more:
         # パラメータ: 単純にoffset 0から順番に全件取る
         params = {
@@ -233,6 +237,9 @@ def fetch_flight_data(api_key, date_str=None):
             data = response.json()
             raw_data = data.get('data', [])
             
+            # [2026-02-07] 🦁 追加: 生データをバッファに追加
+            raw_log_buffer.extend(raw_data)
+
             # データが尽きたら終了
             if not raw_data:
                 print(f"✅ Data End. Total fetched: {len(all_flights)}", file=sys.stderr)
@@ -293,6 +300,15 @@ def fetch_flight_data(api_key, date_str=None):
             print(f"Error fetching flights: {e}", file=sys.stderr)
             break
             
+    # [2026-02-07] 🦁 追加: 生ログをファイルに書き出し (上書き)
+    try:
+        log_filename = "latest_api_log.json"
+        with open(log_filename, 'w', encoding='utf-8') as f:
+            json.dump(raw_log_buffer, f, indent=2, ensure_ascii=False)
+        print(f"✅ Raw Log Saved: {log_filename} ({len(raw_log_buffer)} records)", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️ Log Save Error: {e}", file=sys.stderr)
+
     return all_flights
 
 # extract_flight_info は変更なし
@@ -314,6 +330,21 @@ def extract_flight_info(flight):
     arrival_time = max(time_candidates)
     scheduled_time = s_time 
     
+    # [2026-02-07] 🦁 追加: 遅延(delay)を考慮した「真の到着時刻」計算ロジック
+    # APIのdelayフィールド(分)が存在する場合、定刻に加算してarrival_timeを補正する
+    delay_min = arr.get('delay')
+    if delay_min and isinstance(delay_min, int) and delay_min > 0 and s_time:
+        try:
+            # s_timeが "2026-02-07T12:00:00+00:00" のような形式を想定し、Zやタイムゾーンを除去して計算
+            clean_time = s_time.replace("Z", "").split("+")[0]
+            dt = datetime.fromisoformat(clean_time)
+            dt_delayed = dt + timedelta(minutes=delay_min)
+            # 簡易的にISO形式に戻す (元の文字列に+が含まれていれば考慮すべきだが、ここでは比較用として単純化)
+            arrival_time = dt_delayed.isoformat()
+        except Exception:
+            # 計算失敗時は、元の max(time_candidates) の結果を採用する (何もしない)
+            pass
+
     term = arr.get('terminal')
     f_num_str = str(flight_data.get('number', ''))
     airline_iata = airline.get('iata', '??')
