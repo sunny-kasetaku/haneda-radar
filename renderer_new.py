@@ -278,6 +278,10 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
         elif any(k in jpn_origin for k in ["山形","南紀白浜","出雲","三沢","大館","能代","但馬","隠岐","天草"]):
             calc_pax = 120
 
+        # 🦁 [追加] v24.18 最終パッチ: ハンドラーの決定を最優先 (引かずに足す)
+        if f.get('exit_type'): exit_type = f.get('exit_type')
+        if f.get('pax'): calc_pax = int(f.get('pax'))
+
         final_flights_for_js.append({
             'arrival_time': f.get('arrival_time_jst'),
             'scheduled_time': f.get('scheduled_time'), # 🦁 追加
