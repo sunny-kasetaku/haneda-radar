@@ -388,16 +388,28 @@ def extract_flight_info(flight):
     if aircraft_iata in pax_m: p_count = pax_m[aircraft_iata]
     elif term == "3": p_count = 250
 
-    # [2026-02-07] 🦁 v24.2 追加：判定の「すり抜け」を補完する最終防衛ライン
-    # 生ログ解析の結果, aircraftがnullでも4号(北海道便や国際線)である便が多数存在するため補完する。
+    # =========================================================================
+    # [2026-02-07] 🦁 v24.2 付け加え：辞書による最終防衛ライン (データ欠落対策)
+    # 既存のロジックをすり抜けた場合のみ, ここで空港コード辞書を使って補完する。
+    # =========================================================================
+    safe_origin = str(origin_iata).strip().upper()
+    
+    # 1. 4号(T2)への再振り分け（北海道・東北便の徹底合流）
     if term == "2" and e_type != "4号(T2)":
-        # 北海道・東北便の再チェック（空白・大文字小文字の揺れ対策）
-        if str(origin_iata).strip().upper() in ["CTS", "HKD", "AKJ", "MMB", "KUH", "OBO", "WKJ", "SHB", "AOJ", "MSJ", "AXT", "ODA", "SYO", "HNA", "FKS", "GAJ"]:
+        north_airports = ["CTS", "HKD", "AKJ", "MMB", "KUH", "OBO", "WKJ", "SHB", "AOJ", "MSJ", "AXT", "ODA", "SYO", "HNA", "FKS", "GAJ"]
+        if safe_origin in north_airports:
             e_type = "4号(T2)"
-    # 人数補正（aircraft: null 対策）
+
+    # 2. 人数補正（aircraft: null 対策の辞書判定）
     if p_count == 150:
-        if e_type == "4号(T2)": p_count = 240 # 4号対象(北日本・国際)は中型機が多いため推計を上方修正
-        if term == "3": p_count = 250 # 国際線デフォルト
+        # 北海道・東北・主要幹線は大型機が多いため、機材不明でも推計を底上げする
+        major_trunk_lines = ["FUK", "ITM", "OKA", "CTS", "HIJ", "KGS"]
+        if e_type == "4号(T2)": 
+            p_count = 240 # 函館・新千歳などの4号便
+        elif safe_origin in major_trunk_lines:
+            p_count = 280 # 福岡・伊丹・沖縄などの3号幹線
+        elif term == "3":
+            p_count = 250 # 国際線
 
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
@@ -405,8 +417,8 @@ def extract_flight_info(flight):
         "origin": dep.get('airport', 'Unknown'),
         "origin_iata": origin_iata,
         "terminal": str(term),
-        "exit_type": e_type, # 🦁 追加項目
-        "pax": p_count,      # 🦁 追加項目
+        "exit_type": e_type, # 🦁 付け加え
+        "pax": p_count,      # 🦁 付け加え
         "arrival_time": arrival_time,
         "scheduled_time": scheduled_time,
         "status": flight.get('flight_status', 'unknown'),
