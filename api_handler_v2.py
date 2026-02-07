@@ -347,7 +347,11 @@ def extract_flight_info(flight):
             # 計算失敗時は、元の max(time_candidates) の結果を採用する (何もしない)
             pass
 
-    term = arr.get('terminal')
+    # 🦁 修正: ターミナルの型不一致(int)を防ぐため、文字列に変換
+    # term = arr.get('terminal')
+    raw_term = arr.get('terminal')
+    term = str(raw_term) if raw_term is not None else None
+
     f_num_str = str(flight_data.get('number', ''))
     airline_iata = airline.get('iata', '??')
     origin_iata = dep.get('iata', 'UNK')
@@ -496,13 +500,13 @@ def extract_flight_info(flight):
     # 判定用の全キーワード（日本語名・空港コード・API名を合体）
     f_key = (str(final_origin) + str(dep.get('airport', '')) + str(origin_iata)).upper()
 
-    # 第3ターミナルの場合：100%「国際(T3)」として固定
+    # 第3ターミナル(T3)の場合：100%「国際(T3)」として固定
     if term == "3":
         e_type = "国際(T3)"
         if airline_iata == "IJ": p_count = max(p_count, 180)
         else: p_count = max(p_count, 250)
 
-    # 第2ターミナルの場合：4号か3号かを「指名」で分ける
+    # 第2ターミナル(T2)の場合：4号か3号かを「指名」で分ける
     elif term == "2":
         # 4号指名リスト：北日本キーワード または T2到着の国際線
         is_n = any(kw in f_key for kw in ["函館","HAKODATE","千歳","CHITOSE","札幌","SAPPORO","旭川","ASAHIKAWA","青森","AOMORI","秋田","AKITA","女満別","MEMANBETSU","釧路","KUSHIRO","三沢","MISAWA","KUH","HKD","CTS","AKJ","MMB"])
@@ -636,6 +640,14 @@ def extract_flight_info(flight):
 
     else:
         e_type = f"その他(T{term})"
+
+    # 🦁【修正3】最終防衛ライン (ロジック漏れ絶対防止: T2国際線を強制的に4号へ)
+    if str(term) == "2":
+        # 判定用キーワード(f_key)に海外都市が含まれていれば4号確定
+        intl_keywords = ["TAIPEI", "台北", "GIMPO", "金浦", "INCHEON", "仁川", "SHANGHAI", "上海", "TSA", "GMP", "SHA", "PVG"]
+        if any(k in f_key for k in intl_keywords):
+            e_type = "4号(T2)"
+            p_count = max(p_count, 240)
 
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
