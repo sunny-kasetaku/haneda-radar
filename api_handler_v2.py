@@ -411,14 +411,48 @@ def extract_flight_info(flight):
         elif term == "3":
             p_count = 250 # 国際線
 
+    # =========================================================================
+    # [2026-02-07] 🦁 v24.7 付け加え：機材不明（null）時の「出身地別」機材推計辞書
+    # サニーさんの仰る通り「コードではなく辞書」で機材サイズを判定する最終検問所。
+    # =========================================================================
+    airport_full_name = str(dep.get('airport', 'Unknown')).upper()
+    
+    # 【救済辞書：名前】地名が含まれていれば強制的に 4号(T2) へ引きずり戻す
+    rescue_dict = ["HAKODATE", "函館", "CHITOSE", "千歳", "SAPPORO", "札幌", "ASAHIKAWA", "旭川", "AOMORI", "青森", "AKITA", "秋田"]
+    if term == "2" and any(kw in airport_full_name for kw in rescue_dict):
+        e_type = "4号(T2)"
+        # 4号(北日本)かつ機材不明なら、中型機サイズ(240名)に決定
+        if p_count == 150: p_count = 240
+
+    # 【機材推計辞書：路線別】機材がnullでも、出身地が幹線なら大型機サイズに決定
+    # 福岡、伊丹、那覇などの「名前」が入っていれば、150名を280〜300名へ上書き
+    trunk_rescue_dict = ["FUKUOKA", "福岡", "ITAMI", "伊丹", "NAHA", "那覇", "OKINAWA", "沖縄"]
+    if p_count == 150:
+        if any(kw in airport_full_name for kw in trunk_rescue_dict):
+            p_count = 280 # 幹線大型機推計
+
+    # 表示地名の日本語化辞書 (イベント情報修正)
+    origin_jp_map = {"GIMPO": "ソウル(金浦)", "INCHEON": "ソウル(仁川)", "松山": "台北(松山)", "TAIPEI": "台北(松山)", "PUDONG": "上海(浦東)", "NEW CHITOSE": "新千歳", "HAKODATE": "函館"}
+    final_origin = dep.get('airport', 'Unknown')
+    for eng, jap in origin_jp_map.items():
+        if eng in str(final_origin).upper(): 
+            final_origin = jap
+            break
+
+    # スプリングジャパン(IJ)の3分割入力対応（国際枠へ強制）
+    if airline_iata == "IJ":
+        term = "3"
+        e_type = "国際(T3)"
+        if p_count == 150: p_count = 180
+
     return {
         "flight_number": f"{airline_iata}{f_num_str}",
         "airline": airline.get('name', 'Unknown'),
-        "origin": dep.get('airport', 'Unknown'),
+        "origin": final_origin, # 🦁 修正: 翻訳後の日本語名を使用
         "origin_iata": origin_iata,
         "terminal": str(term),
-        "exit_type": e_type, # 🦁 付け加え
-        "pax": p_count,      # 🦁 付け加え
+        "exit_type": e_type,
+        "pax": p_count,
         "arrival_time": arrival_time,
         "scheduled_time": scheduled_time,
         "status": flight.get('flight_status', 'unknown'),
