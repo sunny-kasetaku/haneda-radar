@@ -24,6 +24,17 @@ jobs:
           python-version: '3.9'
       - run: pip install requests
       - run: python main_v8.py
+
+      # ▼ [2026-02-07] 🦁 追加: 生成されたログファイルをリポジトリに保存する
+      - name: Commit and Push latest_api_log.json
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add latest_api_log.json
+          git commit -m "Update latest API log [skip ci]" || echo "No changes to commit"
+          git push
+      # ▲ 追加終了
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
