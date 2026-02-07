@@ -146,9 +146,11 @@ def analyze_demand(flights, current_time=None):
         # 🦁【追加ロジック】APIハンドラーの決定を絶対遵守し、西日本便を3号へ補正する
         pre_determined_exit = f.get('exit_type')
         pax = f.get('pax_estimated', 0)
+        is_domestic = f.get('is_domestic', True) # 🦁 ここで取得
 
         # 1. 西日本便の強制3号補正 (4号判定されていた場合の救済)
-        if str(f.get('terminal')) == "2":
+        # 🦁 修正: 「かつ、国内線である場合のみ」条件を追加 (台北(松山)の誤爆防止)
+        if str(f.get('terminal')) == "2" and is_domestic:
             check_str = (str(f.get('origin_iata', '')) + str(f.get('origin', ''))).upper()
             is_west = False
             for kw in ANA_WEST_FORCE_3:
@@ -189,7 +191,7 @@ def analyze_demand(flights, current_time=None):
         raw_t_str = str(f.get('terminal', ''))
         airline = str(f.get('airline', '')).lower()
         pax = f.get('pax_estimated', 0)
-        is_domestic = f.get('is_domestic', True) # 🦁【復元】ここに戻しました
+        # is_domestic = f.get('is_domestic', True) # 🦁 上で取得済みなので削除
         
         origin_code = f.get('origin_iata') or ""
         origin_name = f.get('origin') or ""
