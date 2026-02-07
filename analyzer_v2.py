@@ -55,6 +55,13 @@ JAL_SOUTH_ORIGINS = [
     "奄美", "那覇", "沖縄", "石垣", "宮古", "岡山", "出雲"
 ]
 
+# 🦁【追加】ANA(T2)で確実に「3号」に入れるべき西日本エリアリスト (4号誤爆防止)
+ANA_WEST_FORCE_3 = [
+    "FUK", "KOJ", "KMJ", "NGS", "OIT", "KMI", "HIJ", "UBJ", "IWK", "MYJ", "KCZ", "TAK", "TKS", "OKJ", "OKA", "ISG", "MMY", "UKB", "KIX", "ITM",
+    "FUKUOKA", "KAGOSHIMA", "KUMAMOTO", "NAGASAKI", "OITA", "MIYAZAKI", "HIROSHIMA", "YAMAGUCHI", "IWAKUNI", "MATSUYAMA", "KOCHI", "TAKAMATSU", "TOKUSHIMA", "OKAYAMA", "OKINAWA", "NAHA", "ISHIGAKI", "MIYAKO", "KOBE", "KANSAI", "ITAMI", "OSAKA",
+    "福岡", "鹿児島", "熊本", "長崎", "大分", "宮崎", "広島", "山口", "岩国", "松山", "高知", "高松", "徳島", "岡山", "沖縄", "那覇", "石垣", "宮古", "神戸", "関西", "伊丹", "大阪"
+]
+
 def analyze_demand(flights, current_time=None):
     if current_time is None:
         now = datetime.utcnow() + timedelta(hours=9)
@@ -131,20 +138,32 @@ def analyze_demand(flights, current_time=None):
     }
     
     for f in filtered_flights:
-        # 🦁【追加】APIハンドラーが決めた出口情報(exit_type)があれば、それを絶対優先する
+        # 🦁【追加ロジック】APIハンドラーの決定を絶対遵守し、西日本便を3号へ補正する
         pre_determined_exit = f.get('exit_type')
         pax = f.get('pax_estimated', 0)
 
-        # APIハンドラーが既に決めている場合、既存ロジックをスキップして採用
+        # 1. 西日本便の強制3号補正 (4号判定されていた場合の救済)
+        if str(f.get('terminal')) == "2":
+            check_str = (str(f.get('origin_iata', '')) + str(f.get('origin', ''))).upper()
+            is_west = False
+            for kw in ANA_WEST_FORCE_3:
+                if kw in check_str:
+                    is_west = True
+                    break
+            
+            if is_west:
+                pre_determined_exit = "3号(T2)"
+                f['exit_type'] = "3号(T2)"
+
+        # 2. 決定済みの場合はカウントして、下の独自判定ロジックをスキップ(continue)する
         if pre_determined_exit and pre_determined_exit in terminal_counts:
             terminal_counts[pre_determined_exit] += pax
-            # f['exit_type'] は既にセットされているのでそのまま
             continue
+        # 🦁【追加終わり】既存コードは以下そのまま温存
 
-        # --- 以下、既存のバックアップロジック (変更なし) ---
         raw_t_str = str(f.get('terminal', ''))
         airline = str(f.get('airline', '')).lower()
-        # pax = f.get('pax_estimated', 0) # 上で取得済み
+        pax = f.get('pax_estimated', 0)
         is_domestic = f.get('is_domestic', True)
         
         origin_code = f.get('origin_iata') or ""
