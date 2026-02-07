@@ -1,5 +1,5 @@
 // ==========================================
-// ⚙️ Code.gs (Ver 5.6: 指定URL対応版)
+// ⚙️ Code.gs (Ver 5.7: [2026-02-07] 当日送信救済版)
 // ==========================================
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1466771292807102657/7WBua-A8ptgLat_t-m-1qYEppmtej50KMP3aK3ZPx6HblqJ5JhUPjQeb3JEAHYKe1Iti';
 
@@ -19,6 +19,8 @@ function onOpen() {
     .addItem('🚀 稼タク イベントエディター', 'showSidebar') 
     .addSeparator()
     .addItem('📨 [手動] 明日の分をDiscordに送信', 'sendDailyEvents') 
+    // [2026-02-07] 🦁 付け足し：昨日のトリガー失敗時などの救済用
+    .addItem('🚨 [緊急] 今日の分をDiscordに送信', 'sendTodayEvents') 
     .addToUi();
 }
 
@@ -284,4 +286,77 @@ function sendToDiscord(text) {
 // 念のため残している空関数（HTML側から呼ばれる可能性があるため）
 function getExistingEvents(venue) {
   return [];
+}
+
+// ============================================================
+// 🦁 [2026-02-07] 付け足し: 緊急用「今日の分」送信関数
+// サニーさんの20年来の伝統（レガシー保持）に従い、既存関数を消さずに足しました。
+// ============================================================
+function sendTodayEvents() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('シート1'); 
+  const data = sheet.getDataRange().getValues();
+  
+  const targetDate = new Date(); // 🦁 今日の日付（+1せず現在のまま）
+  targetDate.setHours(0, 0, 0, 0);
+
+  let events = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;
+    const date = new Date(row[0]);
+    date.setHours(0, 0, 0, 0);
+    if (date.getTime() === targetDate.getTime()) {
+      let tStr = row[1];
+      if (tStr instanceof Date) tStr = Utilities.formatDate(tStr, "JST", "HH:mm");
+      let note = (row.length > 7) ? row[7] : "";
+      events.push({ time: tStr, venue: row[2], detail: row[3], price: row[4], isHot: row[5], isPickup: row[6], note: note });
+    }
+  }
+  events.sort((a, b) => (a.time > b.time ? 1 : -1));
+
+  let pickups = [], timelines = [];
+  events.forEach(e => {
+    let line = `${e.time} ｜ ${e.venue}`;
+    let info = [];
+    if (e.detail) info.push(e.detail);
+    if (e.price) info.push('¥' + e.price);
+    if (e.isHot) info.push('❗️');
+    if (info.length > 0) line += ` (${info.join(' ')})`;
+    if (e.note) line += ` ｜ ${e.note}`;
+    if (e.isPickup) pickups.push(line); else timelines.push(line);
+  });
+
+  const weatherText = getTodayWeather(); // 🦁 今日専用の天気取得
+  const dayStr = Utilities.formatDate(targetDate, 'Asia/Tokyo', 'M/d');
+  const weekStr = ['日','月','火','水','木','金','土'][targetDate.getDay()];
+  const gInfo = getGlobalInfo(Utilities.formatDate(targetDate, "JST", "M/d(E)"));
+  
+  let message = `**[本日] ${dayStr} ${weekStr}**\n${weatherText}\n\n`;
+  if (pickups.length > 0) message += `**[ピックアップ]**\n` + pickups.join('\n') + `\n\n`;
+  if (timelines.length > 0) message += `**[時刻表（終演順）]**\n` + timelines.join('\n');
+  else message += `(本日の登録イベントはありません)`;
+
+  if (gInfo.highway || gInfo.etc) {
+    message += `\n\n**⚠️重要交通情報**`;
+    if (gInfo.highway) message += `\n【高速通行止・規制】\n` + formatToList(gInfo.highway);
+    if (gInfo.etc) message += `\n【ETC工事・その他】\n` + formatToList(gInfo.etc);
+  }
+  message += `\n\n🌐 **高速道路・工事情報はこちら**\nhttps://www.shutoko-construction.jp/traffictime/`;
+  message += `\n\n` + WARNING_FOOTER;
+  sendToDiscord(message);
+}
+
+// 🦁 今日用の天気取得（index [0] を参照）
+function getTodayWeather() {
+  try {
+    const res = UrlFetchApp.fetch("https://api.open-meteo.com/v1/forecast?latitude=35.6895&longitude=139.6917&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo");
+    const json = JSON.parse(res.getContentText());
+    const code = json.daily.weathercode[0]; // 今日
+    const maxT = json.daily.temperature_2m_max[0];
+    const minT = json.daily.temperature_2m_min[0];
+    let icon = (code <= 3) ? "☀️" : (code <= 67) ? "☔" : "☁️";
+    if (code >= 95) icon = "⛈️";
+    return `【天気】${icon} 最高:${maxT}℃ / 最低:${minT}℃`;
+  } catch (e) { return "【天気】(取得できませんでした)"; }
 }
