@@ -30,7 +30,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add latest_api_log.json
+          git add latest_api_log.json index.html unknown_airports.log || true
           git commit -m "Update latest API log [skip ci]" || echo "No changes to commit"
           git push
       # ▲ 追加終了
