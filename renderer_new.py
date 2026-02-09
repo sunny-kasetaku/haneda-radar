@@ -448,15 +448,22 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                 }} else {{
                     var input = (prompt("本日のパスワードを入力してください") || "").trim();
                     if (input === "{password}" || input === "0000") {{ 
-                         localStorage.setItem("kasetack_auth_pass_v3", input); 
-                         location.reload(); 
+                          localStorage.setItem("kasetack_auth_pass_v3", input); 
+                          location.reload(); 
                      }} else if (input !== "") {{ alert("パスワードが違います"); }}
                 }}
             }}
             window.onload = checkPass;
 
             function initApp() {{
-                setTab('DOM'); // デフォルトは国内線タブ
+                // 🦁 修正: リロード対策（保存されたタブを復元）
+                const savedTab = localStorage.getItem("selectedTab");
+                if (savedTab) {{
+                    setTab(savedTab);
+                }} else {{
+                    setTab('DOM'); // デフォルト
+                }}
+
                 setInterval(updateDisplay, 60000); 
                 setInterval(updateTimeAlert, 60000);
                 updateTimeAlert();
@@ -464,6 +471,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
 
             function setTab(mode) {{
                 currentTab = mode;
+                // 🦁 修正: リロード対策（タブ保存）
+                localStorage.setItem("selectedTab", mode);
+
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 if(mode === 'ALL') document.getElementById('tab-all').classList.add('active');
                 if(mode === 'DOM') document.getElementById('tab-dom').classList.add('active');
@@ -631,9 +641,15 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                         let mStr = fDate.getMinutes().toString().padStart(2, '0');
                         let timeStr = hStr + ":" + mStr;
                         
-                        // 🦁 遅延ラベルの計算
+                        // 🦁 修正: 遅延ラベルと星マーク(⭐)の計算
                         let delayMins = Math.floor((fDate - sDate) / 60000);
-                        let delayText = (delayMins >= 15) ? " <span style='color:#FF4444; font-weight:bold; font-size:10px;'>🔥"+delayMins+"分遅延</span>" : "";
+                        let delayText = "";
+                        
+                        if (delayMins >= 180) {{
+                             delayText = " <span style='color:gold; font-weight:bold; font-size:14px;'>⭐"+delayMins+"分遅延</span>";
+                        }} else if (delayMins >= 15) {{
+                             delayText = " <span style='color:#FF4444; font-weight:bold; font-size:10px;'>🔥"+delayMins+"分遅延</span>";
+                        }}
                         
                         let color = "#FFFFFF";
                         if (eType === "1号(T1南)") color = "#FF8C00";
@@ -653,7 +669,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                     if (diffMins >= 60 && diffMins < 120) fcCounts[1] += f.pax;
                     if (diffMins >= 120 && diffMins < 180) fcCounts[2] += f.pax;
                 }});
-
+                
                 document.getElementById('flight-table-body').innerHTML = tableHtml;
                 
                 document.getElementById('count-t1s').innerText = counts["1号(T1南)"];
@@ -808,6 +824,9 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
             </div>
 
             <div class="section-title">✈️ 分析の根拠（背景色は計算対象）</div>
+            <div style="font-size:12px; color:#ccc; margin: 2px 0 5px 10px;">
+                <span style="color:gold; font-weight:bold;">⭐ 星マーク</span> = 180分以上の遅延 (<span style="color:#FF4444;">事後請求</span>の可能性大)
+            </div>
             <div class="table-container">
                 <table class="flight-table">
                     <thead><tr><th>時刻</th><th>便名</th><th>出身</th><th>推計</th></tr></thead>
@@ -848,6 +867,7 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                     <div class="tool-row">
                         <button class="tool-btn pi-btn" onclick="handlePi()">プールイン (コピー)</button>
                         <button class="tool-btn po-btn" onclick="handlePo()">プールアウト (コピー)</button>
+                        <span style="color:#ff4444; font-size:11px; align-self:center; margin-left:5px;">※自動計算</span>
                     </div>
                 </div>
                 
@@ -865,35 +885,36 @@ def render_html(demand_results, password, discord_url="#", current_time=None, is
                     <div class="qr-row">
                         <div class="qr-key" style="color:#FF8C00;">1号 (T1南)</div>
                         <div class="qr-val">
-                            <strong>JAL（西日本・九州方面）</strong><br>
-                            スカイマーク
+                            <strong>JAL（中国・四国・九州・沖縄）</strong><br>
+                            JTA、SKY（スカイマーク）、SFJ（北九州・福岡・那覇・中部）
                         </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#FF4444;">2号 (T1北)</div>
                         <div class="qr-val">
-                            <strong>JAL（北海道・東北方面）</strong><br>
-                            スターフライヤー
+                            <strong>JAL（北海道・東北・北陸・東海・近畿）</strong><br>
+                            SFJ（関空・山口宇部）
                         </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#1E90FF;">3号 (T2)</div>
                         <div class="qr-val">
-                            <strong>ANA（国内線メイン）</strong><br>
-                            AIRDO、ソラシド
+                            <strong>ANA（西日本・伊丹・福岡・那覇）</strong><br>
+                            ADO（エアドゥ）、SNJ（ソラシド）
                         </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#00FFFF;">4号 (T2)</div>
                         <div class="qr-val">
-                            <strong>ANA（国際線バブル狙い！）</strong><br>
-                            <span style="font-size:11px;">※夕方17時や朝など、国際線が重なる時の特設会場です。</span>
+                            <strong>ANA（北海道・東北・北陸）</strong><br>
+                            <span style="font-size:11px;">※T2到着の国際線も含みます</span>
                         </div>
                     </div>
                     <div class="qr-row">
                         <div class="qr-key" style="color:#FFD700;">国際 (T3)</div>
                         <div class="qr-val">
-                            <strong>JAL国際線</strong>、デルタ、外資系すべて
+                            <strong>第3ターミナル到着便 すべて</strong><br>
+                            (JAL国際、外資系、Spring Japan等)
                         </div>
                     </div>
                 </div>
