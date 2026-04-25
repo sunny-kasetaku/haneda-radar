@@ -98,11 +98,11 @@
         
         <script>
             // 🦁 ここにフライトデータ (17:04取得分)
-            const FLIGHT_DATA = [{"arrival_time": "2026-04-25T03:05:00", "scheduled_time": "2026-04-25T03:05:00", "flight_number": "IJ410", "origin": "新千歳", "pax": 240, "exit_type": "4号(T2)", "terminal": "2"}, {"arrival_time": "2026-04-25T03:10:00", "scheduled_time": "2026-04-25T03:10:00", "flight_number": "IJ444", "origin": "北九州", "pax": 180, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-04-25T04:25:00", "scheduled_time": "2026-04-25T04:25:00", "flight_number": "IT216", "origin": "台北(桃園)", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-04-25T04:55:00", "scheduled_time": "2026-04-25T04:55:00", "flight_number": "MM876", "origin": "上海(浦東)", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-04-25T09:50:00", "scheduled_time": "2026-04-25T09:50:00", "flight_number": "JL38", "origin": "ｼﾝｶﾞﾎﾟｰﾙ", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}];
+            const FLIGHT_DATA = [{"arrival_time": "2026-04-25T03:05:00", "scheduled_time": "2026-04-25T03:05:00", "flight_number": "IJ410", "origin": "新千歳", "pax": 240, "exit_type": "4号(T2)", "terminal": "2"}, {"arrival_time": "2026-04-25T03:10:00", "scheduled_time": "2026-04-25T03:10:00", "flight_number": "IJ444", "origin": "北九州", "pax": 180, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-04-25T04:25:00", "scheduled_time": "2026-04-25T04:25:00", "flight_number": "IT216", "origin": "台北(桃園)", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-04-25T04:55:00", "scheduled_time": "2026-04-25T04:55:00", "flight_number": "MM876", "origin": "上海(浦東)", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-04-25T08:20:00", "scheduled_time": "2026-04-25T08:20:00", "flight_number": "NH452", "origin": "佐賀", "pax": 240, "exit_type": "4号(T2)", "terminal": "2"}, {"arrival_time": "2026-04-25T09:50:00", "scheduled_time": "2026-04-25T09:50:00", "flight_number": "JL38", "origin": "ｼﾝｶﾞﾎﾟｰﾙ", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-04-25T11:30:00", "scheduled_time": "2026-04-25T11:30:00", "flight_number": "NH454", "origin": "佐賀", "pax": 240, "exit_type": "4号(T2)", "terminal": "2"}, {"arrival_time": "2026-04-25T13:45:00", "scheduled_time": "2026-04-25T13:45:00", "flight_number": "NH982", "origin": "佐賀", "pax": 240, "exit_type": "4号(T2)", "terminal": "2"}];
             const SETTING_PAST = 60;
             const SETTING_FUTURE = 240;
             const THEORY_BEST = "3号(T2)"; 
-            const FETCH_TIMESTAMP = 1777064728934;
+            const FETCH_TIMESTAMP = 1777075612869;
 
             // 🦁 定数：各プールの1列あたりの平均台数
             const POOL_CONFIG = {
@@ -468,7 +468,7 @@
             
 
             <div class="info-banner">
-                データ取得: 06:05<br>
+                データ取得: 09:06<br>
                 <span style="font-size:12px">🎯 判定範囲: 過去60分〜未来30分 | 実数: <span id="total-count">---</span>機</span>
             </div>
             
@@ -626,7 +626,7 @@
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
-                データ取得: 06:05 (API) | 表示更新: <span id="last-update">Now</span><br>
+                データ取得: 09:06 (API) | 表示更新: <span id="last-update">Now</span><br>
                 <span style="font-size:10px; color:#666;">次のリロードまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒</span>
             </div>
         </div>
