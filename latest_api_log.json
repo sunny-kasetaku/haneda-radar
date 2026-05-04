@@ -3,6 +3,1130 @@
     "flight_date": "2026-05-04",
     "flight_status": "active",
     "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Japan Airlines",
+      "iata": "JL",
+      "icao": "JAL"
+    },
+    "flight": {
+      "number": "36",
+      "iata": "JL36",
+      "icao": "JAL36",
+      "codeshared": null
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "AS",
+      "icao": "AS"
+    },
+    "flight": {
+      "number": "7350",
+      "iata": "AS7350",
+      "icao": "AS7350",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "36",
+        "flight_iata": "jl36",
+        "flight_icao": "jal36"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "QF",
+      "icao": "QF"
+    },
+    "flight": {
+      "number": "4025",
+      "iata": "QF4025",
+      "icao": "QF4025",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "36",
+        "flight_iata": "jl36",
+        "flight_icao": "jal36"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "6E",
+      "icao": "6E"
+    },
+    "flight": {
+      "number": "3813",
+      "iata": "6E3813",
+      "icao": "6E3813",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "36",
+        "flight_iata": "jl36",
+        "flight_icao": "jal36"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "UL",
+      "icao": "UL"
+    },
+    "flight": {
+      "number": "3336",
+      "iata": "UL3336",
+      "icao": "UL3336",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "36",
+        "flight_iata": "jl36",
+        "flight_icao": "jal36"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "AA",
+      "icao": "AA"
+    },
+    "flight": {
+      "number": "8399",
+      "iata": "AA8399",
+      "icao": "AA8399",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "36",
+        "flight_iata": "jl36",
+        "flight_icao": "jal36"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "All Nippon Airways",
+      "iata": "NH",
+      "icao": "ANA"
+    },
+    "flight": {
+      "number": "844",
+      "iata": "NH844",
+      "icao": "ANA844",
+      "codeshared": null
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "SQ",
+      "icao": "SQ"
+    },
+    "flight": {
+      "number": "5906",
+      "iata": "SQ5906",
+      "icao": "SQ5906",
+      "codeshared": {
+        "airline_name": "all nippon airways",
+        "airline_iata": "nh",
+        "airline_icao": "ana",
+        "flight_number": "844",
+        "flight_iata": "nh844",
+        "flight_icao": "ana844"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Singapore Changi",
+      "timezone": "Asia/Singapore",
+      "iata": "SIN",
+      "icao": "WSSS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "AC",
+      "icao": "AC"
+    },
+    "flight": {
+      "number": "6227",
+      "iata": "AC6227",
+      "icao": "AC6227",
+      "codeshared": {
+        "airline_name": "all nippon airways",
+        "airline_iata": "nh",
+        "airline_icao": "ana",
+        "flight_number": "844",
+        "flight_iata": "nh844",
+        "flight_icao": "ana844"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "All Nippon Airways",
+      "iata": "NH",
+      "icao": "ANA"
+    },
+    "flight": {
+      "number": "850",
+      "iata": "NH850",
+      "icao": "ANA850",
+      "codeshared": null
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "AC",
+      "icao": "AC"
+    },
+    "flight": {
+      "number": "6272",
+      "iata": "AC6272",
+      "icao": "AC6272",
+      "codeshared": {
+        "airline_name": "all nippon airways",
+        "airline_iata": "nh",
+        "airline_icao": "ana",
+        "flight_number": "850",
+        "flight_iata": "nh850",
+        "flight_icao": "ana850"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "TG",
+      "icao": "TG"
+    },
+    "flight": {
+      "number": "6107",
+      "iata": "TG6107",
+      "icao": "TG6107",
+      "codeshared": {
+        "airline_name": "all nippon airways",
+        "airline_iata": "nh",
+        "airline_icao": "ana",
+        "flight_number": "850",
+        "flight_iata": "nh850",
+        "flight_icao": "ana850"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "ET",
+      "icao": "ET"
+    },
+    "flight": {
+      "number": "1403",
+      "iata": "ET1403",
+      "icao": "ET1403",
+      "codeshared": {
+        "airline_name": "all nippon airways",
+        "airline_iata": "nh",
+        "airline_icao": "ana",
+        "flight_number": "850",
+        "flight_iata": "nh850",
+        "flight_icao": "ana850"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Japan Airlines",
+      "iata": "JL",
+      "icao": "JAL"
+    },
+    "flight": {
+      "number": "34",
+      "iata": "JL34",
+      "icao": "JAL34",
+      "codeshared": null
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "6E",
+      "icao": "6E"
+    },
+    "flight": {
+      "number": "3803",
+      "iata": "6E3803",
+      "icao": "6E3803",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "34",
+        "flight_iata": "jl34",
+        "flight_icao": "jal34"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "KC",
+      "icao": "KC"
+    },
+    "flight": {
+      "number": "1034",
+      "iata": "KC1034",
+      "icao": "KC1034",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "34",
+        "flight_iata": "jl34",
+        "flight_icao": "jal34"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "AS",
+      "icao": "AS"
+    },
+    "flight": {
+      "number": "7334",
+      "iata": "AS7334",
+      "icao": "AS7334",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "34",
+        "flight_iata": "jl34",
+        "flight_icao": "jal34"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "PG",
+      "icao": "PG"
+    },
+    "flight": {
+      "number": "4153",
+      "iata": "PG4153",
+      "icao": "PG4153",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "34",
+        "flight_iata": "jl34",
+        "flight_icao": "jal34"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "UL",
+      "icao": "UL"
+    },
+    "flight": {
+      "number": "3360",
+      "iata": "UL3360",
+      "icao": "UL3360",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "34",
+        "flight_iata": "jl34",
+        "flight_icao": "jal34"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Suvarnabhumi International",
+      "timezone": "Asia/Bangkok",
+      "iata": "BKK",
+      "icao": "VTBS",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": null,
+      "iata": "AA",
+      "icao": "AA"
+    },
+    "flight": {
+      "number": "8465",
+      "iata": "AA8465",
+      "icao": "AA8465",
+      "codeshared": {
+        "airline_name": "japan airlines",
+        "airline_iata": "jl",
+        "airline_icao": "jal",
+        "flight_number": "34",
+        "flight_iata": "jl34",
+        "flight_icao": "jal34"
+      }
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "actual",
+    "departure": {
+      "airport": "Narita International Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "NRT",
+      "icao": "RJAA",
+      "terminal": null,
+      "gate": null,
+      "delay": 5,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "All Nippon Airways",
+      "iata": "NH",
+      "icao": "ANA"
+    },
+    "flight": {
+      "number": "9371",
+      "iata": "NH9371",
+      "icao": "ANA9371",
+      "codeshared": null
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Seoul (Incheon)",
+      "timezone": "Asia/Seoul",
+      "iata": "ICN",
+      "icao": "RKSI",
+      "terminal": null,
+      "gate": null,
+      "delay": null,
+      "scheduled": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Haneda Airport",
+      "timezone": "Asia/Tokyo",
+      "iata": "HND",
+      "icao": "RJTT",
+      "terminal": null,
+      "gate": null,
+      "baggage": null,
+      "scheduled": null,
+      "delay": null,
+      "estimated": null,
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Peach Aviation",
+      "iata": "MM",
+      "icao": "APJ"
+    },
+    "flight": {
+      "number": "808",
+      "iata": "MM808",
+      "icao": "APJ808",
+      "codeshared": null
+    },
+    "aircraft": null,
+    "live": null
+  },
+  {
+    "flight_date": "2026-05-04",
+    "flight_status": "active",
+    "departure": {
       "airport": "Kita Kyushu",
       "timezone": "Asia/Tokyo",
       "iata": "KKJ",
@@ -832,7 +1956,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -840,7 +1964,7 @@
       "icao": "RJBB",
       "terminal": null,
       "gate": null,
-      "delay": 4,
+      "delay": 6,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -878,7 +2002,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -886,7 +2010,7 @@
       "icao": "RJBB",
       "terminal": null,
       "gate": null,
-      "delay": 4,
+      "delay": 6,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -931,7 +2055,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -939,7 +2063,7 @@
       "icao": "RJBB",
       "terminal": null,
       "gate": null,
-      "delay": 4,
+      "delay": 6,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -984,7 +2108,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -992,7 +2116,7 @@
       "icao": "RJBB",
       "terminal": null,
       "gate": null,
-      "delay": 4,
+      "delay": 6,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -1037,7 +2161,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -1045,7 +2169,7 @@
       "icao": "RJBB",
       "terminal": null,
       "gate": null,
-      "delay": 4,
+      "delay": 6,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -1090,7 +2214,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -1098,7 +2222,7 @@
       "icao": "RJBB",
       "terminal": null,
       "gate": null,
-      "delay": 4,
+      "delay": 6,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -1151,7 +2275,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 19,
+      "delay": 13,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -1189,7 +2313,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Fukuoka",
       "timezone": "Asia/Tokyo",
@@ -1235,7 +2359,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Fukuoka",
       "timezone": "Asia/Tokyo",
@@ -1759,7 +2883,7 @@
       "icao": "RJCM",
       "terminal": null,
       "gate": null,
-      "delay": 12,
+      "delay": 19,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -1805,7 +2929,7 @@
       "icao": "RJCM",
       "terminal": null,
       "gate": null,
-      "delay": 12,
+      "delay": 19,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -1858,7 +2982,7 @@
       "icao": "RJCM",
       "terminal": null,
       "gate": null,
-      "delay": 12,
+      "delay": 19,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -2019,7 +3143,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 64,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -2065,7 +3189,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 64,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -2118,7 +3242,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 64,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -2171,7 +3295,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 64,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -2603,7 +3727,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Akita",
       "timezone": "Asia/Tokyo",
@@ -2611,7 +3735,7 @@
       "icao": "RJSK",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 22,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -2649,7 +3773,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Akita",
       "timezone": "Asia/Tokyo",
@@ -2657,7 +3781,7 @@
       "icao": "RJSK",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 22,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -2702,7 +3826,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Akita",
       "timezone": "Asia/Tokyo",
@@ -2710,7 +3834,7 @@
       "icao": "RJSK",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 22,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -2755,7 +3879,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Akita",
       "timezone": "Asia/Tokyo",
@@ -2763,7 +3887,7 @@
       "icao": "RJSK",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 22,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -4237,7 +5361,7 @@
       "icao": "RJSK",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 2,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -4283,7 +5407,7 @@
       "icao": "RJSK",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 2,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -4374,7 +5498,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Memanbetsu",
       "timezone": "Asia/Tokyo",
@@ -4382,7 +5506,7 @@
       "icao": "RJCM",
       "terminal": null,
       "gate": null,
-      "delay": 28,
+      "delay": 37,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -4398,7 +5522,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 10,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -4717,7 +5841,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Asahikawa",
       "timezone": "Asia/Tokyo",
@@ -4725,7 +5849,7 @@
       "icao": "RJEC",
       "terminal": null,
       "gate": null,
-      "delay": 18,
+      "delay": 28,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -4741,7 +5865,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 16,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -4870,7 +5994,7 @@
       "icao": "RJEC",
       "terminal": null,
       "gate": null,
-      "delay": 25,
+      "delay": null,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -4886,7 +6010,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 16,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -5602,7 +6726,7 @@
       "icao": "RJFK",
       "terminal": null,
       "gate": null,
-      "delay": 10,
+      "delay": 9,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -5686,7 +6810,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kagoshima",
       "timezone": "Asia/Tokyo",
@@ -5694,7 +6818,7 @@
       "icao": "RJFK",
       "terminal": null,
       "gate": null,
-      "delay": 12,
+      "delay": 16,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -5732,7 +6856,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kagoshima",
       "timezone": "Asia/Tokyo",
@@ -5740,7 +6864,7 @@
       "icao": "RJFK",
       "terminal": null,
       "gate": null,
-      "delay": 12,
+      "delay": 16,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -5785,7 +6909,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kagoshima",
       "timezone": "Asia/Tokyo",
@@ -5793,7 +6917,7 @@
       "icao": "RJFK",
       "terminal": null,
       "gate": null,
-      "delay": 12,
+      "delay": 16,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -5838,7 +6962,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kagoshima",
       "timezone": "Asia/Tokyo",
@@ -5846,7 +6970,7 @@
       "icao": "RJFK",
       "terminal": null,
       "gate": null,
-      "delay": 12,
+      "delay": 16,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -5945,7 +7069,7 @@
       "icao": "VIDP",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 20,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -5961,7 +7085,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 28,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -5991,7 +7115,7 @@
       "icao": "VIDP",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 20,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6007,7 +7131,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 28,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -6044,7 +7168,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 14,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6090,7 +7214,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 14,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6136,7 +7260,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 40,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6152,7 +7276,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 37,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -6182,7 +7306,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 40,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6198,7 +7322,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 37,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -6235,7 +7359,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 40,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6251,7 +7375,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 37,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -6288,7 +7412,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 40,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6304,7 +7428,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 37,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -6341,7 +7465,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 3,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -6835,7 +7959,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": null,
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -6881,7 +8005,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -6934,7 +8058,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -6987,7 +8111,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -7040,7 +8164,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kansai International",
       "timezone": "Asia/Tokyo",
@@ -7101,7 +8225,7 @@
       "icao": "ROAH",
       "terminal": null,
       "gate": null,
-      "delay": 20,
+      "delay": 17,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9168,7 +10292,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -9176,7 +10300,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 9,
+      "delay": 15,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9192,7 +10316,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 3,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -9214,7 +10338,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -9222,7 +10346,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 9,
+      "delay": 15,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9238,7 +10362,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 3,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -9267,7 +10391,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -9275,7 +10399,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 9,
+      "delay": 15,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9291,7 +10415,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 3,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -9511,7 +10635,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -9519,7 +10643,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 29,
+      "delay": 41,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9535,7 +10659,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 32,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -9557,7 +10681,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -9565,7 +10689,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 29,
+      "delay": 41,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9581,7 +10705,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 32,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -9610,7 +10734,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -9618,7 +10742,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 29,
+      "delay": 41,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9634,7 +10758,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 32,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -9663,7 +10787,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -9671,7 +10795,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 29,
+      "delay": 41,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9687,7 +10811,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 32,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -9815,7 +10939,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Fukuoka",
       "timezone": "Asia/Tokyo",
@@ -9869,7 +10993,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 17,
+      "delay": 12,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9915,7 +11039,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 17,
+      "delay": 12,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -9968,7 +11092,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 17,
+      "delay": 12,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10021,7 +11145,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 17,
+      "delay": 12,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10074,7 +11198,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 17,
+      "delay": 12,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10127,7 +11251,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 17,
+      "delay": 12,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10180,7 +11304,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 2,
+      "delay": 4,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10264,7 +11388,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chu-Bu Centrair International (Central Japan International)",
       "timezone": "Asia/Tokyo",
@@ -10310,7 +11434,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chu-Bu Centrair International (Central Japan International)",
       "timezone": "Asia/Tokyo",
@@ -10363,7 +11487,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chu-Bu Centrair International (Central Japan International)",
       "timezone": "Asia/Tokyo",
@@ -10416,7 +11540,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chu-Bu Centrair International (Central Japan International)",
       "timezone": "Asia/Tokyo",
@@ -10469,7 +11593,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chu-Bu Centrair International (Central Japan International)",
       "timezone": "Asia/Tokyo",
@@ -10522,7 +11646,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chu-Bu Centrair International (Central Japan International)",
       "timezone": "Asia/Tokyo",
@@ -10575,7 +11699,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chu-Bu Centrair International (Central Japan International)",
       "timezone": "Asia/Tokyo",
@@ -10636,7 +11760,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 56,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10674,7 +11798,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chitose",
       "timezone": "Asia/Tokyo",
@@ -10682,7 +11806,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 7,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10728,7 +11852,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 56,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -10790,7 +11914,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": 10,
+      "delay": 81,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -10836,7 +11960,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": 10,
+      "delay": 81,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -10889,7 +12013,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": 10,
+      "delay": 81,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -10942,7 +12066,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": 10,
+      "delay": 81,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -11746,7 +12870,7 @@
       "icao": "RJFM",
       "terminal": null,
       "gate": null,
-      "delay": 11,
+      "delay": 19,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -11792,7 +12916,7 @@
       "icao": "RJFM",
       "terminal": null,
       "gate": null,
-      "delay": 11,
+      "delay": 19,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -11845,7 +12969,7 @@
       "icao": "RJFM",
       "terminal": null,
       "gate": null,
-      "delay": 11,
+      "delay": 19,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -11898,7 +13022,7 @@
       "icao": "RJFM",
       "terminal": null,
       "gate": null,
-      "delay": 11,
+      "delay": 19,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -11943,7 +13067,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Naha",
       "timezone": "Asia/Tokyo",
@@ -12035,7 +13159,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chitose",
       "timezone": "Asia/Tokyo",
@@ -12043,7 +13167,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": 16,
+      "delay": 23,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12127,7 +13251,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Chitose",
       "timezone": "Asia/Tokyo",
@@ -12135,7 +13259,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": 5,
+      "delay": 10,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12181,7 +13305,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 56,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12227,7 +13351,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 56,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12280,7 +13404,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 56,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12333,7 +13457,7 @@
       "icao": "RJCC",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 56,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12523,7 +13647,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Fukuoka",
       "timezone": "Asia/Tokyo",
@@ -12531,7 +13655,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 46,
+      "delay": 52,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12569,7 +13693,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Fukuoka",
       "timezone": "Asia/Tokyo",
@@ -12577,7 +13701,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 46,
+      "delay": 52,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -12622,7 +13746,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Fukuoka",
       "timezone": "Asia/Tokyo",
@@ -12630,7 +13754,7 @@
       "icao": "RJFF",
       "terminal": null,
       "gate": null,
-      "delay": 46,
+      "delay": 52,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -13825,7 +14949,7 @@
       "icao": "RJCK",
       "terminal": null,
       "gate": null,
-      "delay": 38,
+      "delay": 35,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14023,7 +15147,7 @@
       "icao": "RJFT",
       "terminal": null,
       "gate": null,
-      "delay": 8,
+      "delay": 14,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14061,7 +15185,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kumamoto",
       "timezone": "Asia/Tokyo",
@@ -14069,7 +15193,7 @@
       "icao": "RJFT",
       "terminal": null,
       "gate": null,
-      "delay": 35,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14107,7 +15231,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kumamoto",
       "timezone": "Asia/Tokyo",
@@ -14115,7 +15239,7 @@
       "icao": "RJFT",
       "terminal": null,
       "gate": null,
-      "delay": 35,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14160,7 +15284,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kumamoto",
       "timezone": "Asia/Tokyo",
@@ -14168,7 +15292,7 @@
       "icao": "RJFT",
       "terminal": null,
       "gate": null,
-      "delay": 35,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14213,7 +15337,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Kumamoto",
       "timezone": "Asia/Tokyo",
@@ -14221,7 +15345,7 @@
       "icao": "RJFT",
       "terminal": null,
       "gate": null,
-      "delay": 35,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14723,7 +15847,7 @@
       "icao": "ROAH",
       "terminal": null,
       "gate": null,
-      "delay": 11,
+      "delay": 17,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14769,7 +15893,7 @@
       "icao": "ROAH",
       "terminal": null,
       "gate": null,
-      "delay": 11,
+      "delay": 17,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -14814,7 +15938,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Naha",
       "timezone": "Asia/Tokyo",
@@ -15461,7 +16585,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Ishigaki",
       "timezone": "Asia/Tokyo",
@@ -15507,7 +16631,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Ishigaki",
       "timezone": "Asia/Tokyo",
@@ -17590,7 +18714,7 @@
       "icao": "RJEC",
       "terminal": null,
       "gate": null,
-      "delay": 54,
+      "delay": 64,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -17636,7 +18760,7 @@
       "icao": "RJEC",
       "terminal": null,
       "gate": null,
-      "delay": 54,
+      "delay": 64,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -17689,7 +18813,7 @@
       "icao": "RJEC",
       "terminal": null,
       "gate": null,
-      "delay": 54,
+      "delay": 64,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -17742,7 +18866,7 @@
       "icao": "RJEC",
       "terminal": null,
       "gate": null,
-      "delay": 54,
+      "delay": 64,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -17795,7 +18919,7 @@
       "icao": "RJEC",
       "terminal": null,
       "gate": null,
-      "delay": 54,
+      "delay": 64,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -29514,7 +30638,7 @@
   },
   {
     "flight_date": "2026-05-04",
-    "flight_status": "active",
+    "flight_status": "actual",
     "departure": {
       "airport": "Hakodate",
       "timezone": "Asia/Tokyo",
@@ -29522,7 +30646,7 @@
       "icao": "RJCH",
       "terminal": null,
       "gate": null,
-      "delay": 18,
+      "delay": 37,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -29538,7 +30662,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 18,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -32725,7 +33849,7 @@
       "icao": "RJSA",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -32741,7 +33865,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 29,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -32771,7 +33895,7 @@
       "icao": "RJSA",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -32787,7 +33911,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 29,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -32824,7 +33948,7 @@
       "icao": "RJSA",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -32840,7 +33964,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 29,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -32877,7 +34001,7 @@
       "icao": "RJSA",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -32893,7 +34017,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 29,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
@@ -32930,7 +34054,7 @@
       "icao": "RJSA",
       "terminal": null,
       "gate": null,
-      "delay": null,
+      "delay": 39,
       "scheduled": null,
       "estimated": null,
       "actual": null,
@@ -32946,7 +34070,7 @@
       "gate": null,
       "baggage": null,
       "scheduled": null,
-      "delay": null,
+      "delay": 29,
       "estimated": null,
       "actual": null,
       "estimated_runway": null,
