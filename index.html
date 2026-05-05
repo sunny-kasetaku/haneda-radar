@@ -98,11 +98,11 @@
         
         <script>
             // 🦁 ここにフライトデータ (17:04取得分)
-            const FLIGHT_DATA = [];
+            const FLIGHT_DATA = [{"arrival_time": "2026-05-05T08:18:00", "scheduled_time": "2026-05-05T08:15:00", "flight_number": "NH412", "origin": "神戸", "pax": 150, "exit_type": "3号(T2)", "terminal": "2"}, {"arrival_time": "2026-05-05T08:30:00", "scheduled_time": "2026-05-05T08:30:00", "flight_number": "BC100", "origin": "神戸", "pax": 150, "exit_type": "1号(T1南)", "terminal": "1"}, {"arrival_time": "2026-05-05T09:04:00", "scheduled_time": "2026-05-05T09:00:00", "flight_number": "JL252", "origin": "広島", "pax": 150, "exit_type": "1号(T1南)", "terminal": "1"}, {"arrival_time": "2026-05-05T09:06:00", "scheduled_time": "2026-05-05T09:00:00", "flight_number": "NH672", "origin": "広島", "pax": 150, "exit_type": "3号(T2)", "terminal": "2"}, {"arrival_time": "2026-05-05T09:15:00", "scheduled_time": "2026-05-05T09:15:00", "flight_number": "NH2452", "origin": "宮崎", "pax": 150, "exit_type": "3号(T2)", "terminal": "2"}, {"arrival_time": "2026-05-05T09:20:00", "scheduled_time": "2026-05-05T09:20:00", "flight_number": "JL688", "origin": "宮崎", "pax": 150, "exit_type": "1号(T1南)", "terminal": "1"}, {"arrival_time": "2026-05-05T09:45:00", "scheduled_time": "2026-05-05T09:45:00", "flight_number": "NH602", "origin": "宮崎", "pax": 150, "exit_type": "3号(T2)", "terminal": "2"}, {"arrival_time": "2026-05-05T10:26:00", "scheduled_time": "2026-05-05T10:25:00", "flight_number": "BC102", "origin": "神戸", "pax": 150, "exit_type": "1号(T1南)", "terminal": "1"}, {"arrival_time": "2026-05-05T10:47:00", "scheduled_time": "2026-05-05T10:45:00", "flight_number": "NH674", "origin": "広島", "pax": 150, "exit_type": "3号(T2)", "terminal": "2"}, {"arrival_time": "2026-05-05T10:51:00", "scheduled_time": "2026-05-05T10:50:00", "flight_number": "JL254", "origin": "広島", "pax": 150, "exit_type": "1号(T1南)", "terminal": "1"}, {"arrival_time": "2026-05-05T11:27:00", "scheduled_time": "2026-05-05T11:25:00", "flight_number": "JL562", "origin": "女満別", "pax": 150, "exit_type": "2号(T1北)", "terminal": "1"}, {"arrival_time": "2026-05-05T11:45:00", "scheduled_time": "2026-05-05T11:45:00", "flight_number": "NH608", "origin": "宮崎", "pax": 240, "exit_type": "3号(T2)", "terminal": "2"}, {"arrival_time": "2026-05-05T12:15:00", "scheduled_time": "2026-05-05T12:10:00", "flight_number": "JL690", "origin": "宮崎", "pax": 150, "exit_type": "1号(T1南)", "terminal": "1"}, {"arrival_time": "2026-05-05T13:30:00", "scheduled_time": "2026-05-05T13:30:00", "flight_number": "JL5642", "origin": "上海(虹橋)", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-05-05T13:35:00", "scheduled_time": "2026-05-05T13:35:00", "flight_number": "NH5334", "origin": "マニラ", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-05-05T14:00:00", "scheduled_time": "2026-05-05T14:00:00", "flight_number": "JL5074", "origin": "北京", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-05-05T14:20:00", "scheduled_time": "2026-05-05T14:20:00", "flight_number": "JL5032", "origin": "広州", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-05-05T14:33:00", "scheduled_time": "2026-05-05T13:55:00", "flight_number": "JL7030", "origin": "香港", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}, {"arrival_time": "2026-05-05T15:45:00", "scheduled_time": "2026-05-05T15:45:00", "flight_number": "NH6250", "origin": "ｼﾝｶﾞﾎﾟｰﾙ", "pax": 250, "exit_type": "国際(T3)", "terminal": "3"}];
             const SETTING_PAST = 60;
             const SETTING_FUTURE = 240;
             const THEORY_BEST = "3号(T2)"; 
-            const FETCH_TIMESTAMP = 1777939615414;
+            const FETCH_TIMESTAMP = 1777950340904;
 
             // 🦁 定数：各プールの1列あたりの平均台数
             const POOL_CONFIG = {
@@ -468,7 +468,7 @@
             
 
             <div class="info-banner">
-                データ取得: 09:06<br>
+                データ取得: 12:05<br>
                 <span style="font-size:12px">🎯 判定範囲: 過去60分〜未来30分 | 実数: <span id="total-count">---</span>機</span>
             </div>
             
@@ -626,7 +626,7 @@
             
             <button class="update-btn" onclick="location.reload(true)">最新情報に更新</button>
             <div class="footer">
-                データ取得: 09:06 (API) | 表示更新: <span id="last-update">Now</span><br>
+                データ取得: 12:05 (API) | 表示更新: <span id="last-update">Now</span><br>
                 <span style="font-size:10px; color:#666;">次のリロードまであと <span id="timer" style="color:gold; font-weight:bold;">60</span> 秒</span>
             </div>
         </div>
